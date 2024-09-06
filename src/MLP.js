@@ -5,20 +5,18 @@
 var net = {};
 
 //Activation functions
-net.activations = {
+net.activations = {};
 
-    sigmoid: function(x) {
-        let functionOutput =  1.0 / (1.0 + Math.exp(-x));
-        let derivative     =  functionOutput * (1.0 - functionOutput)
-    
-        //Compute the function output and derivative
-        return {
-            functionValue   : functionOutput,
-            derivativeValue : derivative
-        }
-    }
-
+net.activations.sigmoid = function(x) {
+    return 1.0 / (1.0 + Math.exp(-x));
 }
+
+//Just the derivative of sigmoid
+net.activations.sigmoid.derivative = function(functionOutput){
+    return functionOutput * (1.0 - functionOutput);
+}
+
+
 
 //A Unit(with just feedforward and weight initialization)
 net.Unit = function( unit_config={} ){
@@ -60,7 +58,7 @@ net.Unit = function( unit_config={} ){
         sum = sum + context.bias;
 
         let output = net.activations[context.activation_function](sum);
-        return output['functionValue'];
+        return output;
     }
 
     return context;
@@ -167,12 +165,15 @@ net.MLP = function( config_dict={} ){
             let units_in_layer  = current_layer.units;
             let number_of_units = units_in_layer.length;
 
-            //For each unit in current layer L, get the UNIT OUTPUT
+            //For each unit in current layer L, get the UNIT OUTPUT and store inside the unit
             let units_outputs = [];
             for( let U = 0 ; U < number_of_units ; U++ )
             {
                 let current_unit = units_in_layer[ U ];
+
                 let unit_output  = current_unit.estimateOutput( current_layer_inputs );
+                current_unit['ACTIVATION'] = unit_output;
+
                 units_outputs.push( unit_output );
             }
 
@@ -198,31 +199,65 @@ net.MLP = function( config_dict={} ){
     */
     context.backpropagate_sample = function( sample_inputs=[], desiredOutputs=[] ){
         //Do the feedforward step
-        let output_estimated_values = context.feedforward_sample( sample_inputs );
-        let number_of_units         = output_estimated_values.length;
+        let output_estimated_values  = context.feedforward_sample( sample_inputs );
+        let number_of_output_units   = output_estimated_values.length;
+        let layers                   = context.layers;
+        let number_of_layers         = layers.length;
 
-        //Calculate the LOSS of each output unit
-        let LOSS_OF_OUTPUT_UNITS = [];
-        for( let U = 0 ; U < number_of_units ; U++ )
+        //Calculate the LOSS of each output unit and store in the outputs units
+        for( let U = 0 ; U < number_of_output_units ; U++ )
         {
-            let unitOutput     = output_estimated_values[ U ];
-            let desiredOutput  = desiredOutputs[ U ];
-            let unitError          = unitOutput - desiredOutput;
-            LOSS_OF_OUTPUT_UNITS.push( unitError );
+            let output_unit            = context.layers[ context.layers.length-1 ].units[ U ];
+            let unitActivationFn       = output_unit['activation_function'];
+            
+            let unitOutput             = output_estimated_values[ U ];
+            
+            let desiredOutput     = desiredOutputs[ U ];
+            let unitError         = unitOutput - desiredOutput;
+            
+            //The derivative of activation funcion of the U output(at output layer)
+            let outputDerivative  = net.activations[ unitActivationFn ].derivative( unitOutput );
+
+            //The delta of this output unit U
+            let unit_nabla = unitError * outputDerivative;
+
+            //Store the error in the unit
+            output_unit['LOSS'] = unit_nabla;
         }
 
-        //TODO: calcular os deltas, multiplicando o erro pela derivada
-
-
         //Start the backpropagation
-        let number_of_layers = model.layers.length;
-
         //A reverse for(starting in OUTPUT LAYER and going in direction of the FIRST HIDDEN LAYER)
-        for( let L = number_of_layers-1; L >= 0 ; L-- )
+        for( let L = number_of_layers-1-1; L >= 0 ; L-- )
         {
-            let current_layer = model.layers[ L ];
+            //Current layer data
+            let current_layer                  = context.layers[ L ];
+            let current_layer_units            = current_layer.units;
+            let number_of_units_current_layer  = current_layer_units.length;
 
+            //Next layer data
+            let next_layer                     = context.layers[ L+1 ];
+            let number_of_next_layer_units     = next_layer.units.length;
+
+            //For each unit in CURRENT HIDDEN LAYER
+            for( let UH = 0 ; UH < number_of_units_current_layer ; UH++ )
+            {
+                let current_hidden_layer_unit = current_layer_units[ UH ];
             
+                // Do the sum of errors
+                let current_hidden_unit_error = 0;
+
+                //For each unit in LEXT LAYER( L+1 )
+                for( let N = 0 ; N < number_of_next_layer_units ; N++ )
+                {
+                    let unit_N = next_layer.units[ N ];
+
+                    current_hidden_unit_error += ( unit_N['weights'][UH] * unit_N['LOSS'] );
+                }
+
+                //Store the error in the unit
+                let unit_nabla = current_hidden_unit_error * net.activations[ current_hidden_layer_unit['activation_function'] ].derivative( current_hidden_layer_unit['ACTIVATION'] );
+                current_hidden_layer_unit['LOSS'] = unit_nabla;
+            }
         }
     }
 
