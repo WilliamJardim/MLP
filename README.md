@@ -1,5 +1,8 @@
 # MLP
 Multilayer Perceptron Neural Network in JavaScript
+Adapted by William Alves Jardim
+
+![Logo](./images/logo.png)
 
 # CREDITS / REFERENCES
 **Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.**
@@ -13,6 +16,6 @@ Also, the "examples" folder contains 1 example used in Jason Brownlee's article,
 
 **I also left a copy of the original file in a folder called "original_code"**
 
-[View Original Jason Brownlee Code](./original_code/complete_original_code.md)
+[View Original Jason Brownlee Code](./original_code/complete_original_code.py)
 
 Thank you, Jason! I'm grateful for having the opportunity to write an adaptation of your code, which was very good for my learning!

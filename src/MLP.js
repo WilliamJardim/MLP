@@ -1,6 +1,6 @@
 /**
 * Multilayer Perceptron Neural Network (MLP)
-* A simple personal adaptation made by William Alves Jardim
+* Adapted by William Alves Jardim
 * 
 * This is just a small personal project, adapted from article below:
 *

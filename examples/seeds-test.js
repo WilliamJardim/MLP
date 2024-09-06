@@ -13,7 +13,7 @@ let model = net.MLP({
     ]
 });
 
-//Define the same weights used in Machine Learning Mastery
+//Define the same weights used in Machine Learning Mastery article
 model.layers[0].units[0].weights = [0.13436424411240122, 0.8474337369372327];
 model.layers[0].units[0].bias = 0.763774618976614;
 
