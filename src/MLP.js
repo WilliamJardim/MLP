@@ -190,5 +190,41 @@ net.MLP = function( config_dict={} ){
         return final_outputs;
     }
 
+    /**
+    * Do the backpropagation step for ONE SAMPLE 
+    * 
+    * @param {Array} sample_inputs  - the sample features
+    * @param {Array} desiredOutputs - the DESIRED outputs of the output units
+    */
+    context.backpropagate_sample = function( sample_inputs=[], desiredOutputs=[] ){
+        //Do the feedforward step
+        let output_estimated_values = context.feedforward_sample( sample_inputs );
+        let number_of_units         = output_estimated_values.length;
+
+        //Calculate the LOSS of each output unit
+        let LOSS_OF_OUTPUT_UNITS = [];
+        for( let U = 0 ; U < number_of_units ; U++ )
+        {
+            let unitOutput     = output_estimated_values[ U ];
+            let desiredOutput  = desiredOutputs[ U ];
+            let unitError          = unitOutput - desiredOutput;
+            LOSS_OF_OUTPUT_UNITS.push( unitError );
+        }
+
+        //TODO: calcular os deltas, multiplicando o erro pela derivada
+
+
+        //Start the backpropagation
+        let number_of_layers = model.layers.length;
+
+        //A reverse for(starting in OUTPUT LAYER and going in direction of the FIRST HIDDEN LAYER)
+        for( let L = number_of_layers-1; L >= 0 ; L-- )
+        {
+            let current_layer = model.layers[ L ];
+
+            
+        }
+    }
+
     return context;
 }
