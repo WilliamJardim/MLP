@@ -1,5 +1,6 @@
 # MLP
-Multilayer Perceptron Neural Network in JavaScript
+Multilayer Perceptron Neural Network in JavaScript.
+
 Adapted by William Alves Jardim
 
 ![Logo](./images/logo/logo256x256.png)
