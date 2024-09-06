@@ -15,6 +15,6 @@ I wrote the functions in JavaScript on my way, but using the same method(that is
 
 Also, the "examples" folder contains one example used in Jason Brownlee's article, I used it to test if my code worked
 
-**I also left a copy of the original file in a folder called "original_code"**, [View Original Jason Brownlee Code](./original_code/complete_original_code.py)
+**I also left a copy of the original file in a folder called "original_code"**, [View the copy of the Jason Brownlee Code](./original_code/complete_original_code.py)
 
 Thank you, Jason! I'm grateful for having the opportunity to write an adaptation of your code, which was very good for my learning!
