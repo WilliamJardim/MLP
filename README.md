@@ -2,7 +2,7 @@
 Multilayer Perceptron Neural Network in JavaScript
 Adapted by William Alves Jardim
 
-![Logo](./images/logo.png)
+![Logo](./images/logo/256x256.png)
 
 # CREDITS / REFERENCES
 **Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.**
