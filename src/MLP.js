@@ -1,6 +1,17 @@
 /**
-* A simple Multilayer Perceptron implementation in JavaScript
-* by William Alves Jardim
+* Multilayer Perceptron Neural Network (MLP)
+* A simple personal adaptation made by William Alves Jardim
+* 
+* This is just a small personal project, adapted from article below:
+*
+*    Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.
+* 
+* CREDITS / REFERENCE:
+* 
+*   Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.
+* 
+* Thank you, Jason! 
+* I'm grateful for having the opportunity to write an adaptation of your code, which was very good for my learning!
 */
 var net = {};
 
@@ -205,6 +216,8 @@ net.MLP = function( config_dict={} ){
 
     /**
     * Do the backpropagation step for ONE SAMPLE 
+    *
+    * Adapted from: Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.
     * 
     * @param {Array} sample_inputs  - the sample features
     * @param {Array} desiredOutputs - the DESIRED outputs of the output units
