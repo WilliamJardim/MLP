@@ -16,6 +16,14 @@ net.activations.sigmoid.derivative = function(functionOutput){
     return functionOutput * (1.0 - functionOutput);
 }
 
+net.activations.relu = function(x) {
+    return Math.max(0, x);
+}
+
+//Just the derivative of sigmoid
+net.activations.relu.derivative = function(functionOutput){
+    return functionOutput > 0 ? 1 : 0;
+}
 
 
 //A Unit(with just feedforward and weight initialization)
@@ -35,10 +43,10 @@ net.Unit = function( unit_config={} ){
 
         for( let i = 0 ; i < number_of_inputs ; i++ )
         {
-            context.weights[i] = Math.random() * 1.1;
+            context.weights[i] = Math.random();
         }
 
-        context.bias = Math.random() * 1.1;
+        context.bias = Math.random();
     }
 
     /**
@@ -103,6 +111,9 @@ net.MLP = function( config_dict={} ){
     context.layers_structure   = config_dict['layers'] || [];
     context.number_of_layers   = context.layers_structure.length;
     context.input_layer        = context.layers_structure[0]; //Get the input layer
+
+    context.hyperparameters    = config_dict['hyperparameters'];
+    context.learning_rate      = context.hyperparameters['learningRate'];
 
     //The layers objects that will be created below
     context.layers  = [];
@@ -173,6 +184,7 @@ net.MLP = function( config_dict={} ){
 
                 let unit_output  = current_unit.estimateOutput( current_layer_inputs );
                 current_unit['ACTIVATION'] = unit_output;
+                current_unit['INPUTS'] = current_layer_inputs;
 
                 units_outputs.push( unit_output );
             }
@@ -259,6 +271,101 @@ net.MLP = function( config_dict={} ){
                 current_hidden_layer_unit['LOSS'] = unit_nabla;
             }
         }
+
+        //Update weights and Bias using Gradient Descent
+        for( let L = 0 ; L < number_of_layers ; L++ )
+        {
+            let current_layer = context.layers[ L ];
+            let current_layer_units = current_layer.units;
+            let number_of_units_current_layer = current_layer_units.length;
+
+            //For each unit in current layer
+            for( let U = 0 ; U < number_of_units_current_layer ; U++ )
+            {
+                let current_unit = current_layer_units[ U ];
+
+                //For each weight
+                for( let W = 0 ; W < current_unit.weights.length ; W++ )
+                {
+                    current_unit.weights[ W ] -= context.learning_rate * current_unit['LOSS'] * current_unit['INPUTS'][ W ];
+                }
+
+                //Update bias
+                current_unit.bias -= context.learning_rate * current_unit['LOSS'];
+
+            }
+
+        }
+    }
+
+    /**
+    * Compute de COST
+    */
+    context.compute_train_cost = function( train_samples ){
+        let cost = 0;
+        
+        for( let A = 0 ; A < train_samples.length ; A++ )
+        {   
+            let sample_data            = train_samples[ A ];
+            let sample_features        = sample_data[0]; //SAMPLE FEATURES
+            let sample_desired_value   = sample_data[1]; //SAMPLE DESIRED OUTPUTS
+            let estimatedValues        = context.feedforward_sample(sample_features);
+
+            for( let S = 0 ; S < estimatedValues.length ; S++ )
+            {
+                cost += ( sample_desired_value[ S ] - estimatedValues[ S ] ) ** 2;
+            }
+
+        }
+
+        return cost;
+    }
+
+    /**
+    * Model training loop 
+    * 
+    * @param {Array} train_samples
+    * @param {Number} number_of_epochs
+    */
+    context.train = function( train_samples, number_of_epochs ){
+
+        let last_total_loss = 0;
+        let loss_history = [];
+
+        //For each epoch
+        for( let p = 0 ; p < number_of_epochs ; p++ )
+        {
+            let total_loss = 0;
+
+            //Training process
+            for( let i = 0 ; i < train_samples.length ; i++ )
+            {
+                let sample_data             = train_samples[i];
+                let sample_features         = sample_data[0]; //SAMPLE FEATURES
+                let sample_desired_value    = sample_data[1]; //SAMPLE DESIRED OUTPUTS
+
+                //Do backpropagation and Gradient Descent
+                context.backpropagate_sample(sample_features, sample_desired_value);
+            }
+
+            total_loss += context.compute_train_cost( train_samples );
+
+            last_total_loss = total_loss;
+            loss_history.push(total_loss);
+            
+            if( String( Number(p / 100) ).indexOf('.') != -1 ){
+                console.log(`LOSS: ${last_total_loss}, epoch ${p}`)
+            }
+        }
+
+        return {
+            model: context,
+            last_total_loss: last_total_loss,
+            loss_history: loss_history,
+            initial_loss: loss_history[0],
+            final_loss: loss_history[loss_history.length-1],
+        };
+
     }
 
     return context;
