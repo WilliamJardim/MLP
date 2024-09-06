@@ -1,7 +1,7 @@
 # MLP
 Multilayer Perceptron Neural Network in JavaScript.
 
-Adapted by William Alves Jardim
+By William Alves Jardim
 
 ![Logo](./images/logo/logo256x256.png)
 
@@ -11,9 +11,9 @@ Adapted by William Alves Jardim
 # Description
 This project is an adaptation of Jason Brownlee's original code. I really liked the way his article taught backpropagation.
 
-I rewrote the functions in JavaScript, but using the same method used by Jason Brownlee, and I also used the same example dataset that he used in the article to test if my adaptation follows the steps correctly. I also used the original files to do tests.
+I rewrote the functions in JavaScript on my way, but using the same method(that is, storing errors and activations in neuron objects) used by Jason Brownlee, and I also used the same example dataset that he used in the article to test if my code follows the steps correctly. 
 
-Also, the "examples" folder contains 1 example used in Jason Brownlee's article, I used it to test if my code worked
+Also, the "examples" folder contains one example used in Jason Brownlee's article, I used it to test if my code worked
 
 **I also left a copy of the original file in a folder called "original_code"**
 
