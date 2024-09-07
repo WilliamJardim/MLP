@@ -5,9 +5,9 @@ I following the credit attribuition avaliable in the FAQ of the Machine Learning
 I had already mentioned it in the README, and in the code. However, I also wanted to mention here in more detail
 
 # Author data
-**Name of the author: Jason Brownlee**
+Name of the author: Jason Brownlee
 
-**Title: How to Code a Neural Network with Backpropagation In Python (from scratch)**
+Title: How to Code a Neural Network with Backpropagation In Python (from scratch)
 
 Name of the website: Machine Learning Mastery
 
