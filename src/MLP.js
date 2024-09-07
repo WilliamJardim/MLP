@@ -2,16 +2,11 @@
 * Multilayer Perceptron Neural Network (MLP)
 * By William Alves Jardim
 * 
-* This is just a small personal project, adapted from article below:
-*
-*    Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.
-* 
-* CREDITS / REFERENCE:
+* CREDITS && REFERENCE:
 * 
 *   Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.
 * 
-* Thank you, Jason! 
-* I'm grateful for having the opportunity to write an adaptation of your code, which was very good for my learning!
+* See README.md
 */
 var net = {};
 
