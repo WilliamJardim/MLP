@@ -10,7 +10,7 @@ By William Alves Jardim
 I also put the credits in the CREDITS file, [Read CREDITS.md](./CREDITS.md)
 
 # Description
-I wrote the functions in JavaScript. This project is an adaptation of Jason Brownlee's original code. I really liked the way his article taught backpropagation.
+I wrote the functions in JavaScript. This project is inspired in Jason Brownlee's code. 
 
 # Implementation Features
 My implementation has the following features:
@@ -69,5 +69,3 @@ In some parts of the Feedforward and Backpropagation code, i used some similar s
 
       - In final of code, they use the property INPUTS of the units in Gradient Descent(For update the weights)
 
-# Thank you note
-Thank you, Jason! I'm grateful for having the opportunity to write an adaptation of your code, which was very good for my learning!
