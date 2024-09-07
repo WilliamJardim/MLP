@@ -49,7 +49,7 @@ My implementation has the following features:
 
    - Do not have normalization
 
-In some parts of the Feedforward and Backpropagation code, i used some strategies that are used by Jason Brownlee. Below are a list that describes this better:
+In some parts of the Feedforward and Backpropagation code, i used some similar strategies that are used by Jason Brownlee. Below are a list that describes this better:
 
   - **feedforward_sample:**
 
