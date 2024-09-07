@@ -57,11 +57,15 @@ In some parts of the Feedforward and Backpropagation code, i used some strategie
 
       - Use of a variable property called 'ACTIVATION' to store the unit activation in the own unit object
 
+      - Use of a variable property called 'INPUTS' to store the inputs that are used in unit in the own unit object
+
   - **backpropagate_sample:**
       
       - Using an aligned for to calculate unit deltas in the hidden layer
 
       - Use of a variable property called 'LOSS' to store the unit error in the own unit object
+
+      - In final of code, they use the property INPUTS of the units in Gradient Descent(For update the weights)
 
 # Examples that i used to test
 I also used the same example dataset that he used in the article to test if my code follows the steps correctly. 
