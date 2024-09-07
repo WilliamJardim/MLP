@@ -223,8 +223,6 @@ net.MLP = function( config_dict={} ){
     /**
     * Do the backpropagation step for ONE SAMPLE 
     *
-    * Adapted from: Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.
-    * 
     * @param {Array} sample_inputs  - the sample features
     * @param {Array} desiredOutputs - the DESIRED outputs of the output units
     */
