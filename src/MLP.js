@@ -166,14 +166,14 @@ net.MLP = function( config_dict={} ){
 
         /**
         * The inputs of a layer L is always the outputs of previous layer( L-1 )
-        * So, the current_layer_inputs starts being sample_inputs, and after each layer propagation, this variavel will be updated
+        * So, the property LAYER_INPUTS of the first hidden layer is the sample_inputs. And in the feedforward, each layer(L) will have the property LAYER_INPUTS, storing the outputs of the previous layer(L-1) 
         * 
         * So, the inputs of first hidden layer( that is L=0 ), will be the sample_inputs
         * And the inputs of secound hidden layer( that is L=1 ), will be the outputs of the first hidden layer( that is L=0 )
         *
         * always in this way.
         */
-        let current_layer_inputs  = [... sample_inputs]; 
+        context.layers[0]['LAYER_INPUTS'] = [... sample_inputs];
 
         //The outputs of OUTPUT LAYER
         let final_outputs         = []; 
@@ -193,15 +193,26 @@ net.MLP = function( config_dict={} ){
             {
                 let current_unit = units_in_layer[ U ];
 
-                let unit_output  = current_unit.estimateOutput( current_layer_inputs );
+                let unit_output  = current_unit.estimateOutput( current_layer['LAYER_INPUTS'] );
                 current_unit['ACTIVATION'] = unit_output;
-                current_unit['INPUTS'] = current_layer_inputs;
+                //The inputs is the same of all units in a layer
+                current_unit['INPUTS'] = current_layer['LAYER_INPUTS'];
 
                 units_outputs.push( unit_output );
             }
 
-            //The inputs of a layer L is always the outputs of previous layer( L-1 )
-            current_layer_inputs = units_outputs;
+            /*
+            * The inputs of a layer L is always the outputs of previous layer( L-1 ) 
+            * Then the in lives below will Store the outputs of the current layer(L) in the NEXT LAYER(L+1) AS INPUTS
+            */
+
+            //If the current layer(L) is NOT the output layer
+            if( current_layer.layer_type != 'output' ){
+                let next_layer = context.layers[ L+1 ];
+                
+                //Set the current layer(L) outputs AS INPUTS OF THE NEXT LAYER(L+1)
+                next_layer['LAYER_INPUTS'] = units_outputs;
+            }
 
             //If is the output layer
             if( current_layer.layer_type == 'output' )
