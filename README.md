@@ -7,6 +7,8 @@ By William Alves Jardim
 # CREDITS / REFERENCES
 **Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.**
 
+I also put the credits in the CREDITS file, [Read CREDITS](./CREDITS), or also [CREDITS.md](./CREDITS.md)
+
 # Description
 I wrote the functions in JavaScript. This project is an adaptation of Jason Brownlee's original code. I really liked the way his article taught backpropagation.
 
