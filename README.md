@@ -53,7 +53,7 @@ In some parts of the Feedforward and Backpropagation code, i used some strategie
 
   - **feedforward_sample:**
 
-      - Use of a variable called 'current_layer_inputs', to store the the outputs of the units in the current layer, that will be the inputs of the next layer.
+      - Use of a property called 'LAYER_INPUTS'(present in each layer object), to store the the outputs of the units of previous layer(L-1), that will be the inputs of the current layer(L).
 
       - Use of a variable property called 'ACTIVATION' to store the unit activation in the own unit object
 
