@@ -139,6 +139,23 @@ net.MLP = function( config_dict={} ){
     context.hyperparameters    = config_dict['hyperparameters'];
     context.learning_rate      = context.hyperparameters['learningRate'];
 
+    //Class parameters and model Hyperparameters validations
+    if(context.number_of_layers == 0){
+        throw Error(`The model does not have any layers!`);
+    }
+    if( context.input_layer == undefined || context.input_layer['type'] != 'input' ){
+        throw Error(`context.input_layer is undefined OR is not of type INPUT!. The first layer must be the INPUT LAYER`);
+    }
+    if( context.learning_rate == undefined || context.learning_rate == null ){
+        throw Error(`hyperparameters.learning_rate is undefined!`);
+    }
+    if( context.learning_rate == Infinity ){
+        throw Error(`hyperparameters.learning_rate is Infinity!`);
+    }
+    if( isNaN(context.learning_rate) == true ){
+        throw Error(`hyperparameters.learning_rate is NaN!`);
+    }
+
     //The layers objects that will be created below
     context.layers  = [];
     let last_created = null;
