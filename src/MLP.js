@@ -42,6 +42,24 @@ net.Unit = function( unit_config={} ){
     context.weights               = unit_config.weights              || Array(context.number_of_inputs).fill(0);
     context.bias                  = unit_config.bias                 || Number();
 
+    //Setters
+    context.setWeights = function( newWeights=[] ){
+        if( !(newWeights instanceof Array) ){
+            throw Error(`the newWeights=${newWeights} is not a Array instance!`);
+        }
+        if( newWeights.length == 0 ){
+            throw Error(`the newWeights is empty Array!`);
+        }
+        context.weights = newWeights;
+    }
+
+    context.setBias = function( newBias=Number() ){
+        if( typeof newBias != 'number' ){
+            throw Error(`the newBias=${newBias} is not a Number instance!`);
+        }
+        context.bias = newBias;
+    }
+
     /**
     * Generate random parameters
     */
@@ -421,6 +439,76 @@ net.MLP = function( config_dict={} ){
             final_loss: loss_history[loss_history.length-1],
         };
 
+    }
+
+    /**
+    * Save the weights and bias in a JSON object
+    */
+    context.export = function(){
+        let nn_saved_structure = {
+            'layers_data': {}
+        };
+        let number_of_layers = context.layers.length;
+
+        nn_saved_structure['number_of_layers'] = number_of_layers;
+
+        for( let L = 0 ; L < number_of_layers ; L++ )
+        {
+            nn_saved_structure.layers_data[`layer${L}`] = {};
+
+            let current_layer_data = context.layers[L];
+            let number_of_units = current_layer_data.units.length;
+
+            for( let U = 0 ; U < number_of_units ; U++ )
+            {
+                let U_data = {
+                    weights: current_layer_data.units[U].weights,
+                    bias: current_layer_data.units[U].bias
+                }
+
+                nn_saved_structure.layers_data[`layer${L}`][`unit${U}`] = U_data;
+            }
+        }
+
+        nn_saved_structure['number_of_inputs'] = nn_saved_structure.layers_data.layer0.unit0.weights.length;
+        nn_saved_structure['number_of_outputs'] = Object.keys( nn_saved_structure.layers_data[`layer${number_of_layers-1}`] ).length;
+
+        return nn_saved_structure;
+    }
+
+    /**
+    * Import the weights and bias from context.export
+    */
+    context.import_from_json = function( nn_saved_structure={} ){
+        let number_of_layers = context.layers.length;
+
+        if( Object.values(nn_saved_structure).length == 0 ){
+            throw Error(` The nn_saved_structure is empty JSON!`);
+        }
+
+        for( let L = 0 ; L < number_of_layers ; L++ )
+        {
+            let current_layer_data = context.layers[L];
+            let number_of_units    = current_layer_data.units.length;
+            let layer_data         = nn_saved_structure.layers_data[`layer${L}`];
+
+            //For each unit
+            for( let U = 0 ; U < number_of_units ; U++ )
+            {
+                //Imported data
+                let imported_current_unit = layer_data[`unit${U}`];
+                let imported_weights      = imported_current_unit.weights;
+                let imported_bias         = imported_current_unit.bias;
+
+                //Model data
+                let model_current_layer = current_layer_data;
+                let model_current_unit  = current_layer_data.units[U];
+
+                //Set imported data
+                model_current_unit.setWeights( imported_weights );
+                model_current_unit.setBias( imported_bias );
+            }
+        }
     }
 
     return context;
