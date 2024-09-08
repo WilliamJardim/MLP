@@ -271,15 +271,18 @@ net.MLP = function( config_dict={} ){
             for( let UH = 0 ; UH < number_of_units_current_layer ; UH++ )
             {
                 /*
-                * The gradients for the units in any hidden layer is:
+                * The gradients for the units in ANY hidden layer is:
+                * Below are a simple example suposing that in the next layer we have 2 units:
                 * 
                 * >>> EQUATION WITH A EXAMPLE OF USE:
                 * 
-                *    Below are a simple example suposing that in the next layer we have 2 units:
-                * 
                 *    current_layer_unit<UH>_error = (next_layer_unit<N0>.weight<UH> * next_layer_unit<N0>.LOSS) + 
                 *                                   (next_layer_unit<N1>.weight<UH> * next_layer_unit<N1>.LOSS) + 
-                *                                   [... etc, other units in the next_layer]
+                *                                   [... etc]
+                * 
+                *    NOTE: In this example, the next layer have just 2 units(N0 and N1, respectively), 
+                *          but There could be as many as there were. By this, i put "[... etc]", to make it clear that there could be more than just 2 units
+                * 
                 * 
                 * >>> EXPLANATION:
                 * 
