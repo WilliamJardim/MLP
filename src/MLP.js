@@ -479,6 +479,20 @@ net.MLP = function( config_dict={} ){
                 let sample_features         = sample_data[0]; //SAMPLE FEATURES
                 let sample_desired_value    = sample_data[1]; //SAMPLE DESIRED OUTPUTS
 
+                //Validations before apply the backpropagation
+                if( !(sample_features instanceof Array) ){
+                    throw Error(`The variable sample_features=${sample_features} must be a Array!`);
+                }
+
+                if( !(sample_desired_value instanceof Array) ){
+                    throw Error(`The variable sample_desired_value=${sample_desired_value} is not a Array!`);
+                }
+
+                //If the number of items in the sample_desired_value Array is different from the number of units in the output layer
+                if( sample_desired_value.length != context.layers[ context.layers.length-1 ].units.length ){
+                    throw Error(`The sample_desired_value=${sample_desired_value} has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in output layer)`);
+                }
+
                 //Do backpropagation and Gradient Descent
                 context.backpropagate_sample(sample_features, sample_desired_value);
             }
