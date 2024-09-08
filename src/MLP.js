@@ -251,7 +251,7 @@ net.MLP = function( config_dict={} ){
             let unit_nabla = unitError * outputDerivative;
 
             //Store the error in the unit
-            output_unit['LOSS'] = unit_nabla;
+            output_unit.LOSS = unit_nabla;
         }
 
         //Start the backpropagation
@@ -342,11 +342,11 @@ net.MLP = function( config_dict={} ){
                 //For each weight
                 for( let W = 0 ; W < current_unit.weights.length ; W++ )
                 {
-                    current_unit.weights[ W ] -= context.learning_rate * current_unit['LOSS'] * current_unit['INPUTS'][ W ];
+                    current_unit.weights[ W ] -= context.learning_rate * current_unit.LOSS * current_unit.INPUTS[ W ];
                 }
 
                 //Update bias
-                current_unit.bias -= context.learning_rate * current_unit['LOSS'];
+                current_unit.bias -= context.learning_rate * current_unit.LOSS;
 
             }
 
