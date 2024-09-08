@@ -175,6 +175,15 @@ net.MLP = function( config_dict={} ){
     */
     context.feedforward_sample = function( sample_inputs=[] ){
 
+        //Validations
+        if( !(sample_inputs instanceof Array) ){
+            throw Error(`The sample_inputs=${sample_inputs} need be a Array instance!`);
+        }
+
+        if( sample_inputs.length == 0 ){
+            throw Error(`The sample_inputs is empty Array!`);
+        }
+
         let number_of_layers      = context.layers.length;
 
         /**
@@ -245,6 +254,24 @@ net.MLP = function( config_dict={} ){
     * @param {Array} desiredOutputs - the DESIRED outputs of the output units
     */
     context.backpropagate_sample = function( sample_inputs=[], desiredOutputs=[] ){
+        
+        //Validations
+        if( !(sample_inputs instanceof Array) ){
+            throw Error(`The sample_inputs=${sample_inputs} need be a Array instance!`);
+        }
+
+        if( sample_inputs.length == 0 ){
+            throw Error(`The sample_inputs is empty Array!`);
+        }
+
+        if( !(desiredOutputs instanceof Array) ){
+            throw Error(`The desiredOutputs=${desiredOutputs} need be a Array instance!`);
+        }
+
+        if( desiredOutputs.length == 0 ){
+            throw Error(`The desiredOutputs is empty Array!`);
+        }
+
         //Do the feedforward step
         let output_estimated_values  = context.feedforward_sample( sample_inputs );
         let number_of_output_units   = output_estimated_values.length;
@@ -375,6 +402,16 @@ net.MLP = function( config_dict={} ){
     * Compute de COST
     */
     context.compute_train_cost = function( train_samples ){
+
+        //Validations
+        if( !(train_samples instanceof Array) ){
+            throw Error(`The train_samples=${train_samples} need be a Array instance!`);
+        }
+
+        if( train_samples.length == 0 ){
+            throw Error(`The train_samples is a empty Array!`);
+        }
+
         let cost = 0;
         
         for( let A = 0 ; A < train_samples.length ; A++ )
@@ -401,6 +438,31 @@ net.MLP = function( config_dict={} ){
     * @param {Number} number_of_epochs
     */
     context.train = function( train_samples, number_of_epochs ){
+
+        //Validations
+        if( !(train_samples instanceof Array) ){
+            throw Error(`The train_samples=${train_samples} need be a Array instance!`);
+        }
+
+        if( train_samples.length == 0 ){
+            throw Error(`The train_samples is a empty Array!`);
+        }
+
+        if( number_of_epochs == undefined || number_of_epochs == null ){
+            throw Error(`The number_of_epochs is undefined!`);
+        }
+
+        if( isNaN(number_of_epochs) ){
+            throw Error(`The number_of_epochs is NaN!`);
+        }
+
+        if( number_of_epochs == Infinity ){
+            throw Error(`The number_of_epochs never be inifinity!`);
+        }
+
+        if( String(number_of_epochs).indexOf('.') == true ){
+            throw Error(`The number_of_epochs=${number_of_epochs} is a invalid value!. The value ${number_of_epochs} should be Integer!`);
+        }
 
         let last_total_loss = 0;
         let loss_history = [];
@@ -482,8 +544,21 @@ net.MLP = function( config_dict={} ){
     context.import_from_json = function( nn_saved_structure={} ){
         let number_of_layers = context.layers.length;
 
+        if( typeof nn_saved_structure != 'object' ){
+            throw Error(` The nn_saved_structure is not a JSON!`);
+        }
+
         if( Object.values(nn_saved_structure).length == 0 ){
             throw Error(` The nn_saved_structure is empty JSON!`);
+        }
+
+        if( nn_saved_structure['layers_data'] == undefined ){
+            throw Error(` The nn_saved_structure not have 'layers_data' property!. Invalid object!`);
+        }
+
+        //If you don't have hair, a layer
+        if( nn_saved_structure['layers_data']['layer0'] == undefined ){
+            throw Error(` The nn_saved_structure=${nn_saved_structure} not have layers!`);
         }
 
         for( let L = 0 ; L < number_of_layers ; L++ )
