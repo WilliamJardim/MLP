@@ -273,11 +273,13 @@ net.MLP = function( config_dict={} ){
                 /*
                 * The gradients for the units in any hidden layer is:
                 * 
-                * >>> EQUATION:
+                * >>> EQUATION WITH A EXAMPLE OF USE:
+                * 
+                *    Below are a simple example suposing that in the next layer we have 2 units:
                 * 
                 *    current_layer_unit<UH>_error = (next_layer_unit<N0>.weight<UH> * next_layer_unit<N0>.LOSS) + 
                 *                                   (next_layer_unit<N1>.weight<UH> * next_layer_unit<N1>.LOSS) + 
-                *                                   [... etc, other units N in the next_layer]
+                *                                   [... etc, other units in the next_layer]
                 * 
                 * >>> EXPLANATION:
                 * 
