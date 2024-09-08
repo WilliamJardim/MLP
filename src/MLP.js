@@ -270,16 +270,45 @@ net.MLP = function( config_dict={} ){
             //For each unit in CURRENT HIDDEN LAYER
             for( let UH = 0 ; UH < number_of_units_current_layer ; UH++ )
             {
-                let current_hidden_layer_unit = current_layer_units[ UH ];
+                /*
+                * The gradients for the units in any hidden layer is:
+                * 
+                * >>> EQUATION:
+                * 
+                *    current_layer_unit<UH>_error = (next_layer_unit<N>.weight<UH> * next_layer_unit<N>.LOSS) + 
+                *                                   (next_layer_unit<N>.weight<UH> * next_layer_unit<N>.LOSS) + 
+                *                                   [... other units N in the next_layer]
+                * 
+                * >>> EXPLANATION:
+                * 
+                *   where the UH is the index of the hidden unit in the current hidden layer. And the N is the index of the next layer unit
+                * 
+                *   The weight<UH> is the connection weight of weights array in the next_layer_unit<N> object.
+                * 
+                *   This is the equation that are used for apply the backpropagation. This equation is used in this loop.
+                *
+                * So the code bellow apply this:
+                * 
+                */
+
+                let current_hidden_layer_unit = current_layer_units[ UH ]; //The hidden layer unit of number UH(like in the equation above)
             
                 // Do the sum of errors
                 let current_hidden_unit_error = 0;
 
-                //For each unit in LEXT LAYER( L+1 )
+                /** For each unit N in LEXT LAYER( L+1 ) **/
                 for( let N = 0 ; N < number_of_next_layer_units ; N++ )
                 {
                     let unit_N = next_layer.units[ N ];
 
+                    /**
+                    * The unit_N['weights'][UH] is the connection weight, whose index is UH(of the external loop)
+                    * because, por example, if we are calculating the gradient of the first unit in the last hidden layer, 
+                    * these gradient(of the hidden unit) will depedent of the all gradients in the output layer, 
+                    * together with the connection weight, that is, the weight of unit N of the output layer with respect to the hidden unit number UH
+                    *
+                    * Above are the gradient equation for the hidden layer units, that are applied in the line below:
+                    */
                     current_hidden_unit_error += ( unit_N['weights'][UH] * unit_N['LOSS'] );
                 }
 
