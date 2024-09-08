@@ -135,6 +135,7 @@ net.MLP = function( config_dict={} ){
     context.layers_structure   = config_dict['layers'] || [];
     context.number_of_layers   = context.layers_structure.length;
     context.input_layer        = context.layers_structure[0]; //Get the input layer
+    context.last_layer         = context.layers_structure[context.number_of_layers-1];
 
     context.hyperparameters    = config_dict['hyperparameters'];
     context.learning_rate      = context.hyperparameters['learningRate'];
@@ -145,6 +146,9 @@ net.MLP = function( config_dict={} ){
     }
     if( context.input_layer == undefined || context.input_layer['type'] != 'input' ){
         throw Error(`context.input_layer is undefined OR is not of type INPUT!. The first layer must be the INPUT LAYER`);
+    }
+    if( context.last_layer == undefined || context.last_layer['type'] != 'output' ){
+        throw Error(`context.last_layer is undefined OR is not of type OUTPUT!. The last layer must be the OUTPUT LAYER`);
     }
     if( context.learning_rate == undefined || context.learning_rate == null ){
         throw Error(`hyperparameters.learning_rate is undefined!`);
