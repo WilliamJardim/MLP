@@ -257,7 +257,7 @@ net.MLP = function( config_dict={} ){
         
         //Validations
         if( !(sample_inputs instanceof Array) ){
-            throw Error(`The sample_inputs=${sample_inputs} need be a Array instance!`);
+            throw Error(`The sample_inputs=[${sample_inputs}] need be a Array instance!`);
         }
 
         if( sample_inputs.length == 0 ){
@@ -265,7 +265,7 @@ net.MLP = function( config_dict={} ){
         }
 
         if( !(desiredOutputs instanceof Array) ){
-            throw Error(`The desiredOutputs=${desiredOutputs} need be a Array instance!`);
+            throw Error(`The desiredOutputs=[${desiredOutputs}] need be a Array instance!`);
         }
 
         if( desiredOutputs.length == 0 ){
@@ -405,7 +405,7 @@ net.MLP = function( config_dict={} ){
 
         //Validations
         if( !(train_samples instanceof Array) ){
-            throw Error(`The train_samples=${train_samples} need be a Array instance!`);
+            throw Error(`The train_samples=[${train_samples}] need be a Array instance!`);
         }
 
         if( train_samples.length == 0 ){
@@ -441,7 +441,7 @@ net.MLP = function( config_dict={} ){
 
         //Validations
         if( !(train_samples instanceof Array) ){
-            throw Error(`The train_samples=${train_samples} need be a Array instance!`);
+            throw Error(`The train_samples=[${train_samples}] need be a Array instance!`);
         }
 
         if( train_samples.length == 0 ){
@@ -481,16 +481,16 @@ net.MLP = function( config_dict={} ){
 
                 //Validations before apply the backpropagation
                 if( !(sample_features instanceof Array) ){
-                    throw Error(`The variable sample_features=${sample_features} must be a Array!`);
+                    throw Error(`The variable sample_features=[${sample_features}] must be a Array!`);
                 }
 
                 if( !(sample_desired_value instanceof Array) ){
-                    throw Error(`The variable sample_desired_value=${sample_desired_value} is not a Array!`);
+                    throw Error(`The variable sample_desired_value=[${sample_desired_value}] is not a Array!`);
                 }
 
                 //If the number of items in the sample_desired_value Array is different from the number of units in the output layer
                 if( sample_desired_value.length != context.layers[ context.layers.length-1 ].units.length ){
-                    throw Error(`The sample_desired_value=${sample_desired_value} has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in output layer)`);
+                    throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in output layer)`);
                 }
 
                 //Do backpropagation and Gradient Descent
