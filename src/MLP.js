@@ -144,6 +144,12 @@ net.MLP = function( config_dict={} ){
     if(context.number_of_layers == 0){
         throw Error(`The model does not have any layers!`);
     }
+    if( config_dict['layers'] == undefined || config_dict['layers'] == null ){
+        throw Error(`The model must have the 'layers' property in the config_dict`);
+    }
+    if( config_dict['hyperparameters'] == undefined || config_dict['hyperparameters'] == null ){
+        throw Error(`The model must have the 'hyperparameters' property in the config_dict`);
+    }
     if( context.input_layer == undefined || context.input_layer['type'] != 'input' ){
         throw Error(`context.input_layer is undefined OR is not of type INPUT!. The first layer must be the INPUT LAYER`);
     }
