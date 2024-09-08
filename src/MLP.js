@@ -308,19 +308,19 @@ net.MLP = function( config_dict={} ){
                     let unit_N = next_layer.units[ N ];
 
                     /**
-                    * The unit_N['weights'][UH] is the connection weight, whose index is UH(of the external loop in the explanation of the equation above)
+                    * The unit_N.weights[ UH ] is the connection weight, whose index is UH(of the external loop in the explanation of the equation above)
                     * because, for example, if we are calculating the gradient of the first unit in the last hidden layer, 
                     * these gradient(of the hidden unit) will depedent of the all gradients in the output layer, 
                     * together with the connection weight, that is, the weight of unit N of the output layer with respect to the hidden unit number UH
                     *
                     * Above are the gradient equation for the hidden layer units, that are applied in the line below:
                     */
-                    current_hidden_unit_error += ( unit_N['weights'][UH] * unit_N['LOSS'] );
+                    current_hidden_unit_error += ( unit_N.weights[ UH ] * unit_N.LOSS );
                 }
 
                 //Store the error in the unit
-                let unit_nabla = current_hidden_unit_error * net.activations[ current_hidden_layer_unit['activation_function'] ].derivative( current_hidden_layer_unit['ACTIVATION'] );
-                current_hidden_layer_unit['LOSS'] = unit_nabla;
+                let unit_nabla = current_hidden_unit_error * net.activations[ current_hidden_layer_unit.activation_function ].derivative( current_hidden_layer_unit.ACTIVATION );
+                current_hidden_layer_unit.LOSS = unit_nabla;
             }
         }
 
