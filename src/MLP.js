@@ -275,9 +275,9 @@ net.MLP = function( config_dict={} ){
                 * 
                 * >>> EQUATION:
                 * 
-                *    current_layer_unit<UH>_error = (next_layer_unit<N>.weight<UH> * next_layer_unit<N>.LOSS) + 
-                *                                   (next_layer_unit<N>.weight<UH> * next_layer_unit<N>.LOSS) + 
-                *                                   [... other units N in the next_layer]
+                *    current_layer_unit<UH>_error = (next_layer_unit<N0>.weight<UH> * next_layer_unit<N0>.LOSS) + 
+                *                                   (next_layer_unit<N1>.weight<UH> * next_layer_unit<N1>.LOSS) + 
+                *                                   [... etc, other units N in the next_layer]
                 * 
                 * >>> EXPLANATION:
                 * 
@@ -302,8 +302,8 @@ net.MLP = function( config_dict={} ){
                     let unit_N = next_layer.units[ N ];
 
                     /**
-                    * The unit_N['weights'][UH] is the connection weight, whose index is UH(of the external loop)
-                    * because, por example, if we are calculating the gradient of the first unit in the last hidden layer, 
+                    * The unit_N['weights'][UH] is the connection weight, whose index is UH(of the external loop in the explanation of the equation above)
+                    * because, for example, if we are calculating the gradient of the first unit in the last hidden layer, 
                     * these gradient(of the hidden unit) will depedent of the all gradients in the output layer, 
                     * together with the connection weight, that is, the weight of unit N of the output layer with respect to the hidden unit number UH
                     *
