@@ -543,6 +543,7 @@ net.MLP = function( config_dict={} ){
         }
 
         //Sample validation
+        validations.throwErrorIfSomeSampleAreStringsOrCharacters( [... train_samples.copyWithin()] );
         validations.throwErrorIfSomeSampleAreIncorrectArrayLength( [... train_samples.copyWithin()] );
         validations.throwErrorIfSomeSampleAreDiffentLengthOfInputsThatTheInputLayer( context.input_layer.inputs , [... train_samples.copyWithin()] );
 

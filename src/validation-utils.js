@@ -24,7 +24,7 @@ validations.throwErrorIfSomeSampleAreIncorrectArrayLength = function(datasetChec
     for( let lc = 0 ; lc < datasetCheck.length ; lc++ )
     {
         if( datasetCheck[lc][0].length != maxLength ){
-            throw Error(`Some sample in dataset are different size of the others!. The dataset samples must have same sizes!`);
+            throw Error(`Some sample in dataset have different size of the others!. The dataset samples must have same sizes!`);
         }
     }
 }
@@ -33,7 +33,18 @@ validations.throwErrorIfSomeSampleAreDiffentLengthOfInputsThatTheInputLayer = fu
     for( let lc = 0 ; lc < datasetCheck.length ; lc++ )
     {
         if( datasetCheck[lc][0].length != inputs_amount ){
-            throw Error(`Some sample in dataset are different size of the inputs in the input layer!`);
+            throw Error(`Some sample in dataset have different size of the inputs in the input layer!`);
+        }
+    }
+}
+
+validations.throwErrorIfSomeSampleAreStringsOrCharacters = function(datasetCheck){
+    for( let lc = 0 ; lc < datasetCheck.length ; lc++ )
+    {
+        if( datasetCheck[lc][0].some( function( value ){ return typeof value != 'number' } ) ||
+            datasetCheck[lc][1].some( function( value ){ return typeof value != 'number' } )
+        ){
+            throw Error(`Some sample in dataset have strings values!`);
         }
     }
 }
