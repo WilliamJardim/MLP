@@ -44,7 +44,22 @@ validations.throwErrorIfSomeSampleAreStringsOrCharacters = function(datasetCheck
         if( datasetCheck[lc][0].some( function( value ){ return typeof value != 'number' } ) ||
             datasetCheck[lc][1].some( function( value ){ return typeof value != 'number' } )
         ){
-            throw Error(`Some sample in dataset have strings values!`);
+            throw Error(`Some sample in dataset have strings values or objects instead numbers!`);
+        }
+    }
+}
+
+validations.throwErrorIfSomeSampleHaveObjectsArraysInsteadValues = function(datasetCheck){
+    for( let lc = 0 ; lc < datasetCheck.length ; lc++ )
+    {
+        if( (typeof datasetCheck[lc][0] == 'object' && !(datasetCheck[lc][0] instanceof Array) ) || (typeof datasetCheck[lc][1] == 'object' && !(datasetCheck[lc][1] instanceof Array)) ){
+            throw Error(`Some sample have Objects or Arrays. The sample values cannot be Objects neither Arrays!`);
+        }
+
+        if( datasetCheck[lc][0].some( function( value ){ return (value instanceof Array) || typeof value == 'object'} ) ||
+            datasetCheck[lc][1].some( function( value ){ return (value instanceof Array) || typeof value == 'object' } )
+        ){
+            throw Error(`Some sample have Objects or Arrays. The sample values cannot be Objects neither Arrays!`);
         }
     }
 }

@@ -532,7 +532,7 @@ net.MLP = function( config_dict={} ){
         if( context.task == 'classification' || context.task == 'logistic_regression' || context.task == 'binary_classification'){
             //Check if some disired value of the samples ARE NOT BINARY
             let someDesiredValueIsNotBinary = [... train_samples.copyWithin()].some( function(entry) {
-                return entry[1].every(function(value) {
+                return Object.values(entry[1]).every(function(value) {
                     return (value != 1 && value != 0 && typeof value != 'boolean')
                 })
             } )
@@ -543,6 +543,7 @@ net.MLP = function( config_dict={} ){
         }
 
         //Sample validation
+        validations.throwErrorIfSomeSampleHaveObjectsArraysInsteadValues( [... train_samples.copyWithin()] );
         validations.throwErrorIfSomeSampleAreStringsOrCharacters( [... train_samples.copyWithin()] );
         validations.throwErrorIfSomeSampleAreIncorrectArrayLength( [... train_samples.copyWithin()] );
         validations.throwErrorIfSomeSampleAreDiffentLengthOfInputsThatTheInputLayer( context.input_layer.inputs , [... train_samples.copyWithin()] );
