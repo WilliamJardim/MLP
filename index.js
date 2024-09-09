@@ -1,5 +1,6 @@
 let model = net.MLP({
     initialization: 'zeros',
+    task: 'binary_classification',
 
     hyperparameters: {
         learningRate: 0.001

@@ -137,6 +137,7 @@ net.MLP = function( config_dict={} ){
     context.input_layer        = context.layers_structure[0]; //Get the input layer
     context.last_layer         = context.layers_structure[context.number_of_layers-1];
 
+    context.task               = config_dict['task'];
     context.hyperparameters    = config_dict['hyperparameters'];
     context.learning_rate      = context.hyperparameters['learningRate'];
 
@@ -164,6 +165,42 @@ net.MLP = function( config_dict={} ){
     }
     if( isNaN(context.learning_rate) == true ){
         throw Error(`hyperparameters.learning_rate is NaN!`);
+    }
+
+    //Task(model use type) validations in initialization
+    if( context.task == undefined || context.task == null ){
+        throw Error(`context.task is not defined!`);
+    }
+    switch(context.task){
+        case 'regression':
+        case 'linear_regression':
+            if( context.last_layer.activation != 'relu' ){
+                throw Error(`In the linear regression, you cannot use ${context.last_layer.activation} as output activation function!`);
+            }
+            break;
+
+        case 'classification':
+        case 'logistic_regression':
+            if( context.last_layer.activation != 'sigmoid' ){
+                throw Error(`In the classification, you cannot use ${context.last_layer.activation} as output activation function!`);
+            }
+
+            break;
+
+        //Only two classes
+        case 'binary_classification':
+            if( context.last_layer.activation != 'sigmoid' ){
+                throw Error(`In the binary classification, you cannot use ${context.last_layer.activation} as output activation function!`);
+            }
+
+            if( context.last_layer.units > 1 ){
+                throw Error(`In the binary classification, the number of outputs must be only 1, but is ${context.last_layer.units}`);
+            }
+            break;
+
+        default:
+            throw Error(`Invalid task: context.task=${context.task} !`);
+            break;
     }
 
     //The layers objects that will be created below
@@ -490,6 +527,24 @@ net.MLP = function( config_dict={} ){
         if( String(number_of_epochs).indexOf('.') == true ){
             throw Error(`The number_of_epochs=${number_of_epochs} is a invalid value!. The value ${number_of_epochs} should be Integer!`);
         }
+
+        //Task validation
+        if( context.task == 'classification' || context.task == 'logistic_regression' || context.task == 'binary_classification'){
+            //Check if some disired value of the samples ARE NOT BINARY
+            let someDesiredValueIsNotBinary = [... train_samples.copyWithin()].some( function(entry) {
+                return entry[1].every(function(value) {
+                    return (value != 1 && value != 0 && typeof value != 'boolean')
+                })
+            } )
+
+            if( someDesiredValueIsNotBinary == true ){
+                throw Error(`dataset problem!. Some desired values are not binar!. But, In task of ${context.task}, Should be only 0 and 1, or boolean`);
+            }
+        }
+
+        //Sample validation
+        validations.throwErrorIfSomeSampleAreIncorrectArrayLength( [... train_samples.copyWithin()] );
+        validations.throwErrorIfSomeSampleAreDiffentLengthOfInputsThatTheInputLayer( context.input_layer.inputs , [... train_samples.copyWithin()] );
 
         let last_total_loss = 0;
         let loss_history = [];
