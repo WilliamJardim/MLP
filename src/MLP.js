@@ -90,7 +90,11 @@ net.Unit = function( unit_config={} ){
         sum = sum + context.bias;
 
         let output = net.activations[context.activation_function](sum);
-        return output;
+
+        return {
+            activation_function_output: output,
+            unit_potential: sum //The unit activation potential(just the sum)
+        };
     }
 
     return context;
@@ -145,8 +149,14 @@ net.Layer = function( layer_config={} ){
         {
             let current_unit = units_in_layer[ U ];
 
-            let unit_output  = current_unit.estimateOutput( context['LAYER_INPUTS'] );
-            current_unit['ACTIVATION'] = unit_output;
+            let unit_output_data  = current_unit.estimateOutput( context['LAYER_INPUTS'] );
+            let act_potential     = unit_output_data.unit_potential;
+            let unit_output       = unit_output_data.activation_function_output;
+
+            current_unit['UNIT_POTENTIAL'] = act_potential;
+
+            current_unit['UNIT_OUTPUT'] = unit_output; //So important in backpropagation and gradient descent steps
+
             //The inputs is the same of all units in a layer
             current_unit['INPUTS'] = context['LAYER_INPUTS'];
 
@@ -452,7 +462,7 @@ net.MLP = function( config_dict={} ){
                 }
 
                 //Store the error in the unit
-                let unit_nabla = current_hidden_unit_LOSS * net.activations[ current_hidden_layer_unit.activation_function ].derivative( current_hidden_layer_unit.ACTIVATION );
+                let unit_nabla = current_hidden_unit_LOSS * net.activations[ current_hidden_layer_unit.activation_function ].derivative( current_hidden_layer_unit.UNIT_OUTPUT );
                 current_hidden_layer_unit.LOSS = unit_nabla;
             }
         }
@@ -705,6 +715,9 @@ net.MLP = function( config_dict={} ){
             }
         }
     }
+
+    //store the initial weights and biases
+    context.initial_weights = context.export();
 
     return context;
 }
