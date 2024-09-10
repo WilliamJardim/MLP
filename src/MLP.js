@@ -286,6 +286,23 @@ net.MLP = function( config_dict={} ){
     }
 
     /**
+    * Get the first hidden layer
+    * @returns {Object}
+    */
+    context.get_first_hidden_layer = function(){
+        return context.layers[0];
+    }
+
+    /**
+    * Get a layer
+    * @param {Number} layer_index 
+    * @returns {Object}
+    */
+    context.getLayer = function( layer_index ){
+        return context.layers[ layer_index ];
+    }
+
+    /**
     * Feedforward for a ONE SAMPLE
     * @param {Array} sample_inputs 
     * @returns {Array}
@@ -312,7 +329,7 @@ net.MLP = function( config_dict={} ){
         *
         * Always in this way.
         */
-        context.layers[0].setInputs( [... sample_inputs] );
+        context.get_first_hidden_layer().setInputs( [... sample_inputs] );
 
         //The outputs of OUTPUT LAYER
         let final_outputs         = []; 
@@ -322,7 +339,7 @@ net.MLP = function( config_dict={} ){
         */
         for( let L = 0 ; L < number_of_layers ; L++ )
         {
-            let current_layer = context.layers[ L ];
+            let current_layer = context.getLayer( L );
             
             //For each unit in current layer L, get the UNIT OUTPUT and store inside the unit
             let units_outputs = current_layer.get_unit_outputs();
@@ -408,12 +425,12 @@ net.MLP = function( config_dict={} ){
         for( let L = number_of_layers-1-1; L >= 0 ; L-- )
         {
             //Current layer data
-            let current_layer                  = context.layers[ L ];
+            let current_layer                  = context.getLayer( L );
             let current_layer_units            = current_layer.units;
             let number_of_units_current_layer  = current_layer_units.length;
 
             //Next layer data
-            let next_layer                     = context.layers[ L+1 ];
+            let next_layer                     = context.getLayer( L+1 );
             let number_of_next_layer_units     = next_layer.units.length;
 
             //For each unit in CURRENT HIDDEN LAYER
