@@ -106,6 +106,15 @@ net.Unit = function( unit_config={} ){
         return context.weights[ weight_index ]
     }
 
+    /**
+    * Get a especific input of weight
+    * @param {Number} weight_index 
+    * @returns {Number}
+    */
+    context.getInputOfWeight = function( weight_index ){
+        return context.INPUTS[ weight_index ];
+    }
+
     return context;
 }
 
@@ -133,6 +142,13 @@ net.Layer = function( layer_config={} ){
        });
 
        context.units[i].generate_random_parameters( context.number_of_inputs );
+    }
+
+    /**
+    * A getter for context.units
+    */
+    context.getUnits = function(){
+        return context.units;
     }
 
     /**
@@ -449,7 +465,7 @@ net.MLP = function( config_dict={} ){
         {
             //Current layer data
             let current_layer                  = context.getLayer( L );
-            let current_layer_units            = current_layer.units;
+            let current_layer_units            = current_layer.getUnits();
             let number_of_units_current_layer  = current_layer_units.length;
 
             //Next layer data
@@ -519,19 +535,19 @@ net.MLP = function( config_dict={} ){
         //Update weights and Bias using Gradient Descent
         for( let L = 0 ; L < number_of_layers ; L++ )
         {
-            let current_layer = context.layers[ L ];
-            let current_layer_units = current_layer.units;
+            let current_layer = context.getLayer( L );
+            let current_layer_units = current_layer.getUnits();
             let number_of_units_current_layer = current_layer_units.length;
 
             //For each unit in current layer
             for( let U = 0 ; U < number_of_units_current_layer ; U++ )
             {
-                let current_unit = current_layer_units[ U ];
+                let current_unit = current_layer.getUnit( U );
 
                 //For each weight
                 for( let W = 0 ; W < current_unit.weights.length ; W++ )
                 {
-                    current_unit.weights[ W ] -= context.learning_rate * current_unit.LOSS * current_unit.INPUTS[ W ];
+                    current_unit.weights[ W ] -= context.learning_rate * current_unit.LOSS * current_unit.getInputOfWeight( W );
                 }
 
                 //Update bias
