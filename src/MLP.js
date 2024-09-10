@@ -122,6 +122,40 @@ net.Layer = function( layer_config={} ){
        context.units[i].generate_random_parameters( context.number_of_inputs );
     }
 
+    /**
+    * Set the inputs of this layer, to be used in context.get_unit_outputs
+    */
+    context.setInputs = function( LAYER_INPUTS=[] ){
+        if( !(LAYER_INPUTS instanceof Array) ){
+            throw Error(`LAYER_INPUTS need be a Array!`);
+        }
+
+        context['LAYER_INPUTS'] = LAYER_INPUTS;
+    }
+
+    /**The unit outputs. */
+    context.get_unit_outputs = function(){
+        let units_in_layer  = context.units;
+        let number_of_units = units_in_layer.length;
+
+        //For each unit in this layer L, get the UNIT OUTPUT and store inside the unit
+        let units_outputs = [];
+
+        for( let U = 0 ; U < number_of_units ; U++ )
+        {
+            let current_unit = units_in_layer[ U ];
+
+            let unit_output  = current_unit.estimateOutput( context['LAYER_INPUTS'] );
+            current_unit['ACTIVATION'] = unit_output;
+            //The inputs is the same of all units in a layer
+            current_unit['INPUTS'] = context['LAYER_INPUTS'];
+
+            units_outputs.push( unit_output );
+        }
+
+        return units_outputs;
+    }
+
     //Return the layer ready
     return context;
 }
@@ -257,9 +291,9 @@ net.MLP = function( config_dict={} ){
         * So, the inputs of first hidden layer( that is L=0 ), will be the sample_inputs
         * And the inputs of secound hidden layer( that is L=1 ), will be the outputs of the first hidden layer( that is L=0 )
         *
-        * always in this way.
+        * Always in this way.
         */
-        context.layers[0]['LAYER_INPUTS'] = [... sample_inputs];
+        context.layers[0].setInputs( [... sample_inputs] );
 
         //The outputs of OUTPUT LAYER
         let final_outputs         = []; 
@@ -269,35 +303,22 @@ net.MLP = function( config_dict={} ){
         */
         for( let L = 0 ; L < number_of_layers ; L++ )
         {
-            let current_layer   = context.layers[ L ];
-            let units_in_layer  = current_layer.units;
-            let number_of_units = units_in_layer.length;
-
+            let current_layer = context.layers[ L ];
+            
             //For each unit in current layer L, get the UNIT OUTPUT and store inside the unit
-            let units_outputs = [];
-            for( let U = 0 ; U < number_of_units ; U++ )
-            {
-                let current_unit = units_in_layer[ U ];
-
-                let unit_output  = current_unit.estimateOutput( current_layer['LAYER_INPUTS'] );
-                current_unit['ACTIVATION'] = unit_output;
-                //The inputs is the same of all units in a layer
-                current_unit['INPUTS'] = current_layer['LAYER_INPUTS'];
-
-                units_outputs.push( unit_output );
-            }
-
-            /*
-            * The inputs of a layer L is always the outputs of previous layer( L-1 ) 
-            * Then the in lives below will Store the outputs of the current layer(L) in the NEXT LAYER(L+1) AS INPUTS
-            */
-
+            let units_outputs = current_layer.get_unit_outputs();
+            
             //If the current layer(L) is NOT the output layer
             if( current_layer.layer_type != 'output' ){
+
+                /*
+                * The inputs of a layer L is always the outputs of previous layer( L-1 ) 
+                * Then the in lines below will Store the outputs of the current layer(L) in the NEXT LAYER(L+1) AS INPUTS
+                */
                 let next_layer = context.layers[ L+1 ];
                 
                 //Set the current layer(L) outputs AS INPUTS OF THE NEXT LAYER(L+1)
-                next_layer['LAYER_INPUTS'] = units_outputs;
+                next_layer.setInputs( units_outputs );
             }
 
             //If is the output layer
@@ -543,10 +564,11 @@ net.MLP = function( config_dict={} ){
         }
 
         //Sample validation
-        validations.throwErrorIfSomeSampleHaveObjectsArraysInsteadValues( [... train_samples.copyWithin()] );
-        validations.throwErrorIfSomeSampleAreStringsOrCharacters( [... train_samples.copyWithin()] );
-        validations.throwErrorIfSomeSampleAreIncorrectArrayLength( [... train_samples.copyWithin()] );
-        validations.throwErrorIfSomeSampleAreDiffentLengthOfInputsThatTheInputLayer( context.input_layer.inputs , [... train_samples.copyWithin()] );
+        let secure_copy_of_samples_for_validations = [... train_samples.copyWithin()];
+        validations.throwErrorIfSomeSampleHaveObjectsArraysInsteadValues( secure_copy_of_samples_for_validations );
+        validations.throwErrorIfSomeSampleAreStringsOrCharacters( secure_copy_of_samples_for_validations );
+        validations.throwErrorIfSomeSampleAreIncorrectArrayLength( secure_copy_of_samples_for_validations );
+        validations.throwErrorIfSomeSampleAreDiffentLengthOfInputsThatTheInputLayer( context.input_layer.inputs , secure_copy_of_samples_for_validations );
 
         let last_total_loss = 0;
         let loss_history = [];
