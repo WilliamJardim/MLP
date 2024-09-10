@@ -137,6 +137,13 @@ net.Layer = function( layer_config={} ){
         context['LAYER_INPUTS'] = LAYER_INPUTS;
     }
 
+    /**
+    * Get the inputs of this layer, to be used in context.get_unit_outputs
+    */
+    context.getInputs = function(){
+        return context['LAYER_INPUTS'];
+    }
+
     /**The unit outputs. */
     context.get_unit_outputs = function(){
         let units_in_layer  = context.units;
@@ -147,9 +154,11 @@ net.Layer = function( layer_config={} ){
 
         for( let U = 0 ; U < number_of_units ; U++ )
         {
+            let LAYER_INPUTS = context.getInputs();
+
             let current_unit = units_in_layer[ U ];
 
-            let unit_output_data  = current_unit.estimateOutput( context['LAYER_INPUTS'] );
+            let unit_output_data  = current_unit.estimateOutput( LAYER_INPUTS );
             let act_potential     = unit_output_data.unit_potential;
             let unit_output       = unit_output_data.activation_function_output;
 
@@ -158,7 +167,7 @@ net.Layer = function( layer_config={} ){
             current_unit['UNIT_OUTPUT'] = unit_output; //So important in backpropagation and gradient descent steps
 
             //The inputs is the same of all units in a layer
-            current_unit['INPUTS'] = context['LAYER_INPUTS'];
+            current_unit['INPUTS'] = LAYER_INPUTS;
 
             units_outputs.push( unit_output );
         }
