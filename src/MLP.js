@@ -97,6 +97,15 @@ net.Unit = function( unit_config={} ){
         };
     }
 
+    /**
+    * Get a especific weight of this unit 
+    * @param {Number} weight_index
+    * @returns {Number}
+    */
+    context.getWeight = function( weight_index ){
+        return context.weights[ weight_index ]
+    }
+
     return context;
 }
 
@@ -124,6 +133,15 @@ net.Layer = function( layer_config={} ){
        });
 
        context.units[i].generate_random_parameters( context.number_of_inputs );
+    }
+
+    /**
+    * Get a unit in this layer
+    * @param {Number} unit_index 
+    * @returns {Object}
+    */
+    context.getUnit = function( unit_index ){
+        return context.units[ unit_index ];
     }
 
     /**
@@ -368,6 +386,11 @@ net.MLP = function( config_dict={} ){
         return final_outputs;
     }
 
+    /* Get the output layer */
+    context.getOutputLayer = function(){
+        return context.layers[ context.layers.length-1 ];
+    }
+
     /**
     * Do the backpropagation step for ONE SAMPLE 
     *
@@ -402,7 +425,7 @@ net.MLP = function( config_dict={} ){
         //Calculate the LOSS of each output unit and store in the outputs units
         for( let U = 0 ; U < number_of_output_units ; U++ )
         {
-            let output_unit            = context.layers[ context.layers.length-1 ].units[ U ];
+            let output_unit            = context.getOutputLayer().getUnit( U );
             let unitActivationFn       = output_unit['activation_function'];
             
             let unitOutput             = output_estimated_values[ U ];
@@ -471,8 +494,8 @@ net.MLP = function( config_dict={} ){
                 /** For each unit N in LEXT LAYER( L+1 ) **/
                 for( let N = 0 ; N < number_of_next_layer_units ; N++ )
                 {
-                    let next_layer_unit_N          = next_layer.units[ N ];
-                    let connection_weight_with_UH  = next_layer_unit_N.weights[ UH ];
+                    let next_layer_unit_N          = next_layer.getUnit( N );
+                    let connection_weight_with_UH  = next_layer_unit_N.getWeight( UH );
                     let LOSS_of_unit_N             = next_layer_unit_N.LOSS;
 
                     /**
