@@ -984,6 +984,13 @@ net.MLP = function( config_dict={} ){
                             summed_gradients_for_bias[ layerId ][ unitId ] = 0;
                         }
 
+                        /**
+                        * I do the accumulation in the following way: 
+                        * I sum all the gradient of all the weights( of each unit of each layer ), 
+                        * in its corresponding position in the hashmap, that is, sample_gradients_for_weights[ LAYER ] [ UNIT ] [ WEIGHT ] 
+                        *
+                        * Because this, The format of the output of this sum will be the same format of the "sample_gradients_for_weights" returned by the backpropagate_sample metheod
+                        */
                         for( let c = 0 ; c < number_of_weights ; c++ )
                         {   
                             let weight_index = c;
