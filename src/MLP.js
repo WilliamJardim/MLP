@@ -545,6 +545,9 @@ net.MLP = function( config_dict={} ){
         let calculated_gradients = {};
         calculated_gradients[ `layer${ number_of_layers-1 }` ] = {};
 
+        let calculated_gradients_for_weights = {};
+        calculated_gradients_for_weights[ `layer${ number_of_layers-1 }` ] = {};
+
         //Calculate the LOSS of each output unit and store in the outputs units
         for( let U = 0 ; U < number_of_output_units ; U++ )
         {
@@ -570,6 +573,15 @@ net.MLP = function( config_dict={} ){
 
             //Aditionally, store the error TOO in the gradients object
             calculated_gradients[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ] = unit_nabla;
+
+            //Aditionally, store the erros TOO with respect of each weight
+            calculated_gradients_for_weights[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ] = [];
+            for( let c = 0 ; c < output_unit.getWeights().length ; c++ )
+            {
+                let weight_index_c = c;
+                let weight_input_C = output_unit.getInputOfWeight( weight_index_c );  
+                calculated_gradients_for_weights[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ][ weight_index_c ] = unit_nabla * weight_input_C;
+            }
         }
 
         //Start the backpropagation
@@ -581,6 +593,7 @@ net.MLP = function( config_dict={} ){
             let number_of_units_current_layer  = current_layer.getUnits().length;
 
             calculated_gradients[ `layer${ L }` ] = {};
+            calculated_gradients_for_weights[`layer${ L }`] = {};
 
             //Next layer data
             let next_layer                     = context.getLayer( L+1 );
@@ -650,11 +663,23 @@ net.MLP = function( config_dict={} ){
 
                 //Aditionally, store the error TOO in gradients object
                 calculated_gradients[ `layer${ L }` ][ `unit${ UH }` ] = unit_nabla;
+
+                //Aditionally, store the erros TOO with respect of each weight
+                calculated_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ] = [];
+                for( let c = 0 ; c < current_hidden_layer_unit.getWeights().length ; c++ )
+                {
+                    let weight_index_c = c;
+                    let weight_input_C = current_hidden_layer_unit.getInputOfWeight( weight_index_c );  
+                    calculated_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ][ weight_index_c ] = unit_nabla * weight_input_C;
+                }
             }
         }
 
         //Return the calculated gradients for the sample
-        return calculated_gradients;
+        return {
+            calculated_gradients: calculated_gradients,
+            calculated_gradients_for_weights: calculated_gradients_for_weights
+        };
     }
 
     /**
@@ -691,6 +716,50 @@ net.MLP = function( config_dict={} ){
 
                 //Update bias
                 current_unit.subtractBias( context.learning_rate * current_unit.LOSS );
+
+            }
+
+        }
+    }
+
+    /**
+    * FOR BATCH OU MINIBATH ONLY
+    * Applies the Gradient Descent algorithm, 
+    * This metheod is used for update the weights and bias of each unit in each layer
+    * 
+    * for this case, will receive the calculated_gradients_for_weights and calculated_gradients_for_bias
+    */
+    context.update_parameters_4batch = function( the_gradients_for_weights={}, the_gradients_for_bias={} ){
+        let number_of_layers  = context.getLayers().length;
+
+        //Update weights and Bias using Gradient Descent
+        for( let L = 0 ; L < number_of_layers ; L++ )
+        {
+            let layer_index   = L;
+            let current_layer = context.getLayer( layer_index );
+            let number_of_units_current_layer = current_layer.getUnits().length;
+
+            //For each unit in current layer
+            for( let U = 0 ; U < number_of_units_current_layer ; U++ )
+            {
+                let unit_index         = U;
+                let current_unit       = current_layer.getUnit( unit_index );
+                
+                //For each weight
+                for( let W = 0 ; W < current_unit.getWeights().length ; W++ )
+                {
+                    let weight_index = W;
+                    let calculated_gradients_values_for_weight = the_gradients_for_weights[`layer${ layer_index }`][ `unit${ unit_index }` ][ weight_index ];
+
+                    //Select this weight W and update then
+                    current_unit.selectWeight( weight_index )
+                                .subtract( context.learning_rate * calculated_gradients_values_for_weight );
+                }
+
+                let calculated_gradients_values_for_bias   = the_gradients_for_bias[`layer${ layer_index }`][ `unit${ unit_index }` ];
+
+                //Update bias
+                current_unit.subtractBias( context.learning_rate * calculated_gradients_values_for_bias );
 
             }
 
@@ -769,11 +838,187 @@ net.MLP = function( config_dict={} ){
                 }
 
                 //Do backpropagation and Gradient Descent
-                let calculated_gradients = context.backpropagate_sample(sample_features, sample_desired_value);
+                let calculated_gradients = context.backpropagate_sample(sample_features, sample_desired_value)['calculated_gradients'];
             
                 //Update the parameters
                 context.update_parameters( calculated_gradients );
             }
+
+            total_loss += context.compute_train_cost( train_samples );
+
+            last_total_loss = total_loss;
+            loss_history.push(total_loss);
+            
+            if( String( Number(p / 100) ).indexOf('.') != -1 ){
+                console.log(`LOSS: ${last_total_loss}, epoch ${p}`)
+            }
+        }
+
+        return {
+            last_total_loss: last_total_loss,
+            loss_history: loss_history
+        };
+    }
+
+    /**
+    * Full Batch training
+    * Update the weights just one time per epoch. 
+    * 
+    * @param {Array} train_samples 
+    * @param {Array} number_of_epochs 
+    * @returns {Object}
+    */
+    context.fullbatch_train = function(train_samples, number_of_epochs){
+        let last_total_loss = 0;
+        let loss_history = [];
+
+        let number_of_samples = train_samples.length;
+        let summed_gradients_for_weights = {};
+        let summed_gradients_for_bias = {};
+
+        //For each epoch
+        for( let p = 0 ; p < number_of_epochs ; p++ )
+        {
+            let total_loss = 0;
+
+            //Training process
+            for( let i = 0 ; i < train_samples.length ; i++ )
+            {
+                let sample_data             = train_samples[i];
+                let sample_features         = sample_data[0]; //SAMPLE FEATURES
+                let sample_desired_value    = sample_data[1]; //SAMPLE DESIRED OUTPUTS
+
+                //Validations before apply the backpropagation
+                if( !(sample_features instanceof Array) ){
+                    throw Error(`The variable sample_features=[${sample_features}] must be a Array!`);
+                }
+
+                if( !(sample_desired_value instanceof Array) ){
+                    throw Error(`The variable sample_desired_value=[${sample_desired_value}] is not a Array!`);
+                }
+
+                //If the number of items in the sample_desired_value Array is different from the number of units in the output layer
+                if( sample_desired_value.length != context.layers[ context.layers.length-1 ].units.length ){
+                    throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in output layer)`);
+                }
+
+                //Do backpropagation and Gradient Descent
+                let sample_gradients_data = context.backpropagate_sample(sample_features, sample_desired_value);
+            
+                //CONTINUAR....
+                let sample_gradients_for_weights = sample_gradients_data['calculated_gradients_for_weights'];
+                let sample_gradients_for_bias    = sample_gradients_data['calculated_gradients'];
+
+                //Accumulate the gradients
+                let layersIds = Object.keys(sample_gradients_for_weights);
+
+                layersIds.forEach(function(layerId){
+                    let layerData  = sample_gradients_for_weights[ layerId ];
+                    let unitsId    = Object.keys(layerData);
+
+                    //If not existis the layer in summed_gradients_for_weights, create with empty object
+                    if( summed_gradients_for_weights[ layerId ] == undefined ){
+                        summed_gradients_for_weights[ layerId ] = {};
+                    }
+
+                    if( summed_gradients_for_bias[ layerId ] == undefined ){
+                        summed_gradients_for_bias[ layerId ] = {};
+                    }
+
+                    unitsId.forEach(function(unitId){
+                        let number_of_weights = sample_gradients_for_weights[ layerId ][ unitId ].length;
+
+                        //If not exists the unit in summed_gradients_for_weights, create with zeros
+                        if( summed_gradients_for_weights[ layerId ][ unitId ] == undefined ){
+                            summed_gradients_for_weights[ layerId ][ unitId ] = Array(number_of_weights).fill(0);
+                        }
+
+                        //If not exists the unit in summed_gradients_for_bias, create with zero
+                        if( summed_gradients_for_bias[ layerId ][ unitId ] == undefined ){
+                            summed_gradients_for_bias[ layerId ][ unitId ] = 0;
+                        }
+
+                        for( let c = 0 ; c < number_of_weights ; c++ )
+                        {   
+                            let weight_index = c;
+                            let gradient_of_weight = sample_gradients_for_weights[ layerId ][ unitId ][ weight_index ];
+                            summed_gradients_for_weights[ layerId ][ unitId ][ weight_index ] = summed_gradients_for_weights[ layerId ][ unitId ][ weight_index ] + gradient_of_weight;
+                        }
+
+                        //Sum gradient for acculate the bias(that no have inputs)
+                        let gradient_of_bias = sample_gradients_for_bias[ layerId ][ unitId ];
+                        summed_gradients_for_bias[ layerId ][ unitId ] = summed_gradients_for_bias[ layerId ][ unitId ] + gradient_of_bias;
+
+                    });
+                });
+
+            }
+
+            //Do the mean of the gradients of each weight
+            //Mean the gradients of each weight
+
+            /**
+            * layer.unit.weight = value
+            * 
+            * Is a map of accumulated gradients for each weight( of each unit of each layer ) 
+            */
+            let mean_gradients_for_weights = {}; //TODO RENOMEAR ISSO PRA mean_gradients_for_weights
+            
+            Object.keys(summed_gradients_for_weights).forEach(function(layerId){
+                let layerData  = summed_gradients_for_weights[ layerId ];
+                let unitsId    = Object.keys(layerData);
+
+                //If not existis the layer, create with empty object
+                if( mean_gradients_for_weights[ layerId ] == undefined ){
+                    mean_gradients_for_weights[ layerId ] = {};
+                }
+
+                unitsId.forEach(function(unitId){
+                    //If not existis the unitID, create with empty object
+                    if( mean_gradients_for_weights[ layerId ][ unitId ] == undefined ){
+                        mean_gradients_for_weights[ layerId ][ unitId ] = [];
+                    }
+
+                    //Sum the unit gradient
+                    let unit_summed_gradient_for_weights = summed_gradients_for_weights[ layerId ][ unitId ];
+
+                    let number_of_weights = unit_summed_gradient_for_weights.length;
+
+                    for( let c = 0 ; c < number_of_weights ; c++ )
+                    {
+                        let weight_index = c;
+                        let sum_of_weight_c = unit_summed_gradient_for_weights[ weight_index ]; //Obtem o peso C que foi acumulado
+                        mean_gradients_for_weights[ layerId ][ unitId ][ weight_index ] = sum_of_weight_c / number_of_samples;
+                    }
+                });
+            });
+
+            //TODO: Accumulate bias
+            let mean_gradients_for_bias = {};
+            
+            Object.keys(summed_gradients_for_bias).forEach(function(layerId){
+                let layerData  = summed_gradients_for_bias[ layerId ];
+                let unitsId    = Object.keys(layerData);
+
+                //If not existis the layer, create with empty object
+                if( mean_gradients_for_bias[ layerId ] == undefined ){
+                    mean_gradients_for_bias[ layerId ] = {};
+                }
+
+                unitsId.forEach(function(unitId){
+                    //If not existis the unitID, create with empty zero
+                    if( mean_gradients_for_bias[ layerId ][ unitId ] == undefined ){
+                        mean_gradients_for_bias[ layerId ][ unitId ] = 0;
+                    }
+
+                    //Sum the unit gradient
+                    let unit_summed_gradient_for_the_bias = summed_gradients_for_bias[ layerId ][ unitId ];
+                    mean_gradients_for_bias[ layerId ][ unitId ] = unit_summed_gradient_for_the_bias / number_of_samples;
+                });
+            });
+
+            //Update the parameters
+            context.update_parameters_4batch( mean_gradients_for_weights, mean_gradients_for_bias );
 
             total_loss += context.compute_train_cost( train_samples );
 
@@ -851,6 +1096,11 @@ net.MLP = function( config_dict={} ){
         switch( context.getTrainingType() ){
             case 'online':
                 training_result = context.online_train(train_samples, number_of_epochs);
+                break;
+
+            case 'batch':
+            case 'fullbatch':
+                training_result = context.fullbatch_train(train_samples, number_of_epochs);
                 break;
 
             default:
