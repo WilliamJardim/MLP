@@ -31,6 +31,31 @@ net.activations.relu.derivative = function(functionOutput){
     return functionOutput > 0 ? 1 : 0;
 }
 
+/**
+* A utility for update weights
+* @param {Object} config 
+*/
+net.WeightManipulator = function( config ){
+    let context = {};
+    context._unit = config['context'];
+    context.weightID = config['index'];
+    context.value = context._unit.getWeight(context.weightID);
+    context.input = context._unit.getInputOfWeight(context.weightID);
+
+    context.add = function( number ){
+        context._unit.weights[ context.weightID ] = context._unit.weights[ context.weightID ] + number;
+    }
+
+    context.subtract = function( number ){
+        context._unit.weights[ context.weightID ] = context._unit.weights[ context.weightID ] - number;
+    }
+
+    context.reset = function(){
+        context._unit.weights[ context.weightID ] = 0;
+    }
+
+    return context;
+}
 
 //A Unit(with just feedforward and weight initialization)
 net.Unit = function( unit_config={} ){
@@ -58,11 +83,40 @@ net.Unit = function( unit_config={} ){
         return context.weights;
     }
 
+    //Add a value to a especific weight
+    context.addWeight = function( weight_index, number ){
+        context.weights[ weight_index ] = context.weights[ weight_index ] + number;
+    }
+
+    //Subtract a value to a especific weight
+    context.subtractWeight = function( weight_index, number ){
+        context.weights[ weight_index ] = context.weights[ weight_index ] - number;
+    }
+
+    //Get a WeightManipulator for a especific weight
+    context.selectWeight = function( weight_index ){
+        return net.WeightManipulator({
+            context: context,
+            index: weight_index
+        });
+    }
+
+    //Setter for bias
     context.setBias = function( newBias=Number() ){
         if( typeof newBias != 'number' ){
             throw Error(`the newBias=${newBias} is not a Number instance!`);
         }
         context.bias = newBias;
+    }
+
+    //Add a value for the bias
+    context.addBias = function( number ){
+        context.bias = context.bias + number;
+    }
+
+    //Subtract a value for the bias
+    context.subtractBias = function( number ){
+        context.bias = context.bias - number;
     }
 
     /**
@@ -570,11 +624,13 @@ net.MLP = function( config_dict={} ){
                 //For each weight
                 for( let W = 0 ; W < current_unit.getWeights().length ; W++ )
                 {
-                    current_unit.weights[ W ] -= context.learning_rate * current_unit.LOSS * current_unit.getInputOfWeight( W );
+                    //current_unit.subtractWeight( W, context.learning_rate * current_unit.LOSS * current_unit.getInputOfWeight( W ) );
+                    current_unit.selectWeight( W )
+                                .subtract( context.learning_rate * current_unit.LOSS * current_unit.getInputOfWeight( W ) );
                 }
 
                 //Update bias
-                current_unit.bias -= context.learning_rate * current_unit.LOSS;
+                current_unit.subtractBias( context.learning_rate * current_unit.LOSS );
 
             }
 
