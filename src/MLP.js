@@ -465,7 +465,7 @@ net.MLP = function( config_dict={} ){
                 * The inputs of a layer L is always the outputs of previous layer( L-1 ) 
                 * Then the in lines below will Store the outputs of the current layer(L) in the NEXT LAYER(L+1) AS INPUTS
                 */
-                let next_layer = context.layers[ L+1 ];
+                let next_layer = context.getLayer( L+1 );
                 
                 //Set the current layer(L) outputs AS INPUTS OF THE NEXT LAYER(L+1)
                 next_layer.setInputs( units_outputs );
