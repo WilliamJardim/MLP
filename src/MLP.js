@@ -53,6 +53,11 @@ net.Unit = function( unit_config={} ){
         context.weights = newWeights;
     }
 
+    //Getter for the context.weights
+    context.getWeights = function(){
+        return context.weights;
+    }
+
     context.setBias = function( newBias=Number() ){
         if( typeof newBias != 'number' ){
             throw Error(`the newBias=${newBias} is not a Number instance!`);
@@ -145,6 +150,20 @@ net.Layer = function( layer_config={} ){
     }
 
     /**
+    * Check if this layer is of type 
+    */
+    context.is = function( layerType ){
+        return context.layer_type == layerType ? true : false;
+    }
+
+    /**
+    * Check if this layer NOT IS of type 
+    */
+    context.notIs = function( layerType ){
+        return !context.is( layerType );
+    }
+
+    /**
     * A getter for context.units
     */
     context.getUnits = function(){
@@ -180,8 +199,7 @@ net.Layer = function( layer_config={} ){
 
     /**The unit outputs. */
     context.get_unit_outputs = function(){
-        let units_in_layer  = context.units;
-        let number_of_units = units_in_layer.length;
+        let number_of_units = context.getUnits().length;
 
         //For each unit in this layer L, get the UNIT OUTPUT and store inside the unit
         let units_outputs = [];
@@ -190,7 +208,7 @@ net.Layer = function( layer_config={} ){
         {
             let LAYER_INPUTS = context.getInputs();
 
-            let current_unit = units_in_layer[ U ];
+            let current_unit = context.getUnit( U );
 
             let unit_output_data  = current_unit.estimateOutput( LAYER_INPUTS );
             let act_potential     = unit_output_data.unit_potential;
@@ -379,7 +397,7 @@ net.MLP = function( config_dict={} ){
             let units_outputs = current_layer.get_unit_outputs();
             
             //If the current layer(L) is NOT the output layer
-            if( current_layer.layer_type != 'output' ){
+            if( current_layer.notIs('output') ){
 
                 /*
                 * The inputs of a layer L is always the outputs of previous layer( L-1 ) 
@@ -392,7 +410,7 @@ net.MLP = function( config_dict={} ){
             }
 
             //If is the output layer
-            if( current_layer.layer_type == 'output' )
+            if( current_layer.is('output') )
             {
                 final_outputs = units_outputs;
             }
@@ -465,12 +483,11 @@ net.MLP = function( config_dict={} ){
         {
             //Current layer data
             let current_layer                  = context.getLayer( L );
-            let current_layer_units            = current_layer.getUnits();
-            let number_of_units_current_layer  = current_layer_units.length;
+            let number_of_units_current_layer  = current_layer.getUnits().length;
 
             //Next layer data
             let next_layer                     = context.getLayer( L+1 );
-            let number_of_next_layer_units     = next_layer.units.length;
+            let number_of_next_layer_units     = next_layer.getUnits().length;
 
             //For each unit in CURRENT HIDDEN LAYER
             for( let UH = 0 ; UH < number_of_units_current_layer ; UH++ )
@@ -502,7 +519,7 @@ net.MLP = function( config_dict={} ){
                 * 
                 */
 
-                let current_hidden_layer_unit = current_layer_units[ UH ]; //The hidden layer unit of number UH(like in the equation above)
+                let current_hidden_layer_unit = current_layer.getUnit( UH ); //The hidden layer unit of number UH(like in the equation above)
             
                 // Do the sum of the errors
                 let current_hidden_unit_LOSS = 0;
@@ -536,8 +553,7 @@ net.MLP = function( config_dict={} ){
         for( let L = 0 ; L < number_of_layers ; L++ )
         {
             let current_layer = context.getLayer( L );
-            let current_layer_units = current_layer.getUnits();
-            let number_of_units_current_layer = current_layer_units.length;
+            let number_of_units_current_layer = current_layer.getUnits().length;
 
             //For each unit in current layer
             for( let U = 0 ; U < number_of_units_current_layer ; U++ )
@@ -545,7 +561,7 @@ net.MLP = function( config_dict={} ){
                 let current_unit = current_layer.getUnit( U );
 
                 //For each weight
-                for( let W = 0 ; W < current_unit.weights.length ; W++ )
+                for( let W = 0 ; W < current_unit.getWeights().length ; W++ )
                 {
                     current_unit.weights[ W ] -= context.learning_rate * current_unit.LOSS * current_unit.getInputOfWeight( W );
                 }
