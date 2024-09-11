@@ -873,7 +873,53 @@ net.MLP = function( config_dict={} ){
         let loss_history = [];
 
         let number_of_samples = train_samples.length;
+
+        /**
+        * The variable summed_gradients_for_weights, is used for:
+        * Accumulate the gradient of each weight of each unit of each layer
+        * 
+        * Structure in visually representation is:
+        *       layer0
+        *          --> unit0
+        *              --> accumulation_for_weight_0
+        *              --> accumulation_for_weight_1
+        *              --> accumulation_for_weight_N
+        *                  (etc.. other accumulations)
+        *                  (all the "accumulation_for_weight_N" is a Number) 
+        * 
+        *              (etc... other units)
+        * 
+        *      (etc... other layers)
+        * 
+        * Text description of this representation:
+        * The variable summed_gradients_for_weights is a hashmap with layers.
+        * Each layer have N units, and each unit have N "weight accumulation" or also called "accumulation_for_weight" in this text example, and are Numbers.
+        * 
+        * This is a accumulation of the gradient of each weight of each unit of each layer
+        * The accumulation will be done in the lines bellow, using some for loops:
+        */
         let summed_gradients_for_weights = {};
+
+        /**
+        * The variable summed_gradients_for_weights, is used for:
+        * Accumulate the gradient of the bias of each unit of each layer
+        * 
+        * Structure in visually representation is:
+        *       layer0
+        *          --> accumulation_for_bias_of_unit_0  
+        *          --> accumulation_for_bias_of_unit_1         
+        *           (etc.. other weights gradients)
+        *           (all the "bias_of_unit<N>" is a Number) 
+        *
+        *      (etc... other layers)
+        * 
+        * Text description of this representation:
+        * The variable summed_gradients_for_bias is a hashmap with layers.
+        * Each layer have N "bias accumulation"(corresponding to each unit) or also called "accumulation_for_bias_of_unit_<N>" in this text example, and is a Number.
+        * 
+        * This is a accumulation of the gradient of each the bias of each unit of each layer
+        * The accumulation will be done in the lines bellow, using some for loops:
+        */
         let summed_gradients_for_bias = {};
 
         //For each epoch
@@ -954,13 +1000,30 @@ net.MLP = function( config_dict={} ){
 
             }
 
-            //Do the mean of the gradients of each weight
-            //Mean the gradients of each weight
+            /** BELOW: Do the mean of the gradients of each weight(of each unit of each layer) **/
 
             /**
-            * layer.unit.weight = value
+            * Struct of the mean_gradients_for_weights:
             * 
-            * Is a map of accumulated gradients for each weight( of each unit of each layer ) 
+            *    mean_gradients_for_weights[layer][unit][weight_index] = Number
+            * 
+            *    Or more visual explaination:
+            * 
+            *    mean_gradients_for_weights
+            *     
+            *       layer0
+            *          --> unit0
+            *              --> mean_of_accumulation_of_weight 1 
+            *              --> mean_of_accumulation_of_weight 2
+            *                  (etc.. other weights gradients) 
+            * 
+            *              (etc... other units)
+            * 
+            *      (etc... other layers)
+            * 
+            *            
+            * So, the variable mean_gradients_for_weights Is a hashmap of the mean of the accumulated gradients for each weight( of each unit of each layer ) 
+            * Is organized in this way!
             */
             let mean_gradients_for_weights = {}; //TODO RENOMEAR ISSO PRA mean_gradients_for_weights
             
@@ -993,7 +1056,25 @@ net.MLP = function( config_dict={} ){
                 });
             });
 
-            //TODO: Accumulate bias
+            /**
+            * Much similar to mean_gradients_for_weights
+            * BUT, instead have a sub-object inside the unit object, they have just a value, that is the mean of the accumulated bias(a Number)
+            *
+            * Or more visual explaination:
+            * 
+            *    mean_gradients_for_bias
+            *     
+            *       layer0
+            *          --> mean_of_accumulation_of_the_bias_of_unit0
+            *          --> mean_of_accumulation_of_the_bias_of_unit1  
+            *          --> mean_of_accumulation_of_the_bias_of_unit2        
+            *              (etc... other bias means)
+            * 
+            *       (etc... other layers)
+            * 
+            * So, inside the mean_gradients_for_bias, he have layers, like in the other examples above
+            * And each layer have N means of the accumulation of the bias of each unit( of each layer )
+            */
             let mean_gradients_for_bias = {};
             
             Object.keys(summed_gradients_for_bias).forEach(function(layerId){
