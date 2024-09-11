@@ -535,8 +535,11 @@ net.MLP = function( config_dict={} ){
             let desiredOutput     = desiredOutputs[ U ];
             let unitError         = unitOutput - desiredOutput;
             
-            //The derivative of activation funcion of the U output(at output layer)
-            let outputDerivative  = net.activations[ unitActivationFn ].derivative( unitOutput );
+            //The activation function of this U output unit
+            let unit_function_object = net.activations[ unitActivationFn ];
+
+            //The derivative of activation funcion of this U output unit(at output layer)
+            let outputDerivative     = unit_function_object.derivative( unitOutput );
 
             //The delta of this output unit U
             let unit_nabla = unitError * outputDerivative;
@@ -612,7 +615,10 @@ net.MLP = function( config_dict={} ){
                 }
 
                 //Store the error in the unit
-                let unit_nabla = current_hidden_unit_LOSS * net.activations[ current_hidden_layer_unit.getFunctionName() ].derivative( current_hidden_layer_unit.UNIT_OUTPUT );
+                let unit_function_object = net.activations[ current_hidden_layer_unit.getFunctionName() ];
+                
+                let unit_nabla    = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
+                
                 current_hidden_layer_unit.LOSS = unit_nabla;
             }
         }
