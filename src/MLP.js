@@ -702,6 +702,10 @@ net.MLP = function( config_dict={} ){
     /**
     * SGD/Online training
     * Update the weights after each individual example
+    * 
+    * @param {Array} train_samples 
+    * @param {Array} number_of_epochs 
+    * @returns {Object}
     */
     context.online_train = function(train_samples, number_of_epochs){
         let last_total_loss = 0;
