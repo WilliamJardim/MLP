@@ -661,13 +661,14 @@ net.MLP = function( config_dict={} ){
     * Applies the Gradient Descent algorithm, 
     * This metheod is used for update the weights and bias of each unit in each layer
     */
-    context.update_parameters = function(){
+    context.update_parameters = function( calculated_gradients={} ){
         let number_of_layers  = context.getLayers().length;
 
         //Update weights and Bias using Gradient Descent
         for( let L = 0 ; L < number_of_layers ; L++ )
         {
-            let current_layer = context.getLayer( L );
+            let layer_index   = L;
+            let current_layer = context.getLayer( layer_index );
             let number_of_units_current_layer = current_layer.getUnits().length;
 
             //For each unit in current layer
@@ -675,7 +676,7 @@ net.MLP = function( config_dict={} ){
             {
                 let unit_index         = U;
                 let current_unit       = current_layer.getUnit( unit_index );
-                let current_unit_LOSS  = current_unit.LOSS;
+                let current_unit_LOSS  = calculated_gradients[ `layer${ layer_index }` ][ `unit${ unit_index }` ];
 
                 //For each weight
                 for( let W = 0 ; W < current_unit.getWeights().length ; W++ )
@@ -771,7 +772,7 @@ net.MLP = function( config_dict={} ){
                 let calculated_gradients = context.backpropagate_sample(sample_features, sample_desired_value);
             
                 //Update the parameters
-                context.update_parameters();
+                context.update_parameters( calculated_gradients );
             }
 
             total_loss += context.compute_train_cost( train_samples );
