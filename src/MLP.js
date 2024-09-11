@@ -546,7 +546,7 @@ net.MLP = function( config_dict={} ){
             //The derivative of activation funcion of this U output unit(at output layer)
             let outputDerivative     = unit_function_object.derivative( unitOutput );
 
-            //The delta of this output unit U
+            //The derivative of this output unit U
             let unit_nabla = unitError * outputDerivative;
 
             //Store the error in the unit
