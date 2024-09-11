@@ -309,10 +309,14 @@ net.MLP = function( config_dict={} ){
     context.last_layer         = context.layers_structure[context.number_of_layers-1];
 
     context.task               = config_dict['task'];
+    context.training_type      = config_dict['traintype'];
     context.hyperparameters    = config_dict['hyperparameters'];
     context.learning_rate      = context.hyperparameters['learningRate'];
 
     //Class parameters and model Hyperparameters validations
+    if( context.training_type == undefined || context.training_type == null ){
+        throw Error(`context.training_type is not defined!`);
+    }
     if(context.number_of_layers == 0){
         throw Error(`The model does not have any layers!`);
     }
@@ -401,6 +405,13 @@ net.MLP = function( config_dict={} ){
 
     if( context.input_layer.activation != undefined ){
         throw Error(`The first layer dont need a activation function!`);
+    }
+
+    /**
+    * Get the training type 
+    */
+    context.getTrainingType = function(){
+        return context.training_type;
     }
 
     /**
@@ -689,6 +700,60 @@ net.MLP = function( config_dict={} ){
     }
 
     /**
+    * SGD/Online training
+    * Update the weights after each individual example
+    */
+    context.online_train = function(train_samples, number_of_epochs){
+        let last_total_loss = 0;
+        let loss_history = [];
+
+        //For each epoch
+        for( let p = 0 ; p < number_of_epochs ; p++ )
+        {
+            let total_loss = 0;
+
+            //Training process
+            for( let i = 0 ; i < train_samples.length ; i++ )
+            {
+                let sample_data             = train_samples[i];
+                let sample_features         = sample_data[0]; //SAMPLE FEATURES
+                let sample_desired_value    = sample_data[1]; //SAMPLE DESIRED OUTPUTS
+
+                //Validations before apply the backpropagation
+                if( !(sample_features instanceof Array) ){
+                    throw Error(`The variable sample_features=[${sample_features}] must be a Array!`);
+                }
+
+                if( !(sample_desired_value instanceof Array) ){
+                    throw Error(`The variable sample_desired_value=[${sample_desired_value}] is not a Array!`);
+                }
+
+                //If the number of items in the sample_desired_value Array is different from the number of units in the output layer
+                if( sample_desired_value.length != context.layers[ context.layers.length-1 ].units.length ){
+                    throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in output layer)`);
+                }
+
+                //Do backpropagation and Gradient Descent
+                context.backpropagate_sample(sample_features, sample_desired_value);
+            }
+
+            total_loss += context.compute_train_cost( train_samples );
+
+            last_total_loss = total_loss;
+            loss_history.push(total_loss);
+            
+            if( String( Number(p / 100) ).indexOf('.') != -1 ){
+                console.log(`LOSS: ${last_total_loss}, epoch ${p}`)
+            }
+        }
+
+        return {
+            last_total_loss: last_total_loss,
+            loss_history: loss_history
+        };
+    }
+
+    /**
     * Model training loop 
     * 
     * @param {Array} train_samples
@@ -742,55 +807,24 @@ net.MLP = function( config_dict={} ){
         validations.throwErrorIfSomeSampleAreIncorrectArrayLength( secure_copy_of_samples_for_validations );
         validations.throwErrorIfSomeSampleAreDiffentLengthOfInputsThatTheInputLayer( context.input_layer.inputs , secure_copy_of_samples_for_validations );
 
-        let last_total_loss = 0;
-        let loss_history = [];
+        //Start train
+        let training_result = {};
 
-        //For each epoch
-        for( let p = 0 ; p < number_of_epochs ; p++ )
-        {
-            let total_loss = 0;
+        switch( context.getTrainingType() ){
+            case 'online':
+                training_result = context.online_train(train_samples, number_of_epochs);
+                break;
 
-            //Training process
-            for( let i = 0 ; i < train_samples.length ; i++ )
-            {
-                let sample_data             = train_samples[i];
-                let sample_features         = sample_data[0]; //SAMPLE FEATURES
-                let sample_desired_value    = sample_data[1]; //SAMPLE DESIRED OUTPUTS
-
-                //Validations before apply the backpropagation
-                if( !(sample_features instanceof Array) ){
-                    throw Error(`The variable sample_features=[${sample_features}] must be a Array!`);
-                }
-
-                if( !(sample_desired_value instanceof Array) ){
-                    throw Error(`The variable sample_desired_value=[${sample_desired_value}] is not a Array!`);
-                }
-
-                //If the number of items in the sample_desired_value Array is different from the number of units in the output layer
-                if( sample_desired_value.length != context.layers[ context.layers.length-1 ].units.length ){
-                    throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in output layer)`);
-                }
-
-                //Do backpropagation and Gradient Descent
-                context.backpropagate_sample(sample_features, sample_desired_value);
-            }
-
-            total_loss += context.compute_train_cost( train_samples );
-
-            last_total_loss = total_loss;
-            loss_history.push(total_loss);
-            
-            if( String( Number(p / 100) ).indexOf('.') != -1 ){
-                console.log(`LOSS: ${last_total_loss}, epoch ${p}`)
-            }
+            default:
+                throw Error(`Invalid training type ${ context.getTrainingType() }!`);
         }
 
         return {
             model: context,
-            last_total_loss: last_total_loss,
-            loss_history: loss_history,
-            initial_loss: loss_history[0],
-            final_loss: loss_history[loss_history.length-1],
+            last_total_loss: training_result.last_total_loss,
+            loss_history: training_result.loss_history,
+            initial_loss: training_result.loss_history[0],
+            final_loss: training_result.loss_history[training_result.loss_history.length-1],
         };
 
     }
