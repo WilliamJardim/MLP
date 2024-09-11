@@ -346,6 +346,14 @@ net.MLP = function( config_dict={} ){
     }
 
     /**
+    * Getter for the context.layers
+    * @returns {Array}
+    */
+    context.getLayers = function(){
+        return context.layers;
+    }
+
+    /**
     * Get a layer
     * @param {Number} layer_index 
     * @returns {Object}
@@ -453,8 +461,7 @@ net.MLP = function( config_dict={} ){
         //Do the feedforward step
         let output_estimated_values  = context.feedforward_sample( sample_inputs );
         let number_of_output_units   = output_estimated_values.length;
-        let layers                   = context.layers;
-        let number_of_layers         = layers.length;
+        let number_of_layers         = context.getLayers().length;
 
         //Calculate the LOSS of each output unit and store in the outputs units
         for( let U = 0 ; U < number_of_output_units ; U++ )
