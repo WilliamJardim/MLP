@@ -653,6 +653,17 @@ net.MLP = function( config_dict={} ){
             }
         }
 
+        //Return the calculated gradients for the sample
+        return calculated_gradients;
+    }
+
+    /**
+    * Applies the Gradient Descent algorithm, 
+    * This metheod is used for update the weights and bias of each unit in each layer
+    */
+    context.update_parameters = function(){
+        let number_of_layers  = context.getLayers().length;
+
         //Update weights and Bias using Gradient Descent
         for( let L = 0 ; L < number_of_layers ; L++ )
         {
@@ -662,14 +673,19 @@ net.MLP = function( config_dict={} ){
             //For each unit in current layer
             for( let U = 0 ; U < number_of_units_current_layer ; U++ )
             {
-                let current_unit = current_layer.getUnit( U );
+                let unit_index         = U;
+                let current_unit       = current_layer.getUnit( unit_index );
+                let current_unit_LOSS  = current_unit.LOSS;
 
                 //For each weight
                 for( let W = 0 ; W < current_unit.getWeights().length ; W++ )
                 {
-                    //current_unit.subtractWeight( W, context.learning_rate * current_unit.LOSS * current_unit.getInputOfWeight( W ) );
-                    current_unit.selectWeight( W )
-                                .subtract( context.learning_rate * current_unit.LOSS * current_unit.getInputOfWeight( W ) );
+                    let weight_index = W;
+                    let weight_input = current_unit.getInputOfWeight( weight_index );
+
+                    //Select this weight W and update then
+                    current_unit.selectWeight( weight_index )
+                                .subtract( context.learning_rate * current_unit_LOSS * weight_input );
                 }
 
                 //Update bias
@@ -678,9 +694,6 @@ net.MLP = function( config_dict={} ){
             }
 
         }
-
-        //Return the calculated gradients for the sample
-        return calculated_gradients;
     }
 
     /**
@@ -756,6 +769,9 @@ net.MLP = function( config_dict={} ){
 
                 //Do backpropagation and Gradient Descent
                 let calculated_gradients = context.backpropagate_sample(sample_features, sample_desired_value);
+            
+                //Update the parameters
+                context.update_parameters();
             }
 
             total_loss += context.compute_train_cost( train_samples );
