@@ -540,6 +540,11 @@ net.MLP = function( config_dict={} ){
         let number_of_output_units   = output_estimated_values.length;
         let number_of_layers         = context.getLayers().length;
 
+        //Store the gradients for the all layers
+        //Format { layer_number: gradients_object ...}
+        let calculated_gradients = {};
+        calculated_gradients[ `layer${ number_of_layers-1 }` ] = {};
+
         //Calculate the LOSS of each output unit and store in the outputs units
         for( let U = 0 ; U < number_of_output_units ; U++ )
         {
@@ -562,15 +567,20 @@ net.MLP = function( config_dict={} ){
 
             //Store the error in the unit
             output_unit.LOSS = unit_nabla;
+
+            //Aditionally, store the error TOO in the gradients object
+            calculated_gradients[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ] = unit_nabla;
         }
 
         //Start the backpropagation
-        //A reverse for(starting in OUTPUT LAYER and going in direction of the FIRST HIDDEN LAYER)
+        //A reverse for(starting in LAST HIDDEN LAYER and going in direction of the FIRST HIDDEN LAYER)
         for( let L = number_of_layers-1-1; L >= 0 ; L-- )
         {
             //Current layer data
             let current_layer                  = context.getLayer( L );
             let number_of_units_current_layer  = current_layer.getUnits().length;
+
+            calculated_gradients[ `layer${ L }` ] = {};
 
             //Next layer data
             let next_layer                     = context.getLayer( L+1 );
@@ -635,7 +645,11 @@ net.MLP = function( config_dict={} ){
                 
                 let unit_nabla    = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
                 
+                //Store the error in the unit
                 current_hidden_layer_unit.LOSS = unit_nabla;
+
+                //Aditionally, store the error TOO in gradients object
+                calculated_gradients[ `layer${ L }` ][ `unit${ UH }` ] = unit_nabla;
             }
         }
 
@@ -664,6 +678,9 @@ net.MLP = function( config_dict={} ){
             }
 
         }
+
+        //Return the calculated gradients for the sample
+        return calculated_gradients;
     }
 
     /**
@@ -738,7 +755,7 @@ net.MLP = function( config_dict={} ){
                 }
 
                 //Do backpropagation and Gradient Descent
-                context.backpropagate_sample(sample_features, sample_desired_value);
+                let calculated_gradients = context.backpropagate_sample(sample_features, sample_desired_value);
             }
 
             total_loss += context.compute_train_cost( train_samples );
