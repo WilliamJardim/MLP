@@ -67,6 +67,13 @@ net.Unit = function( unit_config={} ){
     context.weights               = unit_config.weights              || Array(context.number_of_inputs).fill(0);
     context.bias                  = unit_config.bias                 || Number();
 
+    /**
+    * Get the activation function name
+    */
+    context.getFunctionName = function(){
+        return context.activation_function;
+    }
+
     //Setters
     context.setWeights = function( newWeights=[] ){
         if( !(newWeights instanceof Array) ){
@@ -148,7 +155,7 @@ net.Unit = function( unit_config={} ){
         //Add the bias
         sum = sum + context.bias;
 
-        let output = net.activations[context.activation_function](sum);
+        let output = net.activations[ context.getFunctionName() ](sum);
 
         return {
             activation_function_output: output,
@@ -521,7 +528,7 @@ net.MLP = function( config_dict={} ){
         for( let U = 0 ; U < number_of_output_units ; U++ )
         {
             let output_unit            = context.getOutputLayer().getUnit( U );
-            let unitActivationFn       = output_unit['activation_function'];
+            let unitActivationFn       = output_unit.getFunctionName();
             
             let unitOutput             = output_estimated_values[ U ];
             
@@ -605,7 +612,7 @@ net.MLP = function( config_dict={} ){
                 }
 
                 //Store the error in the unit
-                let unit_nabla = current_hidden_unit_LOSS * net.activations[ current_hidden_layer_unit.activation_function ].derivative( current_hidden_layer_unit.UNIT_OUTPUT );
+                let unit_nabla = current_hidden_unit_LOSS * net.activations[ current_hidden_layer_unit.getFunctionName() ].derivative( current_hidden_layer_unit.UNIT_OUTPUT );
                 current_hidden_layer_unit.LOSS = unit_nabla;
             }
         }
