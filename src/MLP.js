@@ -3,10 +3,15 @@
 * By William Alves Jardim
 * 
 * CREDITS && REFERENCE:
+*
+* This implementation is entirely original, written from scratch in JavaScript.
+* It was inspired by various publicly available resources, including concepts 
+* and explanations from the work of Jason Brownlee on backpropagation.
 * 
-*   Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.
+* Reference:
+* Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.
 * 
-* See README.md
+* For more details, see README.md.
 */
 var net = {};
 
