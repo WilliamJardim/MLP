@@ -694,6 +694,8 @@ net.MLP = function( config_dict={} ){
     *
     * @param {Array} sample_inputs  - the sample features
     * @param {Array} desiredOutputs - the DESIRED outputs of the output units
+    * 
+    * @returns {Object} - The mapped gradients of the units of each layer AND The mapped gradients of the each weight of each unit of each layer
     */
     context.backpropagate_sample = function( sample_inputs=[], desiredOutputs=[] ){
         
