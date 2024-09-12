@@ -553,7 +553,7 @@ net.MLP = function( config_dict={} ){
     * 
     * @returns {Number} - the derivative of the unit
     */
-    context.calculate_hidden_unit_derivative = function( current_hidden_unit_index=Number(), next_layer_units=Array(), next_units_gradients={} ){
+    context.calculate_hidden_unit_derivative = function( current_hidden_unit_index=Number(), next_layer_units=Array(), next_layer_units_gradients={} ){
 
         /*
         * THE FORMULA USED IS FOLLOWING:
@@ -584,17 +584,21 @@ net.MLP = function( config_dict={} ){
         * 
         */
 
-        let number_of_next_layer_units = next_layer_units.length;
-
         // Do the accumulation of the LOSSES in the next layer
         let current_unit_accumulator = net.ErrorAccumulator();
 
-        /** For each unit N in LEXT LAYER( L+1 ) **/
-        for( let N = 0 ; N < number_of_next_layer_units ; N++ )
-        {
-            let next_layer_unit_N                = next_layer_units[ N ];
-            let connection_weight_with_UH        = next_layer_unit_N.getWeight( current_hidden_unit_index );
-            let derivative_of_next_layer_unit_N  = next_units_gradients[ `unit${ N }` ];
+        /**
+        * For each unit in LEXT LAYER 
+        * We are working in the context of the next layer:
+        * 
+        *    Here "unit" is the current unit in the next layer(that is, current of the forEach loop)
+        *   "unit_index" is the number of the current unit in the next layer
+        */
+        next_layer_units.forEach(function( unit, unit_index ){
+
+            let connection_weight_with_UH   = unit.getWeight( current_hidden_unit_index );
+            
+            let derivative_of_unit          = next_layer_units_gradients[ `unit${ unit_index }` ];
 
             /**
             * NOTE: The next_layer_unit_N.weights[ UH ] is the connection weight, whose index is UH(of the external loop in the explanation of the equation above)
@@ -607,9 +611,9 @@ net.MLP = function( config_dict={} ){
 
             current_unit_accumulator.accumulate( 
                                     eloh_param  = connection_weight_with_UH,
-                                    LOSS        = derivative_of_next_layer_unit_N 
+                                    LOSS        = derivative_of_unit 
                                 );
-        }
+        });
 
         return current_unit_accumulator.getAccumulatedValue();
     }
@@ -717,9 +721,9 @@ net.MLP = function( config_dict={} ){
                 * The derivative of a unit in a hidden layer will always depend of the derivatives of the next layer
                 */ 
                 let current_hidden_unit_LOSS  = context.calculate_hidden_unit_derivative( 
-                                                                                          current_hidden_unit_index   = UH, 
-                                                                                          next_layer_units            = next_layer.getUnits(),
-                                                                                          next_layer_gradients        = next_layer_gradients 
+                                                                                          current_hidden_unit_index    = UH, 
+                                                                                          next_layer_units             = next_layer.getUnits(),
+                                                                                          next_layer_units_gradients   = next_layer_gradients 
                                                                                         );
 
                 let unit_function_object      = net.activations[ current_hidden_layer_unit.getFunctionName() ];
