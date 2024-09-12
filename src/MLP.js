@@ -645,7 +645,6 @@ net.MLP = function( config_dict={} ){
 
         //Do the feedforward step
         let output_estimated_values  = context.feedforward_sample( sample_inputs );
-        let number_of_output_units   = output_estimated_values.length;
         let number_of_layers         = context.getLayers().length;
         let index_of_output_layer    = number_of_layers-1;
 
@@ -658,38 +657,39 @@ net.MLP = function( config_dict={} ){
         calculated_gradients_for_weights[ `layer${ number_of_layers-1 }` ] = {};
 
         //Calculate the LOSS of each output unit and store in the outputs units
-        for( let U = 0 ; U < number_of_output_units ; U++ )
-        {
-            let output_unit            = context.getOutputLayer().getUnit( U );
-            let unitActivationFn       = output_unit.getFunctionName();
+        context.getOutputLayer().getUnits().forEach(function( output_unit, output_unit_index ){
+
+            let unitActivationFn     = output_unit.getFunctionName();
             
-            let unitOutput             = output_estimated_values[ U ];
+            let unitOutput           = output_estimated_values[ output_unit_index ];
             
-            let desiredOutput      = desiredOutputs[ U ];
-            let outputDifference   = unitOutput - desiredOutput;
+            let desiredOutput        = desiredOutputs[ output_unit_index ];
+
+            let outputDifference     = unitOutput - desiredOutput;
             
             //The activation function of this U output unit
             let unit_function_object = net.activations[ unitActivationFn ];
 
             //The derivative of activation funcion of this U output unit(at output layer)
-            let outputDerivative     = unit_function_object.derivative( unitOutput );
+            let outputDerivative  = unit_function_object.derivative( unitOutput );
 
             //The derivative of this output unit U
-            let unit_derivative = outputDifference * outputDerivative;
+            let unit_derivative   = outputDifference * outputDerivative;
 
             //Store the error in the gradients object
-            calculated_gradients[ `layer${ index_of_output_layer }` ][ `unit${ U }` ] = unit_derivative;
+            calculated_gradients[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = unit_derivative;
 
             //Aditionally, store the erros TOO with respect of each weight
-            calculated_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ U }` ] = [];
+            calculated_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = [];
             for( let c = 0 ; c < output_unit.getWeights().length ; c++ )
             {
                 let weight_index_c = c;
                 let weight_input_C = output_unit.getInputOfWeight( weight_index_c );  
-                calculated_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ U }` ][ weight_index_c ] = unit_derivative * weight_input_C;
+                calculated_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
             }
-        }
 
+        });
+        
         //Start the backpropagation
         //A reverse for(starting in LAST HIDDEN LAYER and going in direction of the FIRST HIDDEN LAYER)
         for( let L = number_of_layers-1-1; L >= 0 ; L-- )
