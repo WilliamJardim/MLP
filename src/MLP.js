@@ -184,7 +184,7 @@ net.Unit = function( unit_config={} ){
         let number_of_inputs = sample_inputs.length;
 
         let summed_value = 0;
-        
+
         for( let i = 0 ; i < number_of_inputs ; i++ ) 
         {
             let weight_index = i;
@@ -217,7 +217,7 @@ net.Unit = function( unit_config={} ){
     * @returns {Number}
     */
     context.getInputOfWeight = function( weight_index ){
-        return context.INPUTS[ weight_index ];
+        return context.UNIT_INPUTS[ weight_index ];
     }
 
     return context;
@@ -319,7 +319,7 @@ net.Layer = function( layer_config={} ){
             current_unit['UNIT_OUTPUT'] = unit_output; //So important in backpropagation and gradient descent steps
 
             //The inputs is the same of all units in a layer
-            current_unit['INPUTS'] = LAYER_INPUTS;
+            current_unit['UNIT_INPUTS'] = LAYER_INPUTS;
 
             units_outputs.push( unit_output );
         }
@@ -520,11 +520,11 @@ net.MLP = function( config_dict={} ){
 
                 /*
                 * The inputs of a layer L is always the outputs of previous layer( L-1 ) 
-                * Then the in lines below will Store the outputs of the current layer(L) in the NEXT LAYER(L+1) AS INPUTS
+                * Then the in lines below will Store the outputs of the current layer(L) in the NEXT LAYER(L+1) AS UNIT_INPUTS
                 */
                 let next_layer = context.getLayer( L+1 );
                 
-                //Set the current layer(L) outputs AS INPUTS OF THE NEXT LAYER(L+1)
+                //Set the current layer(L) outputs AS UNIT_INPUTS OF THE NEXT LAYER(L+1)
                 next_layer.setInputs( units_outputs );
             }
 
