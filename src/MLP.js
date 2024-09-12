@@ -62,6 +62,36 @@ net.WeightManipulator = function( config ){
     return context;
 }
 
+/**
+* A utility used for accumulate the erros in a hidden layer
+* This accumulation is made using a sum 
+*/
+net.ErrorAccumulator = function(){
+    let context = {};
+    context._acumulated = 0;
+
+    /** 
+    * Compute the derivative using the chain rule AND sum in the __acumulated 
+    * 
+    * @param {Number} eloh_param - The parameters what connect the unit
+    * @param {Number} LOSS       - The unit LOSS
+    */
+    context.accumulate = function( eloh_param=Number(), LOSS=Number() ){
+        let derivative = eloh_param * LOSS;
+        context._acumulated = context._acumulated + derivative;
+    }
+
+    /**
+    * Get the accumulated value
+    * @returns {Number} - the accumulated value
+    */
+    context.getAccumulatedValue = function(){
+        return context._acumulated;
+    }
+
+    return context;
+}
+
 //A Unit(with just feedforward and weight initialization)
 net.Unit = function( unit_config={} ){
     let context = {};
@@ -631,8 +661,8 @@ net.MLP = function( config_dict={} ){
 
                 let current_hidden_layer_unit = current_layer.getUnit( UH ); //The hidden layer unit of number UH(like in the equation above)
             
-                // Do the sum of the errors
-                let current_hidden_unit_LOSS = 0;
+                // Do the accumulation of the LOSSES in the next layer
+                let current_unit_accumulator = net.ErrorAccumulator();
 
                 /** For each unit N in LEXT LAYER( L+1 ) **/
                 for( let N = 0 ; N < number_of_next_layer_units ; N++ )
@@ -650,10 +680,14 @@ net.MLP = function( config_dict={} ){
                     * Above are the gradient equation for the hidden layer units, that are applied in the line below:
                     */
 
-                    current_hidden_unit_LOSS += ( connection_weight_with_UH * LOSS_of_unit_N );
+                    current_unit_accumulator.accumulate( 
+                                            eloh_param  = connection_weight_with_UH,
+                                            LOSS        = LOSS_of_unit_N 
+                                        );
                 }
 
-                //Store the error in the unit
+                let current_hidden_unit_LOSS = current_unit_accumulator.getAccumulatedValue();
+
                 let unit_function_object = net.activations[ current_hidden_layer_unit.getFunctionName() ];
                 
                 let unit_nabla    = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
