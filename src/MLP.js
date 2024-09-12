@@ -573,6 +573,7 @@ net.MLP = function( config_dict={} ){
         let output_estimated_values  = context.feedforward_sample( sample_inputs );
         let number_of_output_units   = output_estimated_values.length;
         let number_of_layers         = context.getLayers().length;
+        let index_of_output_layer    = number_of_layers-1;
 
         //Store the gradients for the all layers
         //Format { layer_number: gradients_object ...}
@@ -602,16 +603,16 @@ net.MLP = function( config_dict={} ){
             //The derivative of this output unit U
             let unit_derivative = outputDifference * outputDerivative;
 
-            //Store the error TOO in the gradients object
-            calculated_gradients[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ] = unit_derivative;
+            //Store the error in the gradients object
+            calculated_gradients[ `layer${ index_of_output_layer }` ][ `unit${ U }` ] = unit_derivative;
 
             //Aditionally, store the erros TOO with respect of each weight
-            calculated_gradients_for_weights[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ] = [];
+            calculated_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ U }` ] = [];
             for( let c = 0 ; c < output_unit.getWeights().length ; c++ )
             {
                 let weight_index_c = c;
                 let weight_input_C = output_unit.getInputOfWeight( weight_index_c );  
-                calculated_gradients_for_weights[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ][ weight_index_c ] = unit_derivative * weight_input_C;
+                calculated_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ U }` ][ weight_index_c ] = unit_derivative * weight_input_C;
             }
         }
 
