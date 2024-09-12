@@ -73,8 +73,8 @@ net.ErrorAccumulator = function(){
     /** 
     * Compute the derivative using the chain rule AND sum in the __acumulated 
     * 
-    * @param {Number} eloh_param - The parameters what connect the unit
-    * @param {Number} LOSS       - The unit LOSS
+    * @param {Number} eloh_param  - The parameters what connect the unit
+    * @param {Number} LOSS        - The unit LOSS
     */
     context.accumulate = function( eloh_param=Number(), LOSS=Number() ){
         let derivative = eloh_param * LOSS;
@@ -548,13 +548,12 @@ net.MLP = function( config_dict={} ){
     * Calculate a derivative of a especific unit in a hidden layer
     * 
     * @param {Number} hidden_unit_index        - The index of the UH unit(that we are calculating the derivative)
-    * @param {Object} current_layer_obj        - The current layer object
-    * @param {Object} next_layer_obj           - The next layer object
-    * @param {Object} next_layer_gradients_obj - The gradients of the all units in the next layer
+    * @param {Object} next_layer_units         - The units of the next layer
+    * @param {Object} next_units_gradients     - The gradients of the all units in the next layer
     * 
     * @returns {Number} - the derivative of the unit
     */
-    context.compute_hidden_unit_derivative = function( hidden_unit_index=Number(), current_layer_obj={}, next_layer_obj={}, next_layer_gradients_obj={} ){
+    context.calculate_hidden_unit_derivative = function( current_hidden_unit_index=Number(), next_layer_units=Array(), next_units_gradients={} ){
 
         /*
         * THE FORMULA USED IS FOLLOWING:
@@ -585,7 +584,7 @@ net.MLP = function( config_dict={} ){
         * 
         */
 
-        let number_of_next_layer_units = next_layer_obj.getUnits().length;
+        let number_of_next_layer_units = next_layer_units.length;
 
         // Do the accumulation of the LOSSES in the next layer
         let current_unit_accumulator = net.ErrorAccumulator();
@@ -593,9 +592,9 @@ net.MLP = function( config_dict={} ){
         /** For each unit N in LEXT LAYER( L+1 ) **/
         for( let N = 0 ; N < number_of_next_layer_units ; N++ )
         {
-            let next_layer_unit_N           = next_layer_obj.getUnit( N );
-            let connection_weight_with_UH   = next_layer_unit_N.getWeight( hidden_unit_index );
-            let LOSS_of_next_layer_unit_N   = next_layer_gradients_obj[ `unit${ N }` ];
+            let next_layer_unit_N                = next_layer_units[ N ];
+            let connection_weight_with_UH        = next_layer_unit_N.getWeight( current_hidden_unit_index );
+            let derivative_of_next_layer_unit_N  = next_units_gradients[ `unit${ N }` ];
 
             /**
             * NOTE: The next_layer_unit_N.weights[ UH ] is the connection weight, whose index is UH(of the external loop in the explanation of the equation above)
@@ -608,7 +607,7 @@ net.MLP = function( config_dict={} ){
 
             current_unit_accumulator.accumulate( 
                                     eloh_param  = connection_weight_with_UH,
-                                    LOSS        = LOSS_of_next_layer_unit_N 
+                                    LOSS        = derivative_of_next_layer_unit_N 
                                 );
         }
 
@@ -713,17 +712,21 @@ net.MLP = function( config_dict={} ){
                 let current_hidden_layer_unit = current_layer.getUnit( UH ); //The hidden layer unit of number UH(like in the equation above)
             
                 /**
-                * Calculate the derivative of the current hidden layer unit
+                * Calculate the derivative of the current unit UH
                 * Relembering that, 
                 * The derivative of a unit in a hidden layer will always depend of the derivatives of the next layer
                 */ 
-                let current_hidden_unit_LOSS  = context.compute_hidden_unit_derivative(UH, current_layer, next_layer, next_layer_gradients);
+                let current_hidden_unit_LOSS  = context.calculate_hidden_unit_derivative( 
+                                                                                          current_hidden_unit_index   = UH, 
+                                                                                          next_layer_units            = next_layer.getUnits(),
+                                                                                          next_layer_gradients        = next_layer_gradients 
+                                                                                        );
 
                 let unit_function_object      = net.activations[ current_hidden_layer_unit.getFunctionName() ];
                 
                 let unit_derivative           = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
                 
-                //Store the error TOO in gradients object
+                //Store the error in gradients object
                 calculated_gradients[ `layer${ L }` ][ `unit${ UH }` ] = unit_derivative;
 
                 //Aditionally, store the erros TOO with respect of each weight
