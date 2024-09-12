@@ -183,18 +183,18 @@ net.Unit = function( unit_config={} ){
     {
         let number_of_inputs = sample_inputs.length;
 
-        let sum = 0;
+        let summed_value = 0;
         for( let i = 0 ; i < number_of_inputs ; i++ ) {
-            sum = sum + ( sample_inputs[i] * context.weights[i] );
+            summed_value = summed_value + ( sample_inputs[i] * context.weights[i] );
         }
         //Add the bias
-        sum = sum + context.bias;
+        summed_value = summed_value + context.bias;
 
-        let output = net.activations[ context.getFunctionName() ](sum);
+        let output = net.activations[ context.getFunctionName() ](summed_value);
 
         return {
             activation_function_output: output,
-            unit_potential: sum //The unit activation potential(just the sum)
+            unit_potential: summed_value //The unit activation potential(just the summed value)
         };
     }
 
