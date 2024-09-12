@@ -250,6 +250,31 @@ net.Layer = function( layer_config={} ){
     }
 
     /**
+    * Vinculate a prop to this layer
+    * @param {String} newAttributeName
+    * @param {any}    valueOfThisAttribute
+    */
+    context.vinculate = function(newAttributeName, valueOfThisAttribute){
+        context[ newAttributeName ] = valueOfThisAttribute;
+    }
+
+    /**
+    * Return the next layer
+    * @returns {net.Layer}
+    */
+    context.getNextLayer = function(){
+        return context.father.getLayer( context._internal_index + 1 ) || null;
+    }
+
+    /**
+    * Return the previous layer
+    * @returns {net.Layer}
+    */
+    context.getPreviousLayer = function(){
+        return context.father.getLayer( context._internal_index - 1 ) || null;
+    }
+
+    /**
     * Check if this layer is of type 
     */
     context.is = function( layerType ){
@@ -420,6 +445,8 @@ net.MLP = function( config_dict={} ){
     for( let i = 1 ; i < context.number_of_layers ; i++ )
     {
         let current_layer = net.Layer( context.layers_structure[i] );
+        current_layer.vinculate('_internal_index', i);
+        current_layer.vinculate('_father',         context);
 
         context.layers.push( current_layer );
 
