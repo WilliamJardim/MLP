@@ -14,10 +14,6 @@ This project was inspired by several publicly available resources, including con
 
    - The project is fully modular: Unit, Layer, and MLP components can be configured via JSON attributes.
 
-   - The backpropagation and gradient descent processes are centralized in the backpropagate_sample function, which updates weights and biases after each training sample.
-
-   - In feedforward and backpropagation, the network processes inputs and outputs for each layer, stores activations, and computes errors for weight updates using gradient descent.
-
 Some general strategies for feedforward and backpropagation were inspired by concepts described by Jason Brownlee, but the code and structure are entirely original and tailored for JavaScript.
 
 # References
