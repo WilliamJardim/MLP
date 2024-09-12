@@ -545,6 +545,66 @@ net.MLP = function( config_dict={} ){
     }
 
     /**
+    * Calculate the derivative of each unit in the output layer
+    * 
+    * @param {Array}  output_estimated_values           - The network estimations(of each unit)
+    * @param {Array}  desiredOutputs                    - The desired outputs(for each unit)
+    * @param {Object} calculated_gradients              - A object to store the gradients of each unit
+    * @param {Object} calculated_gradients_for_weights  - A object to store the gradients of each unit with respect to each unit weight
+    *
+    * @returns {Object} - The calculated gradients of the output layer
+    * 
+    */
+    context.calculate_derivative_of_output_units = function( output_estimated_values, desiredOutputs, list_to_store_gradients, list_to_store_gradients_for_weights ){
+
+        let number_of_layers         = context.getLayers().length;
+        let index_of_output_layer    = number_of_layers-1;
+
+        //Registry a object for store the gradients of the units of the output layer
+        list_to_store_gradients[ `layer${ number_of_layers-1 }` ] = {};
+        list_to_store_gradients_for_weights[ `layer${ number_of_layers-1 }` ] = {};
+
+        //Calculate the LOSS of each output unit and store in the outputs units
+        context.getOutputLayer().getUnits().forEach(function( output_unit, output_unit_index ){
+
+            let unitActivationFn     = output_unit.getFunctionName();
+            
+            let unitOutput           = output_estimated_values[ output_unit_index ];
+            
+            let desiredOutput        = desiredOutputs[ output_unit_index ];
+
+            let outputDifference     = unitOutput - desiredOutput;
+            
+            //The activation function of this U output unit
+            let unit_function_object = net.activations[ unitActivationFn ];
+
+            //The derivative of activation funcion of this U output unit(at output layer)
+            let outputDerivative  = unit_function_object.derivative( unitOutput );
+
+            //The derivative of this output unit U
+            let unit_derivative   = outputDifference * outputDerivative;
+
+            //Store the error in the gradients object
+            list_to_store_gradients[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = unit_derivative;
+
+            //Aditionally, store the erros TOO with respect of each weight
+            list_to_store_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = [];
+            for( let c = 0 ; c < output_unit.getWeights().length ; c++ )
+            {
+                let weight_index_c = c;
+                let weight_input_C = output_unit.getInputOfWeight( weight_index_c );  
+                list_to_store_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
+            }
+
+        });
+
+        return {
+            calculated_gradients: {... JSON.parse(JSON.stringify(list_to_store_gradients)) },
+            calculated_gradients_for_weights: {... JSON.parse(JSON.stringify(list_to_store_gradients_for_weights)) }
+        };
+    }
+
+    /**
     * Calculate a derivative of a especific unit in a hidden layer
     * 
     * @param {Number} hidden_unit_index        - The index of the UH unit(that we are calculating the derivative)
@@ -643,63 +703,43 @@ net.MLP = function( config_dict={} ){
             throw Error(`The desiredOutputs is empty Array!`);
         }
 
+        let number_of_layers         = context.getLayers().length;
+        
         //Do the feedforward step
         let output_estimated_values  = context.feedforward_sample( sample_inputs );
-        let number_of_layers         = context.getLayers().length;
-        let index_of_output_layer    = number_of_layers-1;
-
-        //Store the gradients for the all layers
-        //Format { layer_number: gradients_object ...}
-        let calculated_gradients = {};
-        calculated_gradients[ `layer${ number_of_layers-1 }` ] = {};
-
-        let calculated_gradients_for_weights = {};
-        calculated_gradients_for_weights[ `layer${ number_of_layers-1 }` ] = {};
-
-        //Calculate the LOSS of each output unit and store in the outputs units
-        context.getOutputLayer().getUnits().forEach(function( output_unit, output_unit_index ){
-
-            let unitActivationFn     = output_unit.getFunctionName();
-            
-            let unitOutput           = output_estimated_values[ output_unit_index ];
-            
-            let desiredOutput        = desiredOutputs[ output_unit_index ];
-
-            let outputDifference     = unitOutput - desiredOutput;
-            
-            //The activation function of this U output unit
-            let unit_function_object = net.activations[ unitActivationFn ];
-
-            //The derivative of activation funcion of this U output unit(at output layer)
-            let outputDerivative  = unit_function_object.derivative( unitOutput );
-
-            //The derivative of this output unit U
-            let unit_derivative   = outputDifference * outputDerivative;
-
-            //Store the error in the gradients object
-            calculated_gradients[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = unit_derivative;
-
-            //Aditionally, store the erros TOO with respect of each weight
-            calculated_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = [];
-            for( let c = 0 ; c < output_unit.getWeights().length ; c++ )
-            {
-                let weight_index_c = c;
-                let weight_input_C = output_unit.getInputOfWeight( weight_index_c );  
-                calculated_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
-            }
-
-        });
         
-        //Start the backpropagation
-        //A reverse for(starting in LAST HIDDEN LAYER and going in direction of the FIRST HIDDEN LAYER)
+        /**
+        * List store the gradients for the all layers
+        * Format { layer_number: gradients_object ...}
+        */
+        let list_to_store_gradients = {};
+
+        /**
+        * List store the gradients for the all layers(of each weight of each unit)
+        * Format { layer_number: [ unit: { weight: [] ...} ] ...}
+        */
+        let list_to_store_gradients_for_weights = {};
+
+        /**
+        * Calculate the LOSS of each output unit and store in the outputs units
+        */
+        context.calculate_derivative_of_output_units( output_estimated_values, 
+                                                      desiredOutputs, 
+                                                      list_to_store_gradients, 
+                                                      list_to_store_gradients_for_weights );
+        
+        /** 
+        * Start the backpropagation
+        * A reverse for(starting in LAST HIDDEN LAYER and going in direction of the FIRST HIDDEN LAYER)
+        */
         for( let L = number_of_layers-1-1; L >= 0 ; L-- )
         {
             //Current layer data
             let current_layer                  = context.getLayer( L );
             let number_of_units_current_layer  = current_layer.getUnits().length;
 
-            calculated_gradients[ `layer${ L }` ] = {};
-            calculated_gradients_for_weights[`layer${ L }`] = {};
+            list_to_store_gradients[ `layer${ L }` ] = {};
+            list_to_store_gradients_for_weights[`layer${ L }`] = {};
 
             //Next layer data
             let next_layer                     = context.getLayer( L+1 );
@@ -708,7 +748,7 @@ net.MLP = function( config_dict={} ){
             * Get the gradients(of the units) of the next layer
             * These gradients will be used in lines below:
             */
-            let next_layer_gradients           = calculated_gradients[ `layer${ L+1 }` ];
+            let next_layer_gradients           = list_to_store_gradients[ `layer${ L+1 }` ];
 
             //For each unit in CURRENT HIDDEN LAYER
             for( let UH = 0 ; UH < number_of_units_current_layer ; UH++ )
@@ -731,23 +771,23 @@ net.MLP = function( config_dict={} ){
                 let unit_derivative           = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
                 
                 //Store the error in gradients object
-                calculated_gradients[ `layer${ L }` ][ `unit${ UH }` ] = unit_derivative;
+                list_to_store_gradients[ `layer${ L }` ][ `unit${ UH }` ] = unit_derivative;
 
                 //Aditionally, store the erros TOO with respect of each weight
-                calculated_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ] = [];
+                list_to_store_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ] = [];
                 for( let c = 0 ; c < current_hidden_layer_unit.getWeights().length ; c++ )
                 {
                     let weight_index_c = c;
                     let weight_input_C = current_hidden_layer_unit.getInputOfWeight( weight_index_c );  
-                    calculated_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ][ weight_index_c ] = unit_derivative * weight_input_C;
+                    list_to_store_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ][ weight_index_c ] = unit_derivative * weight_input_C;
                 }
             }
         }
 
         //Return the calculated gradients for the sample
         return {
-            calculated_gradients: calculated_gradients,
-            calculated_gradients_for_weights: calculated_gradients_for_weights
+            calculated_gradients: list_to_store_gradients,
+            calculated_gradients_for_weights: list_to_store_gradients_for_weights
         };
     }
 
