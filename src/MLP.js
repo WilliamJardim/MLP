@@ -647,8 +647,8 @@ net.MLP = function( config_dict={} ){
                 * 
                 * >>> EQUATION WITH A EXAMPLE OF USE:
                 * 
-                *    current_layer_unit<UH>_error = (next_layer_unit<N0>.weight<UH> * next_layer_unit<N0>_LOSS) + 
-                *                                   (next_layer_unit<N1>.weight<UH> * next_layer_unit<N1>_LOSS) + 
+                *    current_layer_unit<UH>_LOSS  = (next_layer_unit<N0>.weight<UH> * LOSS_of_next_layer_unit<N0>) + 
+                *                                   (next_layer_unit<N1>.weight<UH> * LOSS_of_next_layer_unit<N1>) + 
                 *                                   [... etc]
                 * 
                 *    NOTE: In this example, the next layer have just 2 units(N0 and N1, respectively), 
@@ -676,9 +676,9 @@ net.MLP = function( config_dict={} ){
                 /** For each unit N in LEXT LAYER( L+1 ) **/
                 for( let N = 0 ; N < number_of_next_layer_units ; N++ )
                 {
-                    let next_layer_unit_N          = next_layer.getUnit( N );
-                    let connection_weight_with_UH  = next_layer_unit_N.getWeight( UH );
-                    let LOSS_of_unit_N             = next_layer_gradients[ `unit${ N }` ];
+                    let next_layer_unit_N           = next_layer.getUnit( N );
+                    let connection_weight_with_UH   = next_layer_unit_N.getWeight( UH );
+                    let LOSS_of_next_layer_unit_N   = next_layer_gradients[ `unit${ N }` ];
 
                     /**
                     * NOTE: The next_layer_unit_N.weights[ UH ] is the connection weight, whose index is UH(of the external loop in the explanation of the equation above)
@@ -691,7 +691,7 @@ net.MLP = function( config_dict={} ){
 
                     current_unit_accumulator.accumulate( 
                                             eloh_param  = connection_weight_with_UH,
-                                            LOSS        = LOSS_of_unit_N 
+                                            LOSS        = LOSS_of_next_layer_unit_N 
                                         );
                 }
 
