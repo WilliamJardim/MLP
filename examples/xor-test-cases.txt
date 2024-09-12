@@ -1,0 +1,56 @@
+COST after each execution
+
+Always downing gradually during the epochs, downing with consistence
+
+Date: 12.09.2024 20:20 PM
+
+Started with COST 1.67 and gradually down to 0.0818538796836917 at the last epoch( 255 )
+
+Started with COST 1.67 down to 0.0318538796836917 at the last epoch( 255 )
+
+Started with COST 1.553097322487435 and gradually down to 0.17792545513860808 at the last epoch( 255 )
+
+Started with COST 1.599079821175954 and gradually down to 0.09720689194439598 at the last epoch( 255 )
+
+Started with COST 1.1958336118418225 and gradually down to 0.06938289112899214 at the last epoch( 255 )
+
+Started with COST 1.000922482865645 and gradually down to 0.03851684594969229 at the last epoch( 255 )
+
+Started with COST 1.1291135918495625 and gradually down to 0.010699344721005645 at the last epoch( 255 )
+
+Started with COST 1.6051796512286378 and gradually down to 0.2368015336141222 at the last epoch( 255 )
+
+Started with COST 1.3567117288986288 and gradually down to 0.12417773387784928 at the last epoch( 255 )
+
+Started with COST 1.0256161336276293 and gradually down to 0.08785894464872865 at the last epoch( 255 )
+
+Started with COST 1.2520307843103433 and gradually down to 0.03602212328815092 at the last epoch( 255 )
+
+Started with COST 1.0804334462473109 and gradually down to 0.00980475131381409 at the last epoch( 255 )
+
+Started with COST 1.0299199261708765 and gradually down to 0.03481380449075318 at the last epoch( 255 )
+
+Started with COST 1.0995623444899982 and gradually down to 0.037031739615269815 at the last epoch( 255 )
+
+Started with COST 1.1888687361972443 and gradually down to 0.21354994743910008 at the last epoch( 255 )
+
+Started with COST 1.393836318191815 and gradually down to 0.9783748321633937
+
+Started with COST 1.2005550873237811 and gradually down to 0.035919897453096136
+
+Started with COST 1.0633280346238783 and gradually down to 0.015232348594272506
+
+Started with COST 1.3321732888445892 and gradually down to 0.015009864016699988
+
+Started with COST 1.4199724489602619 and gradually down to 0.03556880882088924
+
+Started with COST 1.2558769654488446 and gradually down to 0.9957716832327146
+
+Started with COST 1.1679333693165561 and gradually down to 0.04645194739372392
+
+Started with COST 1.2035654119601378 and gradually down to 0.22656473820268108
+
+Started with COST 1.1984514199754828 and gradually down to 0.011821662996015603
+
+Started with COST 1.454956611080331 and gradually down to 0.045479545567498676
+
