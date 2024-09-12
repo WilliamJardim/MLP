@@ -549,19 +549,19 @@ net.MLP = function( config_dict={} ){
     * 
     * @param {Array}  output_estimated_values           - The network estimations(of each unit)
     * @param {Array}  desiredOutputs                    - The desired outputs(for each unit)
-    * @param {Object} calculated_gradients              - A object to store the gradients of each unit
+    * @param {Object} calculated_gradients_of_units     - A object to store the gradients of each unit
     * @param {Object} calculated_gradients_for_weights  - A object to store the gradients of each unit with respect to each unit weight
     *
     * @returns {Object} - The calculated gradients of the output layer
     * 
     */
-    context.calculate_derivatives_of_output_units = function( output_estimated_values, desiredOutputs, list_to_store_gradients, list_to_store_gradients_for_weights ){
+    context.calculate_derivatives_of_output_units = function( output_estimated_values, desiredOutputs, list_to_store_gradients_of_units, list_to_store_gradients_for_weights ){
 
         let number_of_layers         = context.getLayers().length;
         let index_of_output_layer    = number_of_layers-1;
 
         //Registry a object for store the gradients of the units of the output layer
-        list_to_store_gradients[ `layer${ number_of_layers-1 }` ] = {};
+        list_to_store_gradients_of_units[ `layer${ number_of_layers-1 }` ] = {};
         list_to_store_gradients_for_weights[ `layer${ number_of_layers-1 }` ] = {};
 
         /**
@@ -594,7 +594,7 @@ net.MLP = function( config_dict={} ){
             let unit_derivative   = outputDifference * outputDerivative;
 
             //Store the error in the gradients object
-            list_to_store_gradients[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = unit_derivative;
+            list_to_store_gradients_of_units[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = unit_derivative;
 
             //Aditionally, store the erros TOO with respect of each weight
             list_to_store_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = [];
@@ -608,7 +608,7 @@ net.MLP = function( config_dict={} ){
         });
 
         return {
-            calculated_gradients: {... JSON.parse(JSON.stringify(list_to_store_gradients)) },
+            calculated_gradients_of_units: {... JSON.parse(JSON.stringify(list_to_store_gradients_of_units)) },
             calculated_gradients_for_weights: {... JSON.parse(JSON.stringify(list_to_store_gradients_for_weights)) }
         };
     }
@@ -722,10 +722,10 @@ net.MLP = function( config_dict={} ){
         let output_estimated_values  = context.feedforward_sample( sample_inputs );
         
         /**
-        * List store the gradients for the all layers
+        * List store the gradients of each unit of the all layers
         * Format { layer_number: gradients_object ...}
         */
-        let list_to_store_gradients = {};
+        let list_to_store_gradients_of_units = {};
 
         /**
         * List store the gradients for the all layers(of each weight of each unit)
@@ -738,11 +738,11 @@ net.MLP = function( config_dict={} ){
         * This process is made by a subtraction of the "unit estimated value" and the "desired value for the unit".
         * So, Each unit have a "desired value", and each unit produces a "estimative" in the feedforward phase, so these informations are used to calculate this derivatives
         * 
-        * And these gradients will be stored in the list_to_store_gradients and list_to_store_gradients_for_weights
+        * And these gradients will be stored in the list_to_store_gradients_of_units and list_to_store_gradients_for_weights
         */
         context.calculate_derivatives_of_output_units( output_estimated_values, 
                                                        desiredOutputs, 
-                                                       list_to_store_gradients, 
+                                                       list_to_store_gradients_of_units, 
                                                        list_to_store_gradients_for_weights );
         
         /** 
@@ -757,7 +757,7 @@ net.MLP = function( config_dict={} ){
             let current_layer                  = context.getLayer( L );
             let number_of_units_current_layer  = current_layer.getUnits().length;
 
-            list_to_store_gradients[ `layer${ L }` ] = {};
+            list_to_store_gradients_of_units[ `layer${ L }` ] = {};
             list_to_store_gradients_for_weights[`layer${ L }`] = {};
 
             //Next layer data
@@ -767,7 +767,7 @@ net.MLP = function( config_dict={} ){
             * Get the gradients(of the units) of the next layer
             * These gradients will be used in lines below:
             */
-            let next_layer_gradients           = list_to_store_gradients[ `layer${ L+1 }` ];
+            let next_layer_gradients           = list_to_store_gradients_of_units[ `layer${ L+1 }` ];
 
             //For each unit in CURRENT HIDDEN LAYER
             for( let UH = 0 ; UH < number_of_units_current_layer ; UH++ )
@@ -790,7 +790,7 @@ net.MLP = function( config_dict={} ){
                 let unit_derivative           = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
                 
                 //Store the error in gradients object
-                list_to_store_gradients[ `layer${ L }` ][ `unit${ UH }` ] = unit_derivative;
+                list_to_store_gradients_of_units[ `layer${ L }` ][ `unit${ UH }` ] = unit_derivative;
 
                 //Aditionally, store the erros TOO with respect of each weight
                 list_to_store_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ] = [];
@@ -805,8 +805,8 @@ net.MLP = function( config_dict={} ){
 
         //Return the calculated gradients for the sample
         return {
-            calculated_gradients: list_to_store_gradients,
-            calculated_gradients_for_weights: list_to_store_gradients_for_weights
+            gradients_of_units          : list_to_store_gradients_of_units,
+            gradients_for_each_weights  : list_to_store_gradients_for_weights
         };
     }
 
@@ -814,50 +814,7 @@ net.MLP = function( config_dict={} ){
     * Applies the Gradient Descent algorithm, 
     * This metheod is used for update the weights and bias of each unit in each layer
     */
-    context.update_parameters = function( calculated_gradients={} ){
-        let number_of_layers  = context.getLayers().length;
-
-        //Update weights and Bias using Gradient Descent
-        for( let L = 0 ; L < number_of_layers ; L++ )
-        {
-            let layer_index   = L;
-            let current_layer = context.getLayer( layer_index );
-            let number_of_units_current_layer = current_layer.getUnits().length;
-
-            //For each unit in current layer
-            for( let U = 0 ; U < number_of_units_current_layer ; U++ )
-            {
-                let unit_index         = U;
-                let current_unit       = current_layer.getUnit( unit_index );
-                let current_unit_LOSS  = calculated_gradients[ `layer${ layer_index }` ][ `unit${ unit_index }` ];
-
-                //For each weight
-                for( let W = 0 ; W < current_unit.getWeights().length ; W++ )
-                {
-                    let weight_index = W;
-                    let weight_input = current_unit.getInputOfWeight( weight_index );
-
-                    //Select this weight W and update then
-                    current_unit.selectWeight( weight_index )
-                                .subtract( context.learning_rate * current_unit_LOSS * weight_input );
-                }
-
-                //Update bias
-                current_unit.subtractBias( context.learning_rate * current_unit_LOSS );
-
-            }
-
-        }
-    }
-
-    /**
-    * FOR BATCH OU MINIBATH ONLY
-    * Applies the Gradient Descent algorithm, 
-    * This metheod is used for update the weights and bias of each unit in each layer
-    * 
-    * for this case, will receive the calculated_gradients_for_weights and calculated_gradients_for_bias
-    */
-    context.update_parameters_4batch = function( the_gradients_for_weights={}, the_gradients_for_bias={} ){
+    context.update_parameters = function( the_gradients_for_weights={}, the_gradients_for_bias={} ){
         let number_of_layers  = context.getLayers().length;
 
         //Update weights and Bias using Gradient Descent
@@ -966,10 +923,13 @@ net.MLP = function( config_dict={} ){
                 }
 
                 //Do backpropagation and Gradient Descent
-                let calculated_gradients = context.backpropagate_sample(sample_features, sample_desired_value)['calculated_gradients'];
+                let calculated_gradients_data         = context.backpropagate_sample(sample_features, sample_desired_value);
             
+                let gradients_for_weights  = calculated_gradients_data['gradients_for_each_weights']
+                let gradients_for_bias     = calculated_gradients_data['gradients_of_units']
+
                 //Update the parameters
-                context.update_parameters( calculated_gradients );
+                context.update_parameters( gradients_for_weights, gradients_for_bias );
             }
 
             total_loss += context.compute_train_cost( train_samples );
@@ -1079,9 +1039,8 @@ net.MLP = function( config_dict={} ){
                 //Do backpropagation and Gradient Descent
                 let sample_gradients_data = context.backpropagate_sample(sample_features, sample_desired_value);
             
-                //CONTINUAR....
-                let sample_gradients_for_weights = sample_gradients_data['calculated_gradients_for_weights'];
-                let sample_gradients_for_bias    = sample_gradients_data['calculated_gradients'];
+                let sample_gradients_for_weights = sample_gradients_data['gradients_for_each_weights'];
+                let sample_gradients_for_bias    = sample_gradients_data['gradients_of_units'];
 
                 //Accumulate the gradients
                 let layersIds = Object.keys(sample_gradients_for_weights);
@@ -1234,7 +1193,7 @@ net.MLP = function( config_dict={} ){
             });
 
             //Update the parameters
-            context.update_parameters_4batch( mean_gradients_for_weights, mean_gradients_for_bias );
+            context.update_parameters( mean_gradients_for_weights, mean_gradients_for_bias );
 
             total_loss += context.compute_train_cost( train_samples );
 
