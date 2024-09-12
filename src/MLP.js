@@ -586,8 +586,8 @@ net.MLP = function( config_dict={} ){
             
             let unitOutput             = output_estimated_values[ U ];
             
-            let desiredOutput     = desiredOutputs[ U ];
-            let unitError         = unitOutput - desiredOutput;
+            let desiredOutput      = desiredOutputs[ U ];
+            let outputDifference   = unitOutput - desiredOutput;
             
             //The activation function of this U output unit
             let unit_function_object = net.activations[ unitActivationFn ];
@@ -596,13 +596,13 @@ net.MLP = function( config_dict={} ){
             let outputDerivative     = unit_function_object.derivative( unitOutput );
 
             //The derivative of this output unit U
-            let unit_nabla = unitError * outputDerivative;
+            let unit_derivative = outputDifference * outputDerivative;
 
-            //Store the error in the unit
-            output_unit.LOSS = unit_nabla;
+            //Store the LOSS DERIVATIVE in the output unit
+            output_unit.LOSS = unit_derivative;
 
             //Aditionally, store the error TOO in the gradients object
-            calculated_gradients[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ] = unit_nabla;
+            calculated_gradients[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ] = unit_derivative;
 
             //Aditionally, store the erros TOO with respect of each weight
             calculated_gradients_for_weights[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ] = [];
@@ -610,7 +610,7 @@ net.MLP = function( config_dict={} ){
             {
                 let weight_index_c = c;
                 let weight_input_C = output_unit.getInputOfWeight( weight_index_c );  
-                calculated_gradients_for_weights[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ][ weight_index_c ] = unit_nabla * weight_input_C;
+                calculated_gradients_for_weights[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ][ weight_index_c ] = unit_derivative * weight_input_C;
             }
         }
 
@@ -688,15 +688,15 @@ net.MLP = function( config_dict={} ){
 
                 let current_hidden_unit_LOSS = current_unit_accumulator.getAccumulatedValue();
 
-                let unit_function_object = net.activations[ current_hidden_layer_unit.getFunctionName() ];
+                let unit_function_object     = net.activations[ current_hidden_layer_unit.getFunctionName() ];
                 
-                let unit_nabla    = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
+                let unit_derivative          = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
                 
-                //Store the error in the unit
-                current_hidden_layer_unit.LOSS = unit_nabla;
+                //Store the LOSS DERIVATIVE in the hidden unit
+                current_hidden_layer_unit.LOSS = unit_derivative;
 
                 //Aditionally, store the error TOO in gradients object
-                calculated_gradients[ `layer${ L }` ][ `unit${ UH }` ] = unit_nabla;
+                calculated_gradients[ `layer${ L }` ][ `unit${ UH }` ] = unit_derivative;
 
                 //Aditionally, store the erros TOO with respect of each weight
                 calculated_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ] = [];
@@ -704,7 +704,7 @@ net.MLP = function( config_dict={} ){
                 {
                     let weight_index_c = c;
                     let weight_input_C = current_hidden_layer_unit.getInputOfWeight( weight_index_c );  
-                    calculated_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ][ weight_index_c ] = unit_nabla * weight_input_C;
+                    calculated_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ][ weight_index_c ] = unit_derivative * weight_input_C;
                 }
             }
         }
