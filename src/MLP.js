@@ -555,7 +555,7 @@ net.MLP = function( config_dict={} ){
     * @returns {Object} - The calculated gradients of the output layer
     * 
     */
-    context.calculate_derivative_of_output_units = function( output_estimated_values, desiredOutputs, list_to_store_gradients, list_to_store_gradients_for_weights ){
+    context.calculate_derivatives_of_output_units = function( output_estimated_values, desiredOutputs, list_to_store_gradients, list_to_store_gradients_for_weights ){
 
         let number_of_layers         = context.getLayers().length;
         let index_of_output_layer    = number_of_layers-1;
@@ -564,7 +564,16 @@ net.MLP = function( config_dict={} ){
         list_to_store_gradients[ `layer${ number_of_layers-1 }` ] = {};
         list_to_store_gradients_for_weights[ `layer${ number_of_layers-1 }` ] = {};
 
-        //Calculate the LOSS of each output unit and store in the outputs units
+        /**
+        * Calculate the LOSS derivative of each output unit, using the chain rule of calculus
+        * That is, the derivative of the LOSS with respect to estimated value of the output unit
+        * 
+        * For calculate the LOSS derivative of the each output unit, The formula used is:
+        *  
+        *   unit<N>_derivative = ( output_unit<N>_estimated_value - output_unit<N>_desired_value ) * derivative_of_function_of_output_unit<N>
+        *
+        * Like he can see below:
+        */
         context.getOutputLayer().getUnits().forEach(function( output_unit, output_unit_index ){
 
             let unitActivationFn     = output_unit.getFunctionName();
@@ -623,12 +632,14 @@ net.MLP = function( config_dict={} ){
         * 
         * >>> EQUATION WITH A EXAMPLE OF USE:
         * 
-        *    current_layer_unit<UH>_LOSS  = (next_layer_unit<N0>.weight<UH> * LOSS_of_next_layer_unit<N0>) + 
-        *                                   (next_layer_unit<N1>.weight<UH> * LOSS_of_next_layer_unit<N1>) + 
+        *    current_unit<UH>_derivative  = (next_layer_unit<N0>.weight<UH> * derivative_of_next_layer_unit<N0>) + 
+        *                                   (next_layer_unit<N1>.weight<UH> * derivative_of_next_layer_unit<N1>) + 
         *                                   [... etc]
         * 
         *    NOTE: In this example, the next layer have just 2 units(N0 and N1, respectively), 
         *          but There could be as many as there were. By this, i put "[... etc]", to make it clear that there could be more than just 2 units
+        * 
+        *    NOTE: "current_unit" is a hidden unit!
         * 
         * 
         * >>> EXPLANATION:
@@ -721,16 +732,22 @@ net.MLP = function( config_dict={} ){
         let list_to_store_gradients_for_weights = {};
 
         /**
-        * Calculate the LOSS of each output unit and store in the outputs units
+        * Calculate the derivative of each output unit
+        * This process is made by a subtraction of the "unit estimated value" and the "desired value for the unit".
+        * So, Each unit have a "desired value", and each unit produces a "estimative" in the feedforward phase, so these informations are used to calculate this derivatives
+        * 
+        * And these gradients will be stored in the list_to_store_gradients and list_to_store_gradients_for_weights
         */
-        context.calculate_derivative_of_output_units( output_estimated_values, 
-                                                      desiredOutputs, 
-                                                      list_to_store_gradients, 
-                                                      list_to_store_gradients_for_weights );
+        context.calculate_derivatives_of_output_units( output_estimated_values, 
+                                                       desiredOutputs, 
+                                                       list_to_store_gradients, 
+                                                       list_to_store_gradients_for_weights );
         
         /** 
         * Start the backpropagation
-        * A reverse for(starting in LAST HIDDEN LAYER and going in direction of the FIRST HIDDEN LAYER)
+        * Starting in LAST HIDDEN LAYER and going in direction of the FIRST HIDDEN LAYER.
+        * 
+        * When we reach the FIRST HIDDEN LAYER, when had calculate the gradients of all units in the FIRST HIDDEN LAYER, the backpropagation finally ends.
         */
         for( let L = number_of_layers-1-1; L >= 0 ; L-- )
         {
