@@ -184,13 +184,17 @@ net.Unit = function( unit_config={} ){
         let number_of_inputs = sample_inputs.length;
 
         let summed_value = 0;
-        for( let i = 0 ; i < number_of_inputs ; i++ ) {
-            summed_value = summed_value + ( sample_inputs[i] * context.weights[i] );
+        
+        for( let i = 0 ; i < number_of_inputs ; i++ ) 
+        {
+            let weight_index = i;
+            summed_value = summed_value + ( sample_inputs[i] * context.getWeight( weight_index ) );
         }
+
         //Add the bias
         summed_value = summed_value + context.bias;
 
-        let output = net.activations[ context.getFunctionName() ](summed_value);
+        let output = net.activations[ context.getFunctionName() ]( summed_value );
 
         return {
             activation_function_output: output,
