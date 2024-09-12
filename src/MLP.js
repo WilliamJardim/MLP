@@ -602,10 +602,7 @@ net.MLP = function( config_dict={} ){
             //The derivative of this output unit U
             let unit_derivative = outputDifference * outputDerivative;
 
-            //Store the LOSS DERIVATIVE in the output unit
-            output_unit.LOSS = unit_derivative;
-
-            //Aditionally, store the error TOO in the gradients object
+            //Store the error TOO in the gradients object
             calculated_gradients[ `layer${ number_of_layers-1 }` ][ `unit${ U }` ] = unit_derivative;
 
             //Aditionally, store the erros TOO with respect of each weight
@@ -631,6 +628,13 @@ net.MLP = function( config_dict={} ){
 
             //Next layer data
             let next_layer                     = context.getLayer( L+1 );
+
+            /**
+            * Get the gradients(of the units) of the next layer
+            * These gradients will be used in lines below:
+            */
+            let next_layer_gradients           = calculated_gradients[ `layer${ L+1 }` ];
+
             let number_of_next_layer_units     = next_layer.getUnits().length;
 
             //For each unit in CURRENT HIDDEN LAYER
@@ -642,8 +646,8 @@ net.MLP = function( config_dict={} ){
                 * 
                 * >>> EQUATION WITH A EXAMPLE OF USE:
                 * 
-                *    current_layer_unit<UH>_error = (next_layer_unit<N0>.weight<UH> * next_layer_unit<N0>.LOSS) + 
-                *                                   (next_layer_unit<N1>.weight<UH> * next_layer_unit<N1>.LOSS) + 
+                *    current_layer_unit<UH>_error = (next_layer_unit<N0>.weight<UH> * next_layer_unit<N0>_LOSS) + 
+                *                                   (next_layer_unit<N1>.weight<UH> * next_layer_unit<N1>_LOSS) + 
                 *                                   [... etc]
                 * 
                 *    NOTE: In this example, the next layer have just 2 units(N0 and N1, respectively), 
@@ -673,7 +677,7 @@ net.MLP = function( config_dict={} ){
                 {
                     let next_layer_unit_N          = next_layer.getUnit( N );
                     let connection_weight_with_UH  = next_layer_unit_N.getWeight( UH );
-                    let LOSS_of_unit_N             = next_layer_unit_N.LOSS;
+                    let LOSS_of_unit_N             = next_layer_gradients[ `unit${ N }` ];
 
                     /**
                     * NOTE: The next_layer_unit_N.weights[ UH ] is the connection weight, whose index is UH(of the external loop in the explanation of the equation above)
@@ -696,10 +700,7 @@ net.MLP = function( config_dict={} ){
                 
                 let unit_derivative          = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
                 
-                //Store the LOSS DERIVATIVE in the hidden unit
-                current_hidden_layer_unit.LOSS = unit_derivative;
-
-                //Aditionally, store the error TOO in gradients object
+                //Store the error TOO in gradients object
                 calculated_gradients[ `layer${ L }` ][ `unit${ UH }` ] = unit_derivative;
 
                 //Aditionally, store the erros TOO with respect of each weight
@@ -753,7 +754,7 @@ net.MLP = function( config_dict={} ){
                 }
 
                 //Update bias
-                current_unit.subtractBias( context.learning_rate * current_unit.LOSS );
+                current_unit.subtractBias( context.learning_rate * current_unit_LOSS );
 
             }
 
