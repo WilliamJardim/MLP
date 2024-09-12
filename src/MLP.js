@@ -912,57 +912,57 @@ net.MLP = function( config_dict={} ){
 
         let number_of_samples = train_samples.length;
 
-        /**
-        * The variable summed_gradients_for_weights, is used for:
-        * Accumulate the gradient of each weight of each unit of each layer
-        * 
-        * Structure in visually representation is:
-        *       layer0
-        *          --> unit0
-        *              --> accumulation_for_weight_0
-        *              --> accumulation_for_weight_1
-        *              --> accumulation_for_weight_N
-        *                  (etc.. other accumulations)
-        *                  (all the "accumulation_for_weight_N" is a Number) 
-        * 
-        *              (etc... other units)
-        * 
-        *      (etc... other layers)
-        * 
-        * Text description of this representation:
-        * The variable summed_gradients_for_weights is a hashmap with layers.
-        * Each layer have N units, and each unit have N "weight accumulation" or also called "accumulation_for_weight" in this text example, and are Numbers.
-        * 
-        * This is a accumulation of the gradient of each weight of each unit of each layer
-        * The accumulation will be done in the lines bellow, using some for loops:
-        */
-        let summed_gradients_for_weights = {};
-
-        /**
-        * The variable summed_gradients_for_weights, is used for:
-        * Accumulate the gradient of the bias of each unit of each layer
-        * 
-        * Structure in visually representation is:
-        *       layer0
-        *          --> accumulation_for_bias_of_unit_0  
-        *          --> accumulation_for_bias_of_unit_1         
-        *           (etc.. other weights gradients)
-        *           (all the "bias_of_unit<N>" is a Number) 
-        *
-        *      (etc... other layers)
-        * 
-        * Text description of this representation:
-        * The variable summed_gradients_for_bias is a hashmap with layers.
-        * Each layer have N "bias accumulation"(corresponding to each unit) or also called "accumulation_for_bias_of_unit_<N>" in this text example, and is a Number.
-        * 
-        * This is a accumulation of the gradient of each the bias of each unit of each layer
-        * The accumulation will be done in the lines bellow, using some for loops:
-        */
-        let summed_gradients_for_bias = {};
-
         //For each epoch
         for( let p = 0 ; p < number_of_epochs ; p++ )
         {
+            /**
+            * The variable summed_gradients_for_weights, is used for:
+            * Accumulate the gradient of each weight of each unit of each layer
+            * 
+            * Structure in visually representation is:
+            *       layer0
+            *          --> unit0
+            *              --> accumulation_for_weight_0
+            *              --> accumulation_for_weight_1
+            *              --> accumulation_for_weight_N
+            *                  (etc.. other accumulations)
+            *                  (all the "accumulation_for_weight_N" is a Number) 
+            * 
+            *              (etc... other units)
+            * 
+            *      (etc... other layers)
+            * 
+            * Text description of this representation:
+            * The variable summed_gradients_for_weights is a hashmap with layers.
+            * Each layer have N units, and each unit have N "weight accumulation" or also called "accumulation_for_weight" in this text example, and are Numbers.
+            * 
+            * This is a accumulation of the gradient of each weight of each unit of each layer
+            * The accumulation will be done in the lines bellow, using some for loops:
+            */
+            let summed_gradients_for_weights = {};
+
+            /**
+            * The variable summed_gradients_for_weights, is used for:
+            * Accumulate the gradient of the bias of each unit of each layer
+            * 
+            * Structure in visually representation is:
+            *       layer0
+            *          --> accumulation_for_bias_of_unit_0  
+            *          --> accumulation_for_bias_of_unit_1         
+            *           (etc.. other weights gradients)
+            *           (all the "bias_of_unit<N>" is a Number) 
+            *
+            *      (etc... other layers)
+            * 
+            * Text description of this representation:
+            * The variable summed_gradients_for_bias is a hashmap with layers.
+            * Each layer have N "bias accumulation"(corresponding to each unit) or also called "accumulation_for_bias_of_unit_<N>" in this text example, and is a Number.
+            * 
+            * This is a accumulation of the gradient of each the bias of each unit of each layer
+            * The accumulation will be done in the lines bellow, using some for loops:
+            */
+            let summed_gradients_for_bias = {};
+
             let total_loss = 0;
 
             //Training process
