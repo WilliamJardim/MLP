@@ -1027,10 +1027,12 @@ net.MLP = function( config_dict={} ){
         */
         let summed_gradients_for_bias = {};
 
-        //Training process - for each sample
-        for( let i = 0 ; i < train_samples.length ; i++ )
-        {
-            let sample_data             = train_samples[i];
+        /**
+        * For each sample 
+        * Will accumulating the gradients(of all samples)
+        */
+        train_samples.forEach(function( sample_data ){
+
             let sample_features         = sample_data[0]; //SAMPLE FEATURES
             let sample_desired_value    = sample_data[1]; //SAMPLE DESIRED OUTPUTS
 
@@ -1104,7 +1106,7 @@ net.MLP = function( config_dict={} ){
                 });
             });
 
-        }
+        });
 
         /** BELOW: Do the mean of the gradients of each weight(of each unit of each layer) **/
 
