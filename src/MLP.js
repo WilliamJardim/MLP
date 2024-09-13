@@ -838,10 +838,9 @@ net.MLP = function( config_dict={} ){
     }
 
     /**
-    * Applies the Gradient Descent algorithm, 
-    * This metheod is used for update the weights and bias of each unit in each layer
+    * Applies the Gradient Descent algorithm to update the weights of each unit in each layer
     */
-    context.update_parameters = function( the_gradients_for_weights={}, the_gradients_for_bias={} ){
+    context.optimize_the_weights = function( the_gradients_for_weights={} ){
         let number_of_layers  = context.getLayers().length;
 
         //Update weights and Bias using Gradient Descent
@@ -868,6 +867,30 @@ net.MLP = function( config_dict={} ){
                                 .subtract( context.learning_rate * calculated_gradients_values_for_weight );
                 }
 
+            }
+
+        }
+    }
+
+    /**
+    * Applies the Gradient Descent algorithm to update tht bias of each unit in each layer
+    */
+    context.optimize_the_bias = function( the_gradients_for_bias={} ){
+        let number_of_layers  = context.getLayers().length;
+
+        //Update weights and Bias using Gradient Descent
+        for( let L = 0 ; L < number_of_layers ; L++ )
+        {
+            let layer_index   = L;
+            let current_layer = context.getLayer( layer_index );
+            let number_of_units_current_layer = current_layer.getUnits().length;
+
+            //For each unit in current layer
+            for( let U = 0 ; U < number_of_units_current_layer ; U++ )
+            {
+                let unit_index         = U;
+                let current_unit       = current_layer.getUnit( unit_index );
+                
                 let calculated_gradients_values_for_bias   = the_gradients_for_bias[`layer${ layer_index }`][ `unit${ unit_index }` ];
 
                 //Update bias
@@ -955,8 +978,11 @@ net.MLP = function( config_dict={} ){
                 let gradients_for_weights  = calculated_gradients_data['gradients_for_each_weights']
                 let gradients_for_bias     = calculated_gradients_data['gradients_of_units']
 
-                //Update the parameters
-                context.update_parameters( gradients_for_weights, gradients_for_bias );
+                /**
+                * Applies the Gradient Descent algorithm to update the parameters
+                */
+                context.optimize_the_weights( gradients_for_weights );
+                context.optimize_the_bias( gradients_for_bias );
             }
 
             total_loss += context.compute_train_cost( train_samples );
@@ -1219,8 +1245,11 @@ net.MLP = function( config_dict={} ){
                 });
             });
 
-            //Update the parameters
-            context.update_parameters( mean_gradients_for_weights, mean_gradients_for_bias );
+            /**
+            * Applies the Gradient Descent algorithm to update the parameters
+            */
+            context.optimize_the_weights( mean_gradients_for_weights );
+            context.optimize_the_bias( mean_gradients_for_bias );
 
             total_loss += context.compute_train_cost( train_samples );
 
