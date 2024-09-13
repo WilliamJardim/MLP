@@ -635,14 +635,16 @@ net.MLP = function( config_dict={} ){
             //Store the error in the gradients object
             list_to_store_gradients_of_units[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = unit_derivative;
 
-            //Aditionally, store the erros TOO with respect of each weight
+            //Store the erros with respect of each weight
             list_to_store_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = [];
-            for( let c = 0 ; c < output_unit.getWeights().length ; c++ )
-            {
-                let weight_index_c = c;
+            
+            //For each weight
+            output_unit.getWeights().forEach(function(weight_value, weight_index_c){
+            
                 let weight_input_C = output_unit.getInputOfWeight( weight_index_c );  
                 list_to_store_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
-            }
+            
+            });
 
         });
 
