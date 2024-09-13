@@ -537,7 +537,9 @@ net.MLP = function( config_dict={} ){
         /**
         * In this case, the layer 0 is the first hidden layer, because the input layer is ignored in initialization
         */
-        context.getLayers().forEach(function( current_layer, layer_index ){
+        context.getLayers().forEach(function( current_layer, 
+                                              layer_index 
+        ){
 
             //For each unit in current layer, get the UNIT OUTPUT and store inside the unit
             let units_outputs = current_layer.get_Output_of_Units();
@@ -586,7 +588,11 @@ net.MLP = function( config_dict={} ){
     * @returns {Object} - The calculated gradients of the output layer
     * 
     */
-    context.calculate_derivatives_of_output_units = function( output_estimated_values, desiredOutputs, list_to_store_gradients_of_units, list_to_store_gradients_for_weights ){
+    context.calculate_derivatives_of_output_units = function( output_estimated_values, 
+                                                              desiredOutputs, 
+                                                              list_to_store_gradients_of_units, 
+                                                              list_to_store_gradients_for_weights 
+    ){
 
         let number_of_layers         = context.getLayers().length;
         let index_of_output_layer    = number_of_layers-1;
@@ -605,7 +611,9 @@ net.MLP = function( config_dict={} ){
         *
         * Like he can see below:
         */
-        context.getOutputLayer().getUnits().forEach(function( output_unit, output_unit_index ){
+        context.getOutputLayer().getUnits().forEach(function( output_unit, 
+                                                              output_unit_index 
+        ){
 
             let unitActivationFn     = output_unit.getFunctionName();
             
@@ -696,7 +704,9 @@ net.MLP = function( config_dict={} ){
         *    Here "unit" is the current unit in the next layer(that is, current of the forEach loop)
         *   "unit_index" is the number of the current unit in the next layer
         */
-        next_layer_units.forEach(function( unit, unit_index ){
+        next_layer_units.forEach(function( unit, 
+                                           unit_index 
+        ){
 
             let connection_weight_with_UH   = unit.getWeight( current_hidden_unit_index );
             
@@ -802,7 +812,9 @@ net.MLP = function( config_dict={} ){
             let next_layer_gradients           = list_to_store_gradients_of_units[ `layer${ L+1 }` ];
 
             //For each unit in CURRENT HIDDEN LAYER
-            current_layer.getUnits().forEach(function(current_hidden_layer_unit, the_unit_index){
+            current_layer.getUnits().forEach(function( current_hidden_layer_unit, 
+                                                       the_unit_index
+            ){
 
                 let hidden_unit_index         = the_unit_index; //I also will call as UH, that is The index of the current unit, like in the equation above;
 
@@ -827,7 +839,9 @@ net.MLP = function( config_dict={} ){
                 //Aditionally, store the erros TOO with respect of each weight
                 list_to_store_gradients_for_weights[ `layer${ L }` ][ `unit${ hidden_unit_index }` ] = [];
                 
-                current_hidden_layer_unit.getWeights().forEach(function(weight_value, weight_index_c){
+                current_hidden_layer_unit.getWeights().forEach(function( weight_value, 
+                                                                         weight_index_c
+                ){
 
                     let weight_input_C = current_hidden_layer_unit.getInputOfWeight( weight_index_c );  
                     list_to_store_gradients_for_weights[ `layer${ L }` ][ `unit${ hidden_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
@@ -855,13 +869,19 @@ net.MLP = function( config_dict={} ){
                                                 the_gradients_for_bias={} 
     ){
         //For each layer
-        context.getLayers().forEach(function(current_layer, layer_index){
+        context.getLayers().forEach(function( current_layer, 
+                                              layer_index                                       
+        ){
             
             //For each unit in current layer
-            current_layer.getUnits().forEach(function(current_unit, unit_index){
+            current_layer.getUnits().forEach(function( current_unit, 
+                                                       unit_index
+            ){
 
                 //For each weight
-                current_unit.getWeights().forEach(function(weight_value, weight_index){
+                current_unit.getWeights().forEach(function( weight_value, 
+                                                            weight_index
+                ){
 
                     let calculated_gradients_values_for_weight = the_gradients_for_weights[`layer${ layer_index }`][ `unit${ unit_index }` ][ weight_index ];
 
@@ -1276,7 +1296,9 @@ net.MLP = function( config_dict={} ){
         let sub_divisions = [];
         let current_set   = [];
 
-        train_samples.forEach(function(sample_obj, sample_index){
+        train_samples.forEach(function( sample_obj, 
+                                        sample_index
+        ){
 
             if( current_set.length < samples_per_batch )
             {
