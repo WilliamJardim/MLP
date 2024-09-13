@@ -842,6 +842,9 @@ net.MLP = function( config_dict={} ){
     /**
     * Applies the Gradient Descent algorithm 
     * Is used to update the weights and bias of each unit in each layer
+    * 
+    * @param {Object} the_gradients_for_weights - The gradients of each weight of each unit of each layer
+    * @param {Object} the_gradients_for_bias    - The gradients of the bias of each unit of each layer
     */
     context.optimize_the_parameters = function( the_gradients_for_weights={}, 
                                                 the_gradients_for_bias={} 
@@ -875,6 +878,9 @@ net.MLP = function( config_dict={} ){
 
     /**
     * Compute de COST
+    * 
+    * @param {Array} train_samples - The training samples
+    * @returns {Number} - The cost
     */
     context.compute_train_cost = function( train_samples ){
 
@@ -889,9 +895,8 @@ net.MLP = function( config_dict={} ){
 
         let cost = 0;
         
-        for( let A = 0 ; A < train_samples.length ; A++ )
-        {   
-            let sample_data            = train_samples[ A ];
+        train_samples.forEach(function( sample_data ){  
+
             let sample_features        = sample_data[0]; //SAMPLE FEATURES
             let sample_desired_value   = sample_data[1]; //SAMPLE DESIRED OUTPUTS
             let estimatedValues        = context.feedforward_sample(sample_features);
@@ -901,7 +906,7 @@ net.MLP = function( config_dict={} ){
                 cost += ( sample_desired_value[ S ] - estimatedValues[ S ] ) ** 2;
             }
 
-        }
+        });
 
         return cost;
     }
@@ -923,10 +928,9 @@ net.MLP = function( config_dict={} ){
         {
             let total_loss = 0;
 
-            //Training process
-            for( let i = 0 ; i < train_samples.length ; i++ )
-            {
-                let sample_data             = train_samples[i];
+            //For each sample
+            train_samples.forEach(function( sample_data ){
+
                 let sample_features         = sample_data[0]; //SAMPLE FEATURES
                 let sample_desired_value    = sample_data[1]; //SAMPLE DESIRED OUTPUTS
 
@@ -954,7 +958,8 @@ net.MLP = function( config_dict={} ){
                 * Applies the Gradient Descent algorithm to update the parameters
                 */
                 context.optimize_the_parameters( gradients_for_weights, gradients_for_bias );
-            }
+
+            });
 
             total_loss += context.compute_train_cost( train_samples );
 
@@ -975,6 +980,8 @@ net.MLP = function( config_dict={} ){
     /**
     * Acculumate the gradients of a full-batch(that is, of each sample in training_samples), and update the parameters
     * This method will be used in the "fullbatch_train" training metheod
+    * 
+    * @param {Array} train_samples - The training samples
     */
     context.train_fullbatch = function( train_samples ){
         let number_of_samples = train_samples.length;
