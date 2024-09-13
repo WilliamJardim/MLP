@@ -305,7 +305,7 @@ net.Layer = function( layer_config={} ){
     }
 
     /**
-    * Set the inputs of this layer, to be used in context.get_unit_outputs
+    * Set the inputs of this layer, to be used in context.get_Output_of_Units
     */
     context.setInputs = function( LAYER_INPUTS=[] ){
         if( !(LAYER_INPUTS instanceof Array) ){
@@ -316,17 +316,19 @@ net.Layer = function( layer_config={} ){
     }
 
     /**
-    * Get the inputs of this layer, to be used in context.get_unit_outputs
+    * Get the inputs of this layer, to be used in context.get_Output_of_Units
     */
     context.getInputs = function(){
         return context['LAYER_INPUTS'];
     }
 
-    /**The unit outputs. */
-    context.get_unit_outputs = function(){
+    /** 
+    * Get the output of each unit in the current layer 
+    */
+    context.get_Output_of_Units = function(){
         let number_of_units = context.getUnits().length;
 
-        //For each unit in this layer L, get the UNIT OUTPUT and store inside the unit
+        //For each unit in this layer <layer_index>, get the UNIT OUTPUT and store inside the unit
         let units_outputs = [];
 
         for( let U = 0 ; U < number_of_units ; U++ )
@@ -519,11 +521,11 @@ net.MLP = function( config_dict={} ){
         let number_of_layers      = context.layers.length;
 
         /**
-        * The inputs of a layer L is always the outputs of previous layer( L-1 )
-        * So, the property LAYER_INPUTS of the first hidden layer is the sample_inputs. And in the feedforward, each layer(L) will have the property LAYER_INPUTS, storing the outputs of the previous layer(L-1) 
+        * The inputs of a layer <layer_index> is always the outputs of previous layer( <layer_index> - 1 )
+        * So, the property LAYER_INPUTS of the first hidden layer is the sample_inputs. And in the feedforward, each layer(<layer_index>) will have the property LAYER_INPUTS, storing the outputs of the previous layer(<layer_index> - 1) 
         * 
-        * So, the inputs of first hidden layer( that is L=0 ), will be the sample_inputs
-        * And the inputs of secound hidden layer( that is L=1 ), will be the outputs of the first hidden layer( that is L=0 )
+        * So, the inputs of first hidden layer( that is <layer_index>=0 ), will be the sample_inputs
+        * And the inputs of secound hidden layer( that is <layer_index>=1 ), will be the outputs of the first hidden layer( that is <layer_index>=0 )
         *
         * Always in this way.
         */
@@ -535,23 +537,24 @@ net.MLP = function( config_dict={} ){
         /**
         * In this case, the layer 0 is the first hidden layer, because the input layer is ignored in initialization
         */
-        for( let L = 0 ; L < number_of_layers ; L++ )
-        {
-            let current_layer = context.getLayer( L );
+        context.getLayers().forEach(function( current_layer, layer_index ){
+
+            //For each unit in current layer, get the UNIT OUTPUT and store inside the unit
+            let units_outputs = current_layer.get_Output_of_Units();
             
-            //For each unit in current layer L, get the UNIT OUTPUT and store inside the unit
-            let units_outputs = current_layer.get_unit_outputs();
-            
-            //If the current layer(L) is NOT the output layer
+            //If the current layer is NOT the output layer
             if( current_layer.notIs('output') ){
 
                 /*
-                * The inputs of a layer L is always the outputs of previous layer( L-1 ) 
-                * Then the in lines below will Store the outputs of the current layer(L) in the NEXT LAYER(L+1) AS UNIT_INPUTS
+                * The inputs of a layer <layer_index> is always the outputs of previous layer( <layer_index> - 1 ) 
+                * Then the in lines below will Store the outputs of the current layer( <layer_index> ) in the NEXT LAYER( <layer_index> + 1 ) AS UNIT_INPUTS
                 */
-                let next_layer = context.getLayer( L+1 );
+                let next_layer_index = layer_index + 1;
+                let next_layer       = context.getLayer( next_layer_index );
                 
-                //Set the current layer(L) outputs AS UNIT_INPUTS OF THE NEXT LAYER(L+1)
+                /**
+                * Set the current layer( <layer_index> ) outputs AS UNIT_INPUTS OF THE NEXT LAYER( <layer_index> + 1 )
+                */
                 next_layer.setInputs( units_outputs );
             }
 
@@ -560,7 +563,8 @@ net.MLP = function( config_dict={} ){
             {
                 final_outputs = units_outputs;
             }
-        }
+
+        });
 
         //Return the final outputs( that is the outputs of the output layer )
         return final_outputs;
@@ -643,9 +647,9 @@ net.MLP = function( config_dict={} ){
     /**
     * Calculate a derivative of a especific unit in a hidden layer
     * 
-    * @param {Number} hidden_unit_index        - The index of the UH unit(that we are calculating the derivative)
-    * @param {Object} next_layer_units         - The units of the next layer
-    * @param {Object} next_units_gradients     - The gradients of the all units in the next layer
+    * @param {Number} current_hidden_unit_index    - The index of the UH unit(that we are calculating the derivative)
+    * @param {Object} next_layer_units             - The units of the next layer
+    * @param {Object} next_layer_units_gradients   - The gradients of the all units in the next layer
     * 
     * @returns {Number} - the derivative of the unit
     */
@@ -784,7 +788,6 @@ net.MLP = function( config_dict={} ){
         {
             //Current layer data
             let current_layer                  = context.getLayer( L );
-            let number_of_units_current_layer  = current_layer.getUnits().length;
 
             list_to_store_gradients_of_units[ `layer${ L }` ] = {};
             list_to_store_gradients_for_weights[`layer${ L }`] = {};
@@ -799,17 +802,17 @@ net.MLP = function( config_dict={} ){
             let next_layer_gradients           = list_to_store_gradients_of_units[ `layer${ L+1 }` ];
 
             //For each unit in CURRENT HIDDEN LAYER
-            for( let UH = 0 ; UH < number_of_units_current_layer ; UH++ )
-            {
-                let current_hidden_layer_unit = current_layer.getUnit( UH ); //The hidden layer unit of number UH(like in the equation above)
-            
+            current_layer.getUnits().forEach(function(current_hidden_layer_unit, the_unit_index){
+
+                let hidden_unit_index         = the_unit_index; //I also will call as UH, that is The index of the current unit, like in the equation above;
+
                 /**
                 * Calculate the derivative of the current unit UH
                 * Relembering that, 
                 * The derivative of a unit in a hidden layer will always depend of the derivatives of the next layer
                 */ 
                 let current_hidden_unit_LOSS  = context.calculate_hidden_unit_derivative( 
-                                                                                          current_hidden_unit_index    = UH, 
+                                                                                          current_hidden_unit_index    = hidden_unit_index, 
                                                                                           next_layer_units             = next_layer.getUnits(),
                                                                                           next_layer_units_gradients   = next_layer_gradients 
                                                                                         );
@@ -819,17 +822,19 @@ net.MLP = function( config_dict={} ){
                 let unit_derivative           = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
                 
                 //Store the error in gradients object
-                list_to_store_gradients_of_units[ `layer${ L }` ][ `unit${ UH }` ] = unit_derivative;
+                list_to_store_gradients_of_units[ `layer${ L }` ][ `unit${ hidden_unit_index }` ] = unit_derivative;
 
                 //Aditionally, store the erros TOO with respect of each weight
-                list_to_store_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ] = [];
-                for( let c = 0 ; c < current_hidden_layer_unit.getWeights().length ; c++ )
-                {
-                    let weight_index_c = c;
+                list_to_store_gradients_for_weights[ `layer${ L }` ][ `unit${ hidden_unit_index }` ] = [];
+                
+                current_hidden_layer_unit.getWeights().forEach(function(weight_value, weight_index_c){
+
                     let weight_input_C = current_hidden_layer_unit.getInputOfWeight( weight_index_c );  
-                    list_to_store_gradients_for_weights[ `layer${ L }` ][ `unit${ UH }` ][ weight_index_c ] = unit_derivative * weight_input_C;
-                }
-            }
+                    list_to_store_gradients_for_weights[ `layer${ L }` ][ `unit${ hidden_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
+                
+                });
+
+            })
         }
 
         //Return the calculated gradients for the sample
@@ -860,13 +865,13 @@ net.MLP = function( config_dict={} ){
 
                     let calculated_gradients_values_for_weight = the_gradients_for_weights[`layer${ layer_index }`][ `unit${ unit_index }` ][ weight_index ];
 
-                    //Select this weight W and update then
+                    //Select this weight <weight_index> and update then
                     current_unit.selectWeight( weight_index )
                                 .subtract( context.learning_rate * calculated_gradients_values_for_weight );
                 
                 });
 
-                let calculated_gradients_values_for_bias   = the_gradients_for_bias[`layer${ layer_index }`][ `unit${ unit_index }` ];
+                let calculated_gradients_values_for_bias = the_gradients_for_bias[`layer${ layer_index }`][ `unit${ unit_index }` ];
 
                 //Update bias
                 current_unit.subtractBias( context.learning_rate * calculated_gradients_values_for_bias );
@@ -1095,7 +1100,7 @@ net.MLP = function( config_dict={} ){
                     /**
                     * I do the accumulation in the following way: 
                     * I sum all the gradient of all the weights( of each unit of each layer ), 
-                    * in its corresponding position in the hashmap, that is, sample_gradients_for_weights[ LAYER ] [ UNIT ] [ WEIGHT ] 
+                    * in its corresponding position in the hashmap, that is, sample_gradients_for_weights[ layer<LAYER_INDEX> ] [ unit<UNIT_INDEX> ] [ <WEIGHT_INDEX> ] 
                     *
                     * Because this, The format of the output of this sum will be the same format of the "sample_gradients_for_weights" returned by the backpropagate_sample metheod
                     */
@@ -1120,7 +1125,7 @@ net.MLP = function( config_dict={} ){
         /**
         * Struct of the mean_gradients_for_weights:
         * 
-        *    mean_gradients_for_weights[layer][unit][weight_index] = Number
+        *    mean_gradients_for_weights[ layer<LAYER_INDEX> ][ unit<UNIT_INDEX> ][ <WEIGHT_INDEX> ] = Number
         * 
         *    Or more visual explaination:
         * 
