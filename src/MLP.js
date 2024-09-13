@@ -1002,6 +1002,245 @@ net.MLP = function( config_dict={} ){
     }
 
     /**
+    * Acculumate the gradients of a full-batch(that is, of each sample in training_samples), and update the parameters
+    * This method will be used in the "fullbatch_train" training metheod
+    */
+    context.train_fullbatch = function( train_samples ){
+        let number_of_samples = train_samples.length;
+
+        /**
+        * The variable summed_gradients_for_weights, is used for:
+        * Accumulate the gradient of each weight of each unit of each layer
+        * 
+        * Structure in visually representation is:
+        *       layer0
+        *          --> unit0
+        *              --> accumulation_for_weight_0
+        *              --> accumulation_for_weight_1
+        *              --> accumulation_for_weight_N
+        *                  (etc.. other accumulations)
+        *                  (all the "accumulation_for_weight_N" is a Number) 
+        * 
+        *              (etc... other units)
+        * 
+        *      (etc... other layers)
+        * 
+        * Text description of this representation:
+        * The variable summed_gradients_for_weights is a hashmap with layers.
+        * Each layer have N units, and each unit have N "weight accumulation" or also called "accumulation_for_weight" in this text example, and are Numbers.
+        * 
+        * This is a accumulation of the gradient of each weight of each unit of each layer
+        * The accumulation will be done in the lines bellow, using some for loops:
+        */
+        let summed_gradients_for_weights = {};
+
+        /**
+        * The variable summed_gradients_for_weights, is used for:
+        * Accumulate the gradient of the bias of each unit of each layer
+        * 
+        * Structure in visually representation is:
+        *       layer0
+        *          --> accumulation_for_bias_of_unit_0  
+        *          --> accumulation_for_bias_of_unit_1         
+        *           (etc.. other weights gradients)
+        *           (all the "bias_of_unit<N>" is a Number) 
+        *
+        *      (etc... other layers)
+        * 
+        * Text description of this representation:
+        * The variable summed_gradients_for_bias is a hashmap with layers.
+        * Each layer have N "bias accumulation"(corresponding to each unit) or also called "accumulation_for_bias_of_unit_<N>" in this text example, and is a Number.
+        * 
+        * This is a accumulation of the gradient of each the bias of each unit of each layer
+        * The accumulation will be done in the lines bellow, using some for loops:
+        */
+        let summed_gradients_for_bias = {};
+
+        //Training process - for each sample
+        for( let i = 0 ; i < train_samples.length ; i++ )
+        {
+            let sample_data             = train_samples[i];
+            let sample_features         = sample_data[0]; //SAMPLE FEATURES
+            let sample_desired_value    = sample_data[1]; //SAMPLE DESIRED OUTPUTS
+
+            //Validations before apply the backpropagation
+            if( !(sample_features instanceof Array) ){
+                throw Error(`The variable sample_features=[${sample_features}] must be a Array!`);
+            }
+
+            if( !(sample_desired_value instanceof Array) ){
+                throw Error(`The variable sample_desired_value=[${sample_desired_value}] is not a Array!`);
+            }
+
+            //If the number of items in the sample_desired_value Array is different from the number of units in the output layer
+            if( sample_desired_value.length != context.layers[ context.layers.length-1 ].units.length ){
+                throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in output layer)`);
+            }
+
+            //Do backpropagation and Gradient Descent
+            let sample_gradients_data = context.backpropagate_sample(sample_features, sample_desired_value);
+        
+            let sample_gradients_for_weights = sample_gradients_data['gradients_for_each_weights'];
+            let sample_gradients_for_bias    = sample_gradients_data['gradients_of_units'];
+
+            //Accumulate the gradients
+            let layersIds = Object.keys(sample_gradients_for_weights);
+
+            layersIds.forEach(function(layerId){
+                let layerData  = sample_gradients_for_weights[ layerId ];
+                let unitsId    = Object.keys(layerData);
+
+                //If not existis the layer in summed_gradients_for_weights, create with empty object
+                if( summed_gradients_for_weights[ layerId ] == undefined ){
+                    summed_gradients_for_weights[ layerId ] = {};
+                }
+
+                if( summed_gradients_for_bias[ layerId ] == undefined ){
+                    summed_gradients_for_bias[ layerId ] = {};
+                }
+
+                unitsId.forEach(function(unitId){
+                    let number_of_weights = sample_gradients_for_weights[ layerId ][ unitId ].length;
+
+                    //If not exists the unit in summed_gradients_for_weights, create with zeros
+                    if( summed_gradients_for_weights[ layerId ][ unitId ] == undefined ){
+                        summed_gradients_for_weights[ layerId ][ unitId ] = Array(number_of_weights).fill(0);
+                    }
+
+                    //If not exists the unit in summed_gradients_for_bias, create with zero
+                    if( summed_gradients_for_bias[ layerId ][ unitId ] == undefined ){
+                        summed_gradients_for_bias[ layerId ][ unitId ] = 0;
+                    }
+
+                    /**
+                    * I do the accumulation in the following way: 
+                    * I sum all the gradient of all the weights( of each unit of each layer ), 
+                    * in its corresponding position in the hashmap, that is, sample_gradients_for_weights[ LAYER ] [ UNIT ] [ WEIGHT ] 
+                    *
+                    * Because this, The format of the output of this sum will be the same format of the "sample_gradients_for_weights" returned by the backpropagate_sample metheod
+                    */
+                    for( let c = 0 ; c < number_of_weights ; c++ )
+                    {   
+                        let weight_index = c;
+                        let gradient_of_weight = sample_gradients_for_weights[ layerId ][ unitId ][ weight_index ];
+                        summed_gradients_for_weights[ layerId ][ unitId ][ weight_index ] = summed_gradients_for_weights[ layerId ][ unitId ][ weight_index ] + gradient_of_weight;
+                    }
+
+                    //Sum gradient for acculate the bias(that no have inputs)
+                    let gradient_of_bias = sample_gradients_for_bias[ layerId ][ unitId ];
+                    summed_gradients_for_bias[ layerId ][ unitId ] = summed_gradients_for_bias[ layerId ][ unitId ] + gradient_of_bias;
+
+                });
+            });
+
+        }
+
+        /** BELOW: Do the mean of the gradients of each weight(of each unit of each layer) **/
+
+        /**
+        * Struct of the mean_gradients_for_weights:
+        * 
+        *    mean_gradients_for_weights[layer][unit][weight_index] = Number
+        * 
+        *    Or more visual explaination:
+        * 
+        *    mean_gradients_for_weights
+        *     
+        *       layer0
+        *          --> unit0
+        *              --> mean_of_accumulation_of_weight 1 
+        *              --> mean_of_accumulation_of_weight 2
+        *                  (etc.. other weights gradients) 
+        * 
+        *              (etc... other units)
+        * 
+        *      (etc... other layers)
+        * 
+        *            
+        * So, the variable mean_gradients_for_weights Is a hashmap of the mean of the accumulated gradients for each weight( of each unit of each layer ) 
+        * Is organized in this way!
+        */
+        let mean_gradients_for_weights = {}; //TODO RENOMEAR ISSO PRA mean_gradients_for_weights
+        
+        Object.keys(summed_gradients_for_weights).forEach(function(layerId){
+            let layerData  = summed_gradients_for_weights[ layerId ];
+            let unitsId    = Object.keys(layerData);
+
+            //If not existis the layer, create with empty object
+            if( mean_gradients_for_weights[ layerId ] == undefined ){
+                mean_gradients_for_weights[ layerId ] = {};
+            }
+
+            unitsId.forEach(function(unitId){
+                //If not existis the unitID, create with empty object
+                if( mean_gradients_for_weights[ layerId ][ unitId ] == undefined ){
+                    mean_gradients_for_weights[ layerId ][ unitId ] = [];
+                }
+
+                //Sum the unit gradient
+                let unit_summed_gradient_for_weights = summed_gradients_for_weights[ layerId ][ unitId ];
+
+                let number_of_weights = unit_summed_gradient_for_weights.length;
+
+                for( let c = 0 ; c < number_of_weights ; c++ )
+                {
+                    let weight_index = c;
+                    let sum_of_weight_c = unit_summed_gradient_for_weights[ weight_index ]; //Obtem o peso C que foi acumulado
+                    mean_gradients_for_weights[ layerId ][ unitId ][ weight_index ] = sum_of_weight_c / number_of_samples;
+                }
+            });
+        });
+
+        /**
+        * Much similar to mean_gradients_for_weights
+        * BUT, instead have a sub-object inside the unit object, they have just a value, that is the mean of the accumulated bias(a Number)
+        *
+        * Or more visual explaination:
+        * 
+        *    mean_gradients_for_bias
+        *     
+        *       layer0
+        *          --> mean_of_accumulation_of_the_bias_of_unit0
+        *          --> mean_of_accumulation_of_the_bias_of_unit1  
+        *          --> mean_of_accumulation_of_the_bias_of_unit2        
+        *              (etc... other bias means)
+        * 
+        *       (etc... other layers)
+        * 
+        * So, inside the mean_gradients_for_bias, he have layers, like in the other examples above
+        * And each layer have N means of the accumulation of the bias of each unit( of each layer )
+        */
+        let mean_gradients_for_bias = {};
+        
+        Object.keys(summed_gradients_for_bias).forEach(function(layerId){
+            let layerData  = summed_gradients_for_bias[ layerId ];
+            let unitsId    = Object.keys(layerData);
+
+            //If not existis the layer, create with empty object
+            if( mean_gradients_for_bias[ layerId ] == undefined ){
+                mean_gradients_for_bias[ layerId ] = {};
+            }
+
+            unitsId.forEach(function(unitId){
+                //If not existis the unitID, create with empty zero
+                if( mean_gradients_for_bias[ layerId ][ unitId ] == undefined ){
+                    mean_gradients_for_bias[ layerId ][ unitId ] = 0;
+                }
+
+                //Sum the unit gradient
+                let unit_summed_gradient_for_the_bias = summed_gradients_for_bias[ layerId ][ unitId ];
+                mean_gradients_for_bias[ layerId ][ unitId ] = unit_summed_gradient_for_the_bias / number_of_samples;
+            });
+        });
+
+        /**
+        * Applies the Gradient Descent algorithm to update the parameters
+        */
+        context.optimize_the_weights( mean_gradients_for_weights );
+        context.optimize_the_bias( mean_gradients_for_bias );
+    }
+
+    /**
     * Full Batch training
     * Update the weights just one time per epoch. 
     * 
@@ -1013,249 +1252,81 @@ net.MLP = function( config_dict={} ){
         let last_total_loss = 0;
         let loss_history = [];
 
-        let number_of_samples = train_samples.length;
-
         //For each epoch
         for( let p = 0 ; p < number_of_epochs ; p++ )
         {
-            /**
-            * The variable summed_gradients_for_weights, is used for:
-            * Accumulate the gradient of each weight of each unit of each layer
-            * 
-            * Structure in visually representation is:
-            *       layer0
-            *          --> unit0
-            *              --> accumulation_for_weight_0
-            *              --> accumulation_for_weight_1
-            *              --> accumulation_for_weight_N
-            *                  (etc.. other accumulations)
-            *                  (all the "accumulation_for_weight_N" is a Number) 
-            * 
-            *              (etc... other units)
-            * 
-            *      (etc... other layers)
-            * 
-            * Text description of this representation:
-            * The variable summed_gradients_for_weights is a hashmap with layers.
-            * Each layer have N units, and each unit have N "weight accumulation" or also called "accumulation_for_weight" in this text example, and are Numbers.
-            * 
-            * This is a accumulation of the gradient of each weight of each unit of each layer
-            * The accumulation will be done in the lines bellow, using some for loops:
-            */
-            let summed_gradients_for_weights = {};
-
-            /**
-            * The variable summed_gradients_for_weights, is used for:
-            * Accumulate the gradient of the bias of each unit of each layer
-            * 
-            * Structure in visually representation is:
-            *       layer0
-            *          --> accumulation_for_bias_of_unit_0  
-            *          --> accumulation_for_bias_of_unit_1         
-            *           (etc.. other weights gradients)
-            *           (all the "bias_of_unit<N>" is a Number) 
-            *
-            *      (etc... other layers)
-            * 
-            * Text description of this representation:
-            * The variable summed_gradients_for_bias is a hashmap with layers.
-            * Each layer have N "bias accumulation"(corresponding to each unit) or also called "accumulation_for_bias_of_unit_<N>" in this text example, and is a Number.
-            * 
-            * This is a accumulation of the gradient of each the bias of each unit of each layer
-            * The accumulation will be done in the lines bellow, using some for loops:
-            */
-            let summed_gradients_for_bias = {};
-
             let total_loss = 0;
 
-            //Training process
-            for( let i = 0 ; i < train_samples.length ; i++ )
-            {
-                let sample_data             = train_samples[i];
-                let sample_features         = sample_data[0]; //SAMPLE FEATURES
-                let sample_desired_value    = sample_data[1]; //SAMPLE DESIRED OUTPUTS
-
-                //Validations before apply the backpropagation
-                if( !(sample_features instanceof Array) ){
-                    throw Error(`The variable sample_features=[${sample_features}] must be a Array!`);
-                }
-
-                if( !(sample_desired_value instanceof Array) ){
-                    throw Error(`The variable sample_desired_value=[${sample_desired_value}] is not a Array!`);
-                }
-
-                //If the number of items in the sample_desired_value Array is different from the number of units in the output layer
-                if( sample_desired_value.length != context.layers[ context.layers.length-1 ].units.length ){
-                    throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in output layer)`);
-                }
-
-                //Do backpropagation and Gradient Descent
-                let sample_gradients_data = context.backpropagate_sample(sample_features, sample_desired_value);
-            
-                let sample_gradients_for_weights = sample_gradients_data['gradients_for_each_weights'];
-                let sample_gradients_for_bias    = sample_gradients_data['gradients_of_units'];
-
-                //Accumulate the gradients
-                let layersIds = Object.keys(sample_gradients_for_weights);
-
-                layersIds.forEach(function(layerId){
-                    let layerData  = sample_gradients_for_weights[ layerId ];
-                    let unitsId    = Object.keys(layerData);
-
-                    //If not existis the layer in summed_gradients_for_weights, create with empty object
-                    if( summed_gradients_for_weights[ layerId ] == undefined ){
-                        summed_gradients_for_weights[ layerId ] = {};
-                    }
-
-                    if( summed_gradients_for_bias[ layerId ] == undefined ){
-                        summed_gradients_for_bias[ layerId ] = {};
-                    }
-
-                    unitsId.forEach(function(unitId){
-                        let number_of_weights = sample_gradients_for_weights[ layerId ][ unitId ].length;
-
-                        //If not exists the unit in summed_gradients_for_weights, create with zeros
-                        if( summed_gradients_for_weights[ layerId ][ unitId ] == undefined ){
-                            summed_gradients_for_weights[ layerId ][ unitId ] = Array(number_of_weights).fill(0);
-                        }
-
-                        //If not exists the unit in summed_gradients_for_bias, create with zero
-                        if( summed_gradients_for_bias[ layerId ][ unitId ] == undefined ){
-                            summed_gradients_for_bias[ layerId ][ unitId ] = 0;
-                        }
-
-                        /**
-                        * I do the accumulation in the following way: 
-                        * I sum all the gradient of all the weights( of each unit of each layer ), 
-                        * in its corresponding position in the hashmap, that is, sample_gradients_for_weights[ LAYER ] [ UNIT ] [ WEIGHT ] 
-                        *
-                        * Because this, The format of the output of this sum will be the same format of the "sample_gradients_for_weights" returned by the backpropagate_sample metheod
-                        */
-                        for( let c = 0 ; c < number_of_weights ; c++ )
-                        {   
-                            let weight_index = c;
-                            let gradient_of_weight = sample_gradients_for_weights[ layerId ][ unitId ][ weight_index ];
-                            summed_gradients_for_weights[ layerId ][ unitId ][ weight_index ] = summed_gradients_for_weights[ layerId ][ unitId ][ weight_index ] + gradient_of_weight;
-                        }
-
-                        //Sum gradient for acculate the bias(that no have inputs)
-                        let gradient_of_bias = sample_gradients_for_bias[ layerId ][ unitId ];
-                        summed_gradients_for_bias[ layerId ][ unitId ] = summed_gradients_for_bias[ layerId ][ unitId ] + gradient_of_bias;
-
-                    });
-                });
-
-            }
-
-            /** BELOW: Do the mean of the gradients of each weight(of each unit of each layer) **/
-
-            /**
-            * Struct of the mean_gradients_for_weights:
-            * 
-            *    mean_gradients_for_weights[layer][unit][weight_index] = Number
-            * 
-            *    Or more visual explaination:
-            * 
-            *    mean_gradients_for_weights
-            *     
-            *       layer0
-            *          --> unit0
-            *              --> mean_of_accumulation_of_weight 1 
-            *              --> mean_of_accumulation_of_weight 2
-            *                  (etc.. other weights gradients) 
-            * 
-            *              (etc... other units)
-            * 
-            *      (etc... other layers)
-            * 
-            *            
-            * So, the variable mean_gradients_for_weights Is a hashmap of the mean of the accumulated gradients for each weight( of each unit of each layer ) 
-            * Is organized in this way!
-            */
-            let mean_gradients_for_weights = {}; //TODO RENOMEAR ISSO PRA mean_gradients_for_weights
-            
-            Object.keys(summed_gradients_for_weights).forEach(function(layerId){
-                let layerData  = summed_gradients_for_weights[ layerId ];
-                let unitsId    = Object.keys(layerData);
-
-                //If not existis the layer, create with empty object
-                if( mean_gradients_for_weights[ layerId ] == undefined ){
-                    mean_gradients_for_weights[ layerId ] = {};
-                }
-
-                unitsId.forEach(function(unitId){
-                    //If not existis the unitID, create with empty object
-                    if( mean_gradients_for_weights[ layerId ][ unitId ] == undefined ){
-                        mean_gradients_for_weights[ layerId ][ unitId ] = [];
-                    }
-
-                    //Sum the unit gradient
-                    let unit_summed_gradient_for_weights = summed_gradients_for_weights[ layerId ][ unitId ];
-
-                    let number_of_weights = unit_summed_gradient_for_weights.length;
-
-                    for( let c = 0 ; c < number_of_weights ; c++ )
-                    {
-                        let weight_index = c;
-                        let sum_of_weight_c = unit_summed_gradient_for_weights[ weight_index ]; //Obtem o peso C que foi acumulado
-                        mean_gradients_for_weights[ layerId ][ unitId ][ weight_index ] = sum_of_weight_c / number_of_samples;
-                    }
-                });
-            });
-
-            /**
-            * Much similar to mean_gradients_for_weights
-            * BUT, instead have a sub-object inside the unit object, they have just a value, that is the mean of the accumulated bias(a Number)
-            *
-            * Or more visual explaination:
-            * 
-            *    mean_gradients_for_bias
-            *     
-            *       layer0
-            *          --> mean_of_accumulation_of_the_bias_of_unit0
-            *          --> mean_of_accumulation_of_the_bias_of_unit1  
-            *          --> mean_of_accumulation_of_the_bias_of_unit2        
-            *              (etc... other bias means)
-            * 
-            *       (etc... other layers)
-            * 
-            * So, inside the mean_gradients_for_bias, he have layers, like in the other examples above
-            * And each layer have N means of the accumulation of the bias of each unit( of each layer )
-            */
-            let mean_gradients_for_bias = {};
-            
-            Object.keys(summed_gradients_for_bias).forEach(function(layerId){
-                let layerData  = summed_gradients_for_bias[ layerId ];
-                let unitsId    = Object.keys(layerData);
-
-                //If not existis the layer, create with empty object
-                if( mean_gradients_for_bias[ layerId ] == undefined ){
-                    mean_gradients_for_bias[ layerId ] = {};
-                }
-
-                unitsId.forEach(function(unitId){
-                    //If not existis the unitID, create with empty zero
-                    if( mean_gradients_for_bias[ layerId ][ unitId ] == undefined ){
-                        mean_gradients_for_bias[ layerId ][ unitId ] = 0;
-                    }
-
-                    //Sum the unit gradient
-                    let unit_summed_gradient_for_the_bias = summed_gradients_for_bias[ layerId ][ unitId ];
-                    mean_gradients_for_bias[ layerId ][ unitId ] = unit_summed_gradient_for_the_bias / number_of_samples;
-                });
-            });
-
-            /**
-            * Applies the Gradient Descent algorithm to update the parameters
-            */
-            context.optimize_the_weights( mean_gradients_for_weights );
-            context.optimize_the_bias( mean_gradients_for_bias );
+            //Accumulate the batch and update the parameters
+            context.train_fullbatch( train_samples );
 
             total_loss += context.compute_train_cost( train_samples );
 
             last_total_loss = total_loss;
             loss_history.push(total_loss);
             
+            if( String( Number(p / 100) ).indexOf('.') != -1 ){
+                console.log(`LOSS: ${last_total_loss}, epoch ${p}`)
+            }
+        }
+
+        return {
+            last_total_loss: last_total_loss,
+            loss_history: loss_history
+        };
+    }
+
+    /**
+    * Mini Batch training
+    * Update the weights after every batch. 
+    * 
+    * @param {Array} train_samples 
+    * @param {Array} number_of_epochs 
+    * @returns {Object}
+    */
+    context.minibatch_train = function(train_samples, number_of_epochs, samples_per_batch=2){
+        let last_total_loss = 0;
+        let loss_history = [];
+
+        //Split into N mini batches
+        let sub_divisions = [];
+        let current_set   = [];
+
+        train_samples.forEach(function(sample_obj, sample_index){
+
+            if( current_set.length < samples_per_batch )
+            {
+                current_set.push( sample_obj );
+
+            //If the current set reach the samples_per_batch limit
+            }else{
+                sub_divisions.push( [... current_set.copyWithin()] );
+                current_set = [];
+            }
+
+        });
+
+        //For each epoch
+        for( let p = 0 ; p < number_of_epochs ; p++ )
+        {
+            let total_loss = 0;
+            
+            //For each division
+            sub_divisions.forEach(function( actual_train_set ){
+
+                /**
+                * Accumulate the gradients of each weight of each unit of each layer
+                * Then, update the weights and bias in the final of the batch 
+                */
+                context.train_fullbatch( actual_train_set );
+
+            });
+
+            total_loss += context.compute_train_cost( train_samples );
+
+            last_total_loss = total_loss;
+            loss_history.push(total_loss);
+
             if( String( Number(p / 100) ).indexOf('.') != -1 ){
                 console.log(`LOSS: ${last_total_loss}, epoch ${p}`)
             }
@@ -1332,6 +1403,10 @@ net.MLP = function( config_dict={} ){
             case 'batch':
             case 'fullbatch':
                 training_result = context.fullbatch_train(train_samples, number_of_epochs);
+                break;
+
+            case 'minibatch':
+                training_result = context.minibatch_train(train_samples, number_of_epochs);
                 break;
 
             default:
