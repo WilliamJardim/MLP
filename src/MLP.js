@@ -341,12 +341,12 @@ net.Layer = function( layer_config={} ){
 
             current_unit['UNIT_POTENTIAL'] = act_potential;
 
-            current_unit['UNIT_OUTPUT'] = unit_output; //So important in backpropagation and gradient descent steps
+            current_unit['UNIT_OUTPUT']    = unit_output; //So important in backpropagation and gradient descent steps
 
             units_outputs.push( unit_output );
 
             //The inputs is the same of all units in a layer
-            current_unit['UNIT_INPUTS'] = LAYER_INPUTS;
+            current_unit['UNIT_INPUTS']    = LAYER_INPUTS;
 
         });
 
