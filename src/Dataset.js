@@ -82,6 +82,7 @@ net.data.Dataset = function( my_dataset_structure ){
     }
 
     let context = {};
+    context.flags = ['dataset'];
 
     context.samples = [];
     context._my_dataset_structure = my_dataset_structure;
