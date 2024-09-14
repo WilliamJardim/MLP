@@ -535,6 +535,9 @@ net.MLP = function( config_dict={} ){
 
         /**
         * In this case, the layer 0 is the first hidden layer, because the input layer is ignored in initialization
+        *
+        * So
+        * For each layer:
         */
         context.getLayers().forEach(function( current_layer, 
                                               layer_index 
