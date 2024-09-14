@@ -62,6 +62,14 @@ net.data.Sample = function( features, desired_values ){
         return context.desired_values[index];
     }
 
+    context.getDataset = function(){
+        return context._dataset;
+    }
+
+    context.getIndex = function(){
+        return context._index;
+    }
+
     return context;
 }
 
@@ -90,17 +98,17 @@ net.data.Dataset = function( my_dataset_structure ){
     /**
     * Convert my_dataset_structure to Objects to make easy manipulation
     */
-    context._my_dataset_structure.forEach(function(my_sample){
+    context._my_dataset_structure.forEach(function(my_sample, my_sample_index){
         let sample_features       = my_sample[0];
         let sample_desired_values = my_sample[1];
 
         //Add the Sample to the context.samples array
-        context.samples.push( 
+        context.samples[my_sample_index] = new net.data.Sample( sample_features, 
+                                                                sample_desired_values );
 
-            new net.data.Sample( sample_features, 
-                                 sample_desired_values )
-
-        );
+        context.samples[my_sample_index]._index   = my_sample_index;             
+        context.samples[my_sample_index]._dataset = context;    
+        context.samples[my_sample_index].params   = {};
     });
 
     context.getSamples = function(){
@@ -121,5 +129,27 @@ net.data.Dataset = function( my_dataset_structure ){
         return context.samples[index];
     }
 
-    return context;
+    return new Proxy(context, {
+        get: function(target, prop, receiver) {
+
+          if (typeof prop === 'string' && !isNaN(prop)) {
+            return target.getSample( Number(prop) );
+
+          }else if (typeof prop === 'number' && !isNaN(prop)) {
+            return target.getSample( prop );
+          }
+
+          return Reflect.get(target, prop, receiver);
+        },
+
+        set: function(target, prop, value) {
+
+          if (typeof prop === 'string' && !isNaN(prop)) {
+            target.content[Number(prop)] = value;
+            return true;
+          }
+
+          return Reflect.set(target, prop, value);
+        }
+    });;
 }
