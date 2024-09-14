@@ -950,11 +950,12 @@ net.MLP = function( config_dict={} ){
     * @returns {Object}
     */
     context.online_train = function(train_samples, number_of_epochs){
+        let currentEpoch    = 0;
         let last_total_loss = 0;
-        let loss_history = [];
+        let loss_history    = [];
 
-        //For each epoch
-        for( let p = 0 ; p < number_of_epochs ; p++ )
+        //While the current epoch number is less the number_of_epochs
+        while( currentEpoch < number_of_epochs )
         {
             let total_loss = 0;
 
@@ -996,9 +997,12 @@ net.MLP = function( config_dict={} ){
             last_total_loss = total_loss;
             loss_history.push(total_loss);
             
-            if( String( Number(p / 100) ).indexOf('.') != -1 ){
-                console.log(`LOSS: ${last_total_loss}, epoch ${p}`)
+            if( String( Number(currentEpoch / 100) ).indexOf('.') != -1 ){
+                console.log(`LOSS: ${last_total_loss}, epoch ${currentEpoch}`)
             }
+
+            //Goto next epoch
+            currentEpoch++;
         }
 
         return {
@@ -1258,11 +1262,12 @@ net.MLP = function( config_dict={} ){
     * @returns {Object}
     */
     context.fullbatch_train = function(train_samples, number_of_epochs){
+        let currentEpoch    = 0;
         let last_total_loss = 0;
-        let loss_history = [];
+        let loss_history    = [];
 
-        //For each epoch
-        for( let p = 0 ; p < number_of_epochs ; p++ )
+        //While the current epoch number is less the number_of_epochs
+        while( currentEpoch < number_of_epochs )
         {
             let total_loss = 0;
 
@@ -1274,9 +1279,12 @@ net.MLP = function( config_dict={} ){
             last_total_loss = total_loss;
             loss_history.push(total_loss);
             
-            if( String( Number(p / 100) ).indexOf('.') != -1 ){
-                console.log(`LOSS: ${last_total_loss}, epoch ${p}`)
+            if( String( Number(currentEpoch / 100) ).indexOf('.') != -1 ){
+                console.log(`LOSS: ${last_total_loss}, epoch ${currentEpoch}`)
             }
+
+            //Goto next epoch
+            currentEpoch++;
         }
 
         return {
@@ -1294,8 +1302,9 @@ net.MLP = function( config_dict={} ){
     * @returns {Object}
     */
     context.minibatch_train = function(train_samples, number_of_epochs, samples_per_batch=2){
+        let currentEpoch    = 0;
         let last_total_loss = 0;
-        let loss_history = [];
+        let loss_history    = [];
 
         //Split into N mini batches
         let sub_divisions = [];
@@ -1317,8 +1326,8 @@ net.MLP = function( config_dict={} ){
 
         });
 
-        //For each epoch
-        for( let p = 0 ; p < number_of_epochs ; p++ )
+        //While the current epoch number is less the number_of_epochs
+        while( currentEpoch < number_of_epochs )
         {
             let total_loss = 0;
             
@@ -1338,9 +1347,12 @@ net.MLP = function( config_dict={} ){
             last_total_loss = total_loss;
             loss_history.push(total_loss);
 
-            if( String( Number(p / 100) ).indexOf('.') != -1 ){
-                console.log(`LOSS: ${last_total_loss}, epoch ${p}`)
+            if( String( Number(currentEpoch / 100) ).indexOf('.') != -1 ){
+                console.log(`LOSS: ${last_total_loss}, epoch ${currentEpoch}`)
             }
+
+            //Goto next epoch
+            currentEpoch++;
         }
 
         return {
