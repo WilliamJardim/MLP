@@ -798,24 +798,31 @@ net.MLP = function( config_dict={} ){
         * 
         * When we reach the FIRST HIDDEN LAYER, when had calculate the gradients of all units in the FIRST HIDDEN LAYER, the backpropagation finally ends.
         */
-        for( let L = number_of_layers-1-1; L >= 0 ; L-- )
+        let currentLayerIndex = number_of_layers-1-1;
+
+        while( currentLayerIndex >= 0 )
         {
             //Current layer data
-            let current_layer                  = context.getLayer( L );
+            let current_layer = context.getLayer( currentLayerIndex );
 
-            list_to_store_gradients_of_units[ `layer${ L }` ] = {};
-            list_to_store_gradients_for_weights[`layer${ L }`] = {};
+            list_to_store_gradients_of_units[ `layer${ currentLayerIndex }` ]     = {};
+            list_to_store_gradients_for_weights [ `layer${ currentLayerIndex }` ] = {};
 
-            //Next layer data
-            let next_layer                     = context.getLayer( L+1 );
+            /**
+            * Next layer data:
+            */
+            let next_layer_index               = currentLayerIndex + 1;
+            let next_layer                     = context.getLayer( next_layer_index );
 
             /**
             * Get the gradients(of the units) of the next layer
             * These gradients will be used in lines below:
             */
-            let next_layer_gradients           = list_to_store_gradients_of_units[ `layer${ L+1 }` ];
+            let next_layer_gradients           = list_to_store_gradients_of_units[ `layer${ next_layer_index }` ];
 
-            //For each unit in CURRENT HIDDEN LAYER
+            /**
+            * For each unit in CURRENT HIDDEN LAYER
+            */
             current_layer.getUnits().forEach(function( current_hidden_layer_unit, 
                                                        the_unit_index
             ){
@@ -837,25 +844,36 @@ net.MLP = function( config_dict={} ){
                 
                 let unit_derivative           = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
                 
-                //Store the error in gradients object
-                list_to_store_gradients_of_units[ `layer${ L }` ][ `unit${ hidden_unit_index }` ] = unit_derivative;
+                /**
+                * Store the error in gradients object
+                */
+                list_to_store_gradients_of_units[ `layer${ currentLayerIndex }` ][ `unit${ hidden_unit_index }` ] = unit_derivative;
 
-                //Aditionally, store the erros TOO with respect of each weight
-                list_to_store_gradients_for_weights[ `layer${ L }` ][ `unit${ hidden_unit_index }` ] = [];
+                /*
+                * Aditionally, store the erros TOO with respect of each weight
+                */
+                list_to_store_gradients_for_weights[ `layer${ currentLayerIndex }` ][ `unit${ hidden_unit_index }` ] = [];
                 
                 current_hidden_layer_unit.getWeights().forEach(function( weight_value, 
                                                                          weight_index_c
                 ){
 
                     let weight_input_C = current_hidden_layer_unit.getInputOfWeight( weight_index_c );  
-                    list_to_store_gradients_for_weights[ `layer${ L }` ][ `unit${ hidden_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
+                    list_to_store_gradients_for_weights[ `layer${ currentLayerIndex }` ][ `unit${ hidden_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
                 
                 });
 
-            })
+            });
+
+            /**
+            * Goto previous layer
+            */
+            currentLayerIndex--;
         }
 
-        //Return the calculated gradients for the sample
+        /**
+        * Return the calculated gradients for the sample
+        */
         return {
             gradients_of_units          : list_to_store_gradients_of_units,
             gradients_for_each_weights  : list_to_store_gradients_for_weights
