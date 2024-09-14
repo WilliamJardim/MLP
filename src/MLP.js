@@ -328,16 +328,12 @@ net.Layer = function( layer_config={} ){
     * Get the output of each unit in the current layer 
     */
     context.get_Output_of_Units = function(){
-        let number_of_units = context.getUnits().length;
-
+        let LAYER_INPUTS = context.getInputs();
+        
         //For each unit in this layer <layer_index>, get the UNIT OUTPUT and store inside the unit
         let units_outputs = [];
 
-        for( let U = 0 ; U < number_of_units ; U++ )
-        {
-            let LAYER_INPUTS = context.getInputs();
-
-            let current_unit = context.getUnit( U );
+        context.getUnits().forEach(function( current_unit ){
 
             let unit_output_data  = current_unit.estimateOutput( LAYER_INPUTS );
             let act_potential     = unit_output_data.unit_potential;
@@ -347,11 +343,12 @@ net.Layer = function( layer_config={} ){
 
             current_unit['UNIT_OUTPUT'] = unit_output; //So important in backpropagation and gradient descent steps
 
+            units_outputs.push( unit_output );
+
             //The inputs is the same of all units in a layer
             current_unit['UNIT_INPUTS'] = LAYER_INPUTS;
 
-            units_outputs.push( unit_output );
-        }
+        });
 
         return units_outputs;
     }
