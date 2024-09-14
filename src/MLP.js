@@ -810,7 +810,7 @@ net.MLP = function( config_dict={} ){
             let current_layer = context.getLayer( currentLayerIndex );
 
             list_to_store_gradients_of_units[ `layer${ currentLayerIndex }` ]     = {};
-            list_to_store_gradients_for_weights [ `layer${ currentLayerIndex }` ] = {};
+            list_to_store_gradients_for_weights[ `layer${ currentLayerIndex }` ]  = {};
 
             /**
             * Next layer data:
