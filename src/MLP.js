@@ -949,7 +949,9 @@ net.MLP = function( config_dict={} ){
     * @param {Array} number_of_epochs 
     * @returns {Object}
     */
-    context.online_train = function(train_samples, number_of_epochs){
+    context.online_train = function( train_samples, 
+                                     number_of_epochs
+    ){
         let currentEpoch    = 0;
         let last_total_loss = 0;
         let loss_history    = [];
@@ -1176,7 +1178,7 @@ net.MLP = function( config_dict={} ){
         */
         let mean_gradients_for_weights = {}; //TODO RENOMEAR ISSO PRA mean_gradients_for_weights
         
-        Object.keys(summed_gradients_for_weights).forEach(function(layerId){
+        Object.keys(summed_gradients_for_weights).forEach(function( layerId ){
             let layerData  = summed_gradients_for_weights[ layerId ];
             let unitsId    = Object.keys(layerData);
 
@@ -1226,7 +1228,7 @@ net.MLP = function( config_dict={} ){
         */
         let mean_gradients_for_bias = {};
         
-        Object.keys(summed_gradients_for_bias).forEach(function(layerId){
+        Object.keys(summed_gradients_for_bias).forEach(function( layerId ){
             let layerData  = summed_gradients_for_bias[ layerId ];
             let unitsId    = Object.keys(layerData);
 
@@ -1261,7 +1263,9 @@ net.MLP = function( config_dict={} ){
     * @param {Array} number_of_epochs 
     * @returns {Object}
     */
-    context.fullbatch_train = function(train_samples, number_of_epochs){
+    context.fullbatch_train = function( train_samples, 
+                                        number_of_epochs 
+    ){
         let currentEpoch    = 0;
         let last_total_loss = 0;
         let loss_history    = [];
@@ -1301,7 +1305,10 @@ net.MLP = function( config_dict={} ){
     * @param {Array} number_of_epochs 
     * @returns {Object}
     */
-    context.minibatch_train = function(train_samples, number_of_epochs, samples_per_batch=2){
+    context.minibatch_train = function( train_samples, 
+                                        number_of_epochs, 
+                                        samples_per_batch=2 
+    ){
         let currentEpoch    = 0;
         let last_total_loss = 0;
         let loss_history    = [];
@@ -1367,7 +1374,9 @@ net.MLP = function( config_dict={} ){
     * @param {Array} train_samples
     * @param {Number} number_of_epochs
     */
-    context.train = function( train_samples, number_of_epochs ){
+    context.train = function( train_samples, 
+                              number_of_epochs 
+    ){
 
         //Validations
         //If is a array or a instance of net.data.Dataset, is acceptable and compative type
@@ -1397,6 +1406,7 @@ net.MLP = function( config_dict={} ){
 
         //Task validation
         if( context.task == 'classification' || context.task == 'logistic_regression' || context.task == 'binary_classification'){
+            
             //Check if some disired value of the samples ARE NOT BINARY
             let someDesiredValueIsNotBinary = [... train_samples.copyWithin()].some( function(entry) {
                 return Object.values(entry[1]).every(function(value) {
@@ -1407,6 +1417,7 @@ net.MLP = function( config_dict={} ){
             if( someDesiredValueIsNotBinary == true ){
                 throw Error(`dataset problem!. Some desired values are not binar!. But, In task of ${context.task}, Should be only 0 and 1, or boolean`);
             }
+
         }
 
         //Sample validation
