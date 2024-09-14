@@ -800,6 +800,10 @@ net.MLP = function( config_dict={} ){
         */
         let currentLayerIndex = number_of_layers-1-1;
 
+        /**
+        * While the "while loop" not arrived the first hidden layer
+        * The first hidden layer(that have index 0, will be the last layer that will be computed) 
+        */
         while( currentLayerIndex >= 0 )
         {
             //Current layer data
