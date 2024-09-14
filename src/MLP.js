@@ -13,7 +13,9 @@
 * 
 * For more details, see README.md.
 */
-var net = {};
+if( !window.net ){
+    window.net = {};
+}
 
 //Activation functions
 net.activations = {};
