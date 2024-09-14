@@ -914,7 +914,8 @@ net.MLP = function( config_dict={} ){
     context.compute_train_cost = function( train_samples ){
 
         //Validations
-        if( !(train_samples instanceof Array) ){
+        //If is a array or a instance of net.data.Dataset, is acceptable and compative type
+        if( !(train_samples instanceof Array || train_samples.internalType == 'dataset') ){
             throw Error(`The train_samples=[${train_samples}] need be a Array instance!`);
         }
 
@@ -1357,7 +1358,8 @@ net.MLP = function( config_dict={} ){
     context.train = function( train_samples, number_of_epochs ){
 
         //Validations
-        if( !(train_samples instanceof Array) ){
+        //If is a array or a instance of net.data.Dataset, is acceptable and compative type
+        if( !(train_samples instanceof Array || train_samples.internalType == 'dataset' ) ){
             throw Error(`The train_samples=[${train_samples}] need be a Array instance!`);
         }
 

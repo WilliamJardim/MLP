@@ -17,12 +17,12 @@ let model = net.MLP({
 
 //XOR problem
 //dataset is [ features, targets_values ]
-let dataset = [
+let dataset = net.data.Dataset([
     [ [0, 1], [ 1 ] ],
     [ [1, 0], [ 1 ] ],
     [ [0, 0], [ 0 ] ],
     [ [1, 1], [ 0 ] ],
-]
+]);
 
 //Training the model
 let results = model.train(dataset, 256);

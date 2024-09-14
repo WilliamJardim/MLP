@@ -55,10 +55,30 @@ net.data.Sample = function( features, desired_values ){
     }
 
     context.getFeature = function(index){
+        if( index == undefined ){
+            throw Error(`Need a index!`);
+        }
+        if(index < 0){
+            throw Error(`Dont negatives!`);
+        }
+        if( index > context.features.length ){
+            throw Error('Exceded the length!');
+        }
+
         return context.features[index];
     }
 
     context.getDesiredValue = function(index){
+        if( index == undefined ){
+            throw Error(`Need a index!`);
+        }
+        if(index < 0){
+            throw Error(`Dont negatives!`);
+        }
+        if( index > context.features.length ){
+            throw Error('Exceded the length!');
+        }
+        
         return context.desired_values[index];
     }
 
@@ -70,7 +90,30 @@ net.data.Sample = function( features, desired_values ){
         return context._index;
     }
 
-    return context;
+    return new Proxy(context, {
+        get: function(target, prop, receiver) {
+
+          if (typeof prop === 'string' && !isNaN(prop) ) {
+
+              if( Number(prop) === 0 ){
+                 return target.features;
+
+              }else if( Number(prop) === 1 ){
+                 return target.desired_values;
+
+              }else{
+                 throw Error(`Invalid prop index!`);
+              }
+    
+          }
+          
+          return Reflect.get(target, prop, receiver);
+        },
+
+        set: function(target, prop, value) {
+          return Reflect.set(target, prop, value);
+        }
+    });
 }
 
 /**
@@ -91,6 +134,7 @@ net.data.Dataset = function( my_dataset_structure ){
 
     let context = {};
     context.flags = ['dataset'];
+    context.internalType = 'dataset';
 
     context.samples = [];
     context._my_dataset_structure = my_dataset_structure;
@@ -129,6 +173,14 @@ net.data.Dataset = function( my_dataset_structure ){
         return context.samples[index];
     }
 
+    context.copyWithin = function(){
+        return [... context.samples.copyWithin()];
+    }
+
+    context.forEach = function(forFn){
+        return context.samples.forEach(forFn);
+    }
+
     return new Proxy(context, {
         get: function(target, prop, receiver) {
 
@@ -143,13 +195,7 @@ net.data.Dataset = function( my_dataset_structure ){
         },
 
         set: function(target, prop, value) {
-
-          if (typeof prop === 'string' && !isNaN(prop)) {
-            target.content[Number(prop)] = value;
-            return true;
-          }
-
           return Reflect.set(target, prop, value);
         }
-    });;
+    });
 }
