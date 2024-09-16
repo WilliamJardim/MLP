@@ -23,6 +23,9 @@ net.data.Sample = function( features, desired_values ){
     if( !(features instanceof Array && desired_values instanceof Array) ){
         throw Error(`The "features" and "desired_values" must be Arrays!`);
     }
+    if( features.length == 0 || desired_values.length == 0){
+        throw Error(`The "features" and the "desired_values" length cannot be zero!`);
+    }
 
     let context = {};
 
@@ -130,6 +133,9 @@ net.data.Dataset = function( my_dataset_structure ){
     }
     if( !(my_dataset_structure instanceof Array) ){
         throw Error(`my_dataset_structure must be Array!`);
+    }
+    if( my_dataset_structure.length == 0 ){
+        throw Error('No have any samples!');
     }
 
     let context = {};
