@@ -793,30 +793,30 @@ net.MLP = function( config_dict={} ){
     * 
     * @param {Number} index_of_current_hidden_layer      - The index of the current hidden layer( Who owns the UH unit(that we are calculating the derivative) )
     * @param {Number} current_hidden_unit_index          - The index of the UH unit(that we are calculating the derivative)
+    * @param {Number} weights_of_current_hidden_unit     - The weights of the UH unit(that we are calculating the derivative)
     * @param {Array}  current_unit_inputs_values         - The inputs of of the UH unit(that we are calculating the derivative)
     * @param {String} current_unit_function_name         - The function name of the UH unit(that we are calculating the derivative)
     * @param {Number} current_unit_output_value          - The output of the UH unit(that we are calculating the derivative)
-    * @param {Array}  next_layer_units                   - The units of the next layer
+    * @param {Array}  next_layer_units_objects           - The units of the next layer
     * @param {Object} next_layer_units_gradients         - The gradients of the all units in the next layer
     *
     * @param {Object} map_to_store_gradients_of_units    - The list to store the calculated gradients of the UH unit(that we are calculating the derivative)
     * @param {Object} map_to_store_gradients_for_weights - The list to store the calculated gradients with respect each weight of the UH unit(that we are calculating the derivative)
-    * @param {Object} current_hidden_layer_unit_object   - The object of the current UH unit (that we are calculating the derivative)
     * 
     * @returns {Number} - the derivative of the unit
     */
     context.calculate_hidden_unit_derivative = function( index_of_current_hidden_layer=Number(), 
                                                          current_hidden_unit_index=Number(), 
+                                                         weights_of_current_hidden_unit=Array(),
                                                          current_unit_inputs_values=Array(), 
                                                          current_unit_function_name=String(), 
                                                          current_unit_output_value=Number(), 
-                                                         next_layer_units=Array(), 
+                                                         next_layer_units_objects=Array(), 
                                                          next_layer_units_gradients={}, 
 
                                                          //List to store the values
                                                          map_to_store_gradients_of_units={}, 
-                                                         map_to_store_gradients_for_weights={},
-                                                         current_hidden_layer_unit_object=Object()
+                                                         map_to_store_gradients_for_weights={}
     ){
 
         let unit_function_object      = net.activations[ current_unit_function_name ];
@@ -862,8 +862,8 @@ net.MLP = function( config_dict={} ){
         *    Here "unit" is the current unit in the next layer(that is, current of the forEach loop)
         *   "unit_index" is the number of the current unit in the next layer
         */
-        next_layer_units.forEach(function( unit, 
-                                           unit_index 
+        next_layer_units_objects.forEach(function( unit, 
+                                                   unit_index 
         ){
 
             let connection_weight_with_UH   = unit.getWeight( current_hidden_unit_index );
@@ -899,8 +899,8 @@ net.MLP = function( config_dict={} ){
         */
         map_to_store_gradients_for_weights[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ] = [];
         
-        current_hidden_layer_unit_object.getWeights().forEach(function( weight_value, 
-                                                                 weight_index_c
+        weights_of_current_hidden_unit.forEach(function( weight_value, 
+                                                         weight_index_c
         ){
 
             let weight_input_C = current_unit_inputs_values[ weight_index_c ]; //CRIAR UM GETTER  
@@ -1005,6 +1005,7 @@ net.MLP = function( config_dict={} ){
             */
             let next_layer_index               = currentLayerIndex + 1;
             let next_layer                     = context.getLayer( next_layer_index );
+            let next_layer_units               = next_layer.getUnits();
 
             /**
             * Get the gradients(of the units) of the next layer
@@ -1020,6 +1021,7 @@ net.MLP = function( config_dict={} ){
             ){
 
                 let hidden_unit_index           = the_unit_index; //I also will call as UH, that is The index of the current unit, like in the equation above;
+                let current_unit_weights        = current_hidden_layer_unit.getWeights();
                 let current_unit_output         = current_layer_outputs[ `unit${ the_unit_index }` ];
                 let current_unit_function_name  = current_hidden_layer_unit.getFunctionName();
                 
@@ -1047,15 +1049,15 @@ net.MLP = function( config_dict={} ){
                 context.calculate_hidden_unit_derivative( 
                                                         index_of_current_hidden_layer        = currentLayerIndex,
                                                         current_hidden_unit_index            = hidden_unit_index, 
+                                                        weights_of_current_hidden_unit       = current_unit_weights,
                                                         current_unit_inputs_values           = current_unit_inputs,
                                                         current_unit_function_name           = current_unit_function_name,
                                                         current_unit_output_value            = current_unit_output,
-                                                        next_layer_units                     = next_layer.getUnits(),
+                                                        next_layer_units_objects             = next_layer_units,
                                                         next_layer_units_gradients           = next_layer_gradients,
 
                                                         list_to_store_gradients_of_units     = list_to_store_gradients_of_units,
-                                                        list_to_store_gradients_for_weights  = list_to_store_gradients_for_weights,
-                                                        current_hidden_layer_unit_object     = current_hidden_layer_unit  
+                                                        list_to_store_gradients_for_weights  = list_to_store_gradients_for_weights
                                                     );
             });
 
