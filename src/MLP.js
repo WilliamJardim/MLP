@@ -791,14 +791,36 @@ net.MLP = function( config_dict={} ){
     /**
     * Calculate a derivative of a especific unit in a hidden layer
     * 
-    * @param {Number} current_hidden_unit_index    - The index of the UH unit(that we are calculating the derivative)
-    * @param {Object} next_layer_units             - The units of the next layer
-    * @param {Object} next_layer_units_gradients   - The gradients of the all units in the next layer
+    * @param {Number} index_of_current_hidden_layer      - The index of the current hidden layer( Who owns the UH unit(that we are calculating the derivative) )
+    * @param {Number} current_hidden_unit_index          - The index of the UH unit(that we are calculating the derivative)
+    * @param {Array}  current_unit_inputs_values         - The inputs of of the UH unit(that we are calculating the derivative)
+    * @param {String} current_unit_function_name         - The function name of the UH unit(that we are calculating the derivative)
+    * @param {Number} current_unit_output_value          - The output of the UH unit(that we are calculating the derivative)
+    * @param {Array}  next_layer_units                   - The units of the next layer
+    * @param {Object} next_layer_units_gradients         - The gradients of the all units in the next layer
+    *
+    * @param {Object} map_to_store_gradients_of_units    - The list to store the calculated gradients of the UH unit(that we are calculating the derivative)
+    * @param {Object} map_to_store_gradients_for_weights - The list to store the calculated gradients with respect each weight of the UH unit(that we are calculating the derivative)
+    * @param {Object} current_hidden_layer_unit_object   - The object of the current UH unit (that we are calculating the derivative)
     * 
     * @returns {Number} - the derivative of the unit
     */
-    context.calculate_hidden_unit_derivative = function( current_hidden_unit_index=Number(), next_layer_units=Array(), next_layer_units_gradients={} ){
+    context.calculate_hidden_unit_derivative = function( index_of_current_hidden_layer=Number(), 
+                                                         current_hidden_unit_index=Number(), 
+                                                         current_unit_inputs_values=Array(), 
+                                                         current_unit_function_name=String(), 
+                                                         current_unit_output_value=Number(), 
+                                                         next_layer_units=Array(), 
+                                                         next_layer_units_gradients={}, 
 
+                                                         //List to store the values
+                                                         map_to_store_gradients_of_units={}, 
+                                                         map_to_store_gradients_for_weights={},
+                                                         current_hidden_layer_unit_object=Object()
+    ){
+
+        let unit_function_object      = net.activations[ current_unit_function_name ];
+    
         /*
         * THE FORMULA USED IS FOLLOWING:
         *
@@ -863,7 +885,34 @@ net.MLP = function( config_dict={} ){
                                 );
         });
 
-        return current_unit_accumulator.getAccumulatedValue();
+        let acumulated      = current_unit_accumulator.getAccumulatedValue();
+
+        let unit_derivative = acumulated * unit_function_object.derivative( current_unit_output_value );
+        
+        /**
+        * Store the error in gradients object
+        */
+        map_to_store_gradients_of_units[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ] = unit_derivative;
+
+        /*
+        * Aditionally, store the erros TOO with respect of each weight
+        */
+        map_to_store_gradients_for_weights[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ] = [];
+        
+        current_hidden_layer_unit_object.getWeights().forEach(function( weight_value, 
+                                                                 weight_index_c
+        ){
+
+            let weight_input_C = current_unit_inputs_values[ weight_index_c ]; //CRIAR UM GETTER  
+            map_to_store_gradients_for_weights[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
+        
+        });
+
+        //Return the actual gradients
+        return {
+            map_to_store_gradients_of_units     : map_to_store_gradients_of_units,
+            map_to_store_gradients_for_weights  : map_to_store_gradients_for_weights
+        }
     }
 
     /**
@@ -970,9 +1019,10 @@ net.MLP = function( config_dict={} ){
                                                        the_unit_index
             ){
 
-                let hidden_unit_index     = the_unit_index; //I also will call as UH, that is The index of the current unit, like in the equation above;
-                let current_unit_output   = current_layer_outputs[ `unit${ the_unit_index }` ];
-
+                let hidden_unit_index           = the_unit_index; //I also will call as UH, that is The index of the current unit, like in the equation above;
+                let current_unit_output         = current_layer_outputs[ `unit${ the_unit_index }` ];
+                let current_unit_function_name  = current_hidden_layer_unit.getFunctionName();
+                
                 /**
                 * I make a copy of the "current_layer_inputs" variable to make a safe and independent copy of the same layer inputs for all units,
                 * 
@@ -987,42 +1037,26 @@ net.MLP = function( config_dict={} ){
                 *
                 *    To facilitate and standardize the process, in a generic way for each layer, we can imagine that the outputs of the previous layer are the inputs themselves.               
                 */
-                let current_unit_inputs   = [... current_layer_inputs.copyWithin()];
+                let current_unit_inputs       = [... current_layer_inputs.copyWithin()];
 
                 /**
                 * Calculate the derivative of the current unit UH
                 * Relembering that, 
                 * The derivative of a unit in a hidden layer will always depend of the derivatives of the next layer
                 */ 
-                let current_hidden_unit_LOSS  = context.calculate_hidden_unit_derivative( 
-                                                                                          current_hidden_unit_index    = hidden_unit_index, 
-                                                                                          next_layer_units             = next_layer.getUnits(),
-                                                                                          next_layer_units_gradients   = next_layer_gradients 
-                                                                                        );
+                context.calculate_hidden_unit_derivative( 
+                                                        index_of_current_hidden_layer        = currentLayerIndex,
+                                                        current_hidden_unit_index            = hidden_unit_index, 
+                                                        current_unit_inputs_values           = current_unit_inputs,
+                                                        current_unit_function_name           = current_unit_function_name,
+                                                        current_unit_output_value            = current_unit_output,
+                                                        next_layer_units                     = next_layer.getUnits(),
+                                                        next_layer_units_gradients           = next_layer_gradients,
 
-                let unit_function_object      = net.activations[ current_hidden_layer_unit.getFunctionName() ];
-                
-                let unit_derivative           = current_hidden_unit_LOSS * unit_function_object.derivative( current_unit_output );
-                
-                /**
-                * Store the error in gradients object
-                */
-                list_to_store_gradients_of_units[ `layer${ currentLayerIndex }` ][ `unit${ hidden_unit_index }` ] = unit_derivative;
-
-                /*
-                * Aditionally, store the erros TOO with respect of each weight
-                */
-                list_to_store_gradients_for_weights[ `layer${ currentLayerIndex }` ][ `unit${ hidden_unit_index }` ] = [];
-                
-                current_hidden_layer_unit.getWeights().forEach(function( weight_value, 
-                                                                         weight_index_c
-                ){
-
-                    let weight_input_C = current_unit_inputs[ weight_index_c ]; //CRIAR UM GETTER  
-                    list_to_store_gradients_for_weights[ `layer${ currentLayerIndex }` ][ `unit${ hidden_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
-                
-                });
-
+                                                        list_to_store_gradients_of_units     = list_to_store_gradients_of_units,
+                                                        list_to_store_gradients_for_weights  = list_to_store_gradients_for_weights,
+                                                        current_hidden_layer_unit_object     = current_hidden_layer_unit  
+                                                    );
             });
 
             /**
