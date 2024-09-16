@@ -79,3 +79,13 @@ Started with COST 1.7937513915811072 and gradually down to 0.52104293024577
 Started with COST 1.262964062350453 and gradually down to 0.15647109180568802
 
 Started with COST 1.0738831770752149 and gradually down to 0.0628066809751275
+
+Started with COST 1.5761358161138754 and gradually down to 0.07353256660489686
+
+Started with COST 1.4790429587022862 and gradually down to 0.039098489679514584
+
+Started with COST 1.479095763671122 and gradually down to 0.08711051930970179
+
+Started with COST 1.158931343180547 and gradually down to 0.050686252600001536
+
+

@@ -105,6 +105,23 @@ net.Unit = function( unit_config={} ){
     context.bias                  = unit_config.bias                 || Number();
 
     /**
+    * Get the layer object( That was linked to this unit )
+    * @returns {Object}
+    */
+    context.getLayerOfThisUnit = function(){
+        return context._layerRef; 
+    }
+
+    /**
+    * Vinculate a prop to this unit
+    * @param {String} newAttributeName
+    * @param {any}    valueOfThisAttribute
+    */
+    context.vinculate = function(newAttributeName, valueOfThisAttribute){
+        context[ newAttributeName ] = valueOfThisAttribute;
+    }
+
+    /**
     * Get the activation function name
     */
     context.getFunctionName = function(){
@@ -219,7 +236,10 @@ net.Unit = function( unit_config={} ){
     * @returns {Number}
     */
     context.getInputOfWeight = function( weight_index ){
-        return context.UNIT_INPUTS[ weight_index ];
+        let father_layer          = context.getLayerOfThisUnit(), //Get the layer to which THIS UNIT belongs
+            father_layer_inputs   = father_layer.getInputs();     //The inputs of the layer(that is, the layer to which THIS UNIT belongs)
+
+        return father_layer_inputs[ weight_index ];
     }
 
     return context;
@@ -248,6 +268,8 @@ net.Layer = function( layer_config={} ){
            activation_function  : context.activation_function
        });
 
+       context.units[i].vinculate( '_unitIndex',  i       );
+       context.units[i].vinculate( '_layerRef' ,  context );
        context.units[i].generate_random_parameters( context.number_of_inputs );
     }
 
@@ -261,19 +283,39 @@ net.Layer = function( layer_config={} ){
     }
 
     /**
-    * Return the next layer
-    * @returns {net.Layer}
+    * Get the layer number(in model) 
     */
-    context.getNextLayer = function(){
-        return context.father.getLayer( context._internal_index + 1 ) || null;
+    context.getIndex = function(){
+        return context['_internal_index'];
     }
 
     /**
-    * Return the previous layer
+    * Get the layer father(the model)
+    */
+    context.getFather = function(){
+        return context._father;
+    }
+
+    /**
+    * Return the next layer( That is, it returns the layer that comes after the current layer )
+    * @returns {net.Layer}
+    */
+    context.getNextLayer = function(){
+        let next_layer_index = context.getIndex() + 1;
+
+        return context.getFather()
+                      .getLayer( next_layer_index ) || null;
+    }
+
+    /**
+    * Return the previous layer( That is, it returns the layer that comes before the current layer )
     * @returns {net.Layer}
     */
     context.getPreviousLayer = function(){
-        return context.father.getLayer( context._internal_index - 1 ) || null;
+        let previous_layer_index = context.getIndex() - 1;
+
+        return context.getFather()
+                      .getLayer( previous_layer_index ) || null;
     }
 
     /**
@@ -310,11 +352,24 @@ net.Layer = function( layer_config={} ){
     * Set the inputs of this layer, to be used in context.get_Output_of_Units
     */
     context.setInputs = function( LAYER_INPUTS=[] ){
+        let this_layer_ref        = context,
+            this_layer_index      = this_layer_ref.getIndex(),
+            father_ref            = this_layer_ref.getFather(),
+            inputs_of_each_layer  = father_ref.readProp('inputs_of_each_layer');  
+
         if( !(LAYER_INPUTS instanceof Array) ){
             throw Error(`LAYER_INPUTS need be a Array!`);
         }
 
-        context['LAYER_INPUTS'] = LAYER_INPUTS;
+        /**
+        * Assign the LAYER_INPUTS in the prop "inputs_of_each_layer"
+        */
+        inputs_of_each_layer[ `layer${ this_layer_index }` ] = [... LAYER_INPUTS.copyWithin()];
+
+        /*
+        * Create a direct reference to make easy access this via layer
+        */
+        this_layer_ref[ 'LAYER_INPUTS' ] = inputs_of_each_layer[ `layer${ this_layer_index }` ];
     }
 
     /**
@@ -328,32 +383,36 @@ net.Layer = function( layer_config={} ){
     * Get the output of each unit in the current layer 
     */
     context.get_Output_of_Units = function(){
+
+        /**
+        * Get this layer inputs( that was linked to this object )
+        * Remembering that the inputs of this layer are the outputs of the previous layer
+        */
         let LAYER_INPUTS = context.getInputs();
-        
-        //For each unit in this layer <layer_index>, get the UNIT OUTPUT and store inside the unit
+
+        /**
+        * For each unit in this layer <layer_index>, get the UNIT OUTPUT and store inside the unit
+        */
         let units_outputs = [];
 
+        /**
+        * Compute the output of each unit in this layer 
+        */
         context.getUnits().forEach(function( current_unit ){
 
             let unit_output_data  = current_unit.estimateOutput( LAYER_INPUTS );
             let act_potential     = unit_output_data.unit_potential;
             let unit_output       = unit_output_data.activation_function_output;
 
-            current_unit['UNIT_POTENTIAL'] = act_potential;
-
-            current_unit['UNIT_OUTPUT']    = unit_output; //So important in backpropagation and gradient descent steps
-
             units_outputs.push( unit_output );
-
-            //The inputs is the same of all units in a layer
-            current_unit['UNIT_INPUTS']    = LAYER_INPUTS;
-
         });
 
         return units_outputs;
     }
 
-    //Return the layer ready
+    /**
+    * Return the layer ready
+    */
     return context;
 }
 
@@ -446,7 +505,12 @@ net.MLP = function( config_dict={} ){
     for( let i = 1 ; i < context.number_of_layers ; i++ )
     {
         let current_layer = net.Layer( context.layers_structure[i] );
-        current_layer.vinculate('_internal_index', i);
+
+        /**
+        * Here I used "i-1" precisely because we are ignoring the input layer, as this for loop starts at layer 1 forward (precisely to ignore the input layer)
+        */
+        current_layer.vinculate('_internal_index', i-1);
+
         current_layer.vinculate('_father',         context);
 
         context.layers.push( current_layer );
@@ -467,6 +531,19 @@ net.MLP = function( config_dict={} ){
 
     if( context.input_layer.activation != undefined ){
         throw Error(`The first layer dont need a activation function!`);
+    }
+
+    /**
+    * Vinculate a prop into this model, to make easy to get and manipulate
+    * @param {whatVinculateID}
+    * @parma {whatVinculate}
+    */
+    context.vinculate = function(whatVinculateID, whatVinculate){
+        context[ whatVinculateID ] = whatVinculate;
+    }
+
+    context.readProp = function( whatReadName ){
+        return context[whatReadName];
     }
 
     /**
@@ -517,7 +594,19 @@ net.MLP = function( config_dict={} ){
             throw Error(`The sample_inputs is empty Array!`);
         }
 
-        let number_of_layers      = context.layers.length;
+        /**
+        * Store the inputs of each layer (that all units of the layer receives)
+        * And vinculate this object in the MLP(the father of the layers) to easy access and manipulations
+        */
+        let inputs_of_each_layer   = {};
+        context.vinculate('inputs_of_each_layer', inputs_of_each_layer);
+
+        /**
+        * Store the ouputs of each unit of each layer 
+        * And vinculate this object in the MLP(the father of the layers) to easy access and manipulations
+        */
+        let outputs_of_each_layer  = {};
+        context.vinculate('outputs_of_each_layer', outputs_of_each_layer);
 
         /**
         * The inputs of a layer <layer_index> is always the outputs of previous layer( <layer_index> - 1 )
@@ -528,7 +617,8 @@ net.MLP = function( config_dict={} ){
         *
         * Always in this way.
         */
-        context.get_first_hidden_layer().setInputs( [... sample_inputs] );
+        context.get_first_hidden_layer()
+               .setInputs( [... sample_inputs] );
 
         //The outputs of OUTPUT LAYER
         let final_outputs         = []; 
@@ -542,27 +632,39 @@ net.MLP = function( config_dict={} ){
         context.getLayers().forEach(function( current_layer, 
                                               layer_index 
         ){
-
-            //For each unit in current layer, get the UNIT OUTPUT and store inside the unit
+            /**
+            * For each unit in current layer, get the UNIT OUTPUT and store inside the unit
+            */
             let units_outputs = current_layer.get_Output_of_Units();
+
+            /**
+            * Store the outputs
+            */
+            outputs_of_each_layer[ `layer${ layer_index }` ] = {};
+            units_outputs.forEach(function( unitOutput, index ){
+                outputs_of_each_layer[ `layer${ layer_index }` ][ `unit${ index }` ] = unitOutput;
+            });
             
-            //If the current layer is NOT the output layer
+            /**
+            * If the current layer is NOT the output layer
+            */
             if( current_layer.notIs('output') ){
 
                 /*
                 * The inputs of a layer <layer_index> is always the outputs of previous layer( <layer_index> - 1 ) 
                 * Then the in lines below will Store the outputs of the current layer( <layer_index> ) in the NEXT LAYER( <layer_index> + 1 ) AS UNIT_INPUTS
                 */
-                let next_layer_index = layer_index + 1;
-                let next_layer       = context.getLayer( next_layer_index );
-                
+                let next_layer = current_layer.getNextLayer();
+            
                 /**
                 * Set the current layer( <layer_index> ) outputs AS UNIT_INPUTS OF THE NEXT LAYER( <layer_index> + 1 )
                 */
                 next_layer.setInputs( units_outputs );
             }
 
-            //If is the output layer
+            /**
+            * If is the output layer
+            */
             if( current_layer.is('output') )
             {
                 final_outputs = units_outputs;
@@ -570,8 +672,38 @@ net.MLP = function( config_dict={} ){
 
         });
 
-        //Return the final outputs( that is the outputs of the output layer )
-        return final_outputs;
+        /**
+        * Return the final outputs( that is the outputs of the output layer )
+        */
+        return {
+            output_estimated_values : final_outputs,
+            inputs_of_each_layer    : inputs_of_each_layer,
+            outputs_of_each_layer   : outputs_of_each_layer,
+
+            /**
+            * Get the estimated outputs
+            * @returns {Array}
+            */
+            getEstimatedOutputs: function(){
+                return final_outputs;
+            },
+
+            /**
+            * Get the input of each layer
+            * @returns {Array}
+            */
+            getInputsOfEachLayer: function(){
+                return inputs_of_each_layer;
+            },
+
+            /**
+            * Get the output of each layer
+            * @returns {Array}
+            */
+            getOutputsOfEachLayer: function(){
+                return outputs_of_each_layer;
+            }
+        };
     }
 
     /* Get the output layer */
@@ -766,8 +898,13 @@ net.MLP = function( config_dict={} ){
         let number_of_layers         = context.getLayers().length;
         
         //Do the feedforward step
-        let output_estimated_values  = context.feedforward_sample( sample_inputs );
-        
+        let feedforward_data         = context.feedforward_sample( sample_inputs );
+
+        //Extract the data from the feedforward
+        let output_estimated_values  = feedforward_data.getEstimatedOutputs();
+        let inputs_of_each_layer     = feedforward_data.getInputsOfEachLayer();
+        let outputs_of_each_layer    = feedforward_data.getOutputsOfEachLayer();
+         
         /**
         * List store the gradients of each unit of the all layers
         * Format { layer_number: gradients_object ...}
@@ -807,7 +944,9 @@ net.MLP = function( config_dict={} ){
         while( currentLayerIndex >= 0 )
         {
             //Current layer data
-            let current_layer = context.getLayer( currentLayerIndex );
+            let current_layer          = context.getLayer( currentLayerIndex );
+            let current_layer_inputs   = inputs_of_each_layer[ `layer${ currentLayerIndex }` ];
+            let current_layer_outputs  = outputs_of_each_layer[ `layer${ currentLayerIndex }` ]
 
             list_to_store_gradients_of_units[ `layer${ currentLayerIndex }` ]     = {};
             list_to_store_gradients_for_weights[ `layer${ currentLayerIndex }` ]  = {};
@@ -831,7 +970,24 @@ net.MLP = function( config_dict={} ){
                                                        the_unit_index
             ){
 
-                let hidden_unit_index         = the_unit_index; //I also will call as UH, that is The index of the current unit, like in the equation above;
+                let hidden_unit_index     = the_unit_index; //I also will call as UH, that is The index of the current unit, like in the equation above;
+                let current_unit_output   = current_layer_outputs[ `unit${ the_unit_index }` ];
+
+                /**
+                * I make a copy of the "current_layer_inputs" variable to make a safe and independent copy of the same layer inputs for all units,
+                * 
+                * Because, the key point of this is: 
+                * 
+                *    All units receives the same inputs!. That is, the same inputs of the layer Who owns the unit
+                *    Because, each layer have N inputs. And the inputs of EACH UNIT in a layer are the outputs of the previous layer.
+                *    So, in short, in a given layer of the neural network, all units in that layer will receive exactly the same inputs, THAT IS, THE OUTPUT OF THE PREVIOUS LAYER, WHICH ARE ITS INPUTS   
+                *
+                *    Except the input layer, because the input layer has no units, It only has inputs(just numbers), and nothing more than that.
+                *    Therefore, the input layer has no units, and therefore does not receive input from a previous layer
+                *
+                *    To facilitate and standardize the process, in a generic way for each layer, we can imagine that the outputs of the previous layer are the inputs themselves.               
+                */
+                let current_unit_inputs   = [... current_layer_inputs.copyWithin()];
 
                 /**
                 * Calculate the derivative of the current unit UH
@@ -846,7 +1002,7 @@ net.MLP = function( config_dict={} ){
 
                 let unit_function_object      = net.activations[ current_hidden_layer_unit.getFunctionName() ];
                 
-                let unit_derivative           = current_hidden_unit_LOSS * unit_function_object.derivative( current_hidden_layer_unit.UNIT_OUTPUT );
+                let unit_derivative           = current_hidden_unit_LOSS * unit_function_object.derivative( current_unit_output );
                 
                 /**
                 * Store the error in gradients object
@@ -862,7 +1018,7 @@ net.MLP = function( config_dict={} ){
                                                                          weight_index_c
                 ){
 
-                    let weight_input_C = current_hidden_layer_unit.getInputOfWeight( weight_index_c );  
+                    let weight_input_C = current_unit_inputs[ weight_index_c ]; //CRIAR UM GETTER  
                     list_to_store_gradients_for_weights[ `layer${ currentLayerIndex }` ][ `unit${ hidden_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
                 
                 });
@@ -951,7 +1107,7 @@ net.MLP = function( config_dict={} ){
 
             let sample_features        = sample_data[0]; //SAMPLE FEATURES
             let sample_desired_value   = sample_data[1]; //SAMPLE DESIRED OUTPUTS
-            let estimatedValues        = context.feedforward_sample(sample_features);
+            let estimatedValues        = context.feedforward_sample(sample_features).getEstimatedOutputs();
 
             for( let S = 0 ; S < estimatedValues.length ; S++ )
             {
