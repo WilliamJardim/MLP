@@ -11,7 +11,7 @@ This project implements a fully modular Multilayer Perceptron (MLP) Neural Netwo
 
    - The project is fully modular: Unit, Layer, and MLP components can be configured via JSON attributes.
 
-   - Online, Full-batch and Mini-batch
+   - Suports Online, Full-batch and Mini-batch
 
 # Credits and References
  - Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.
