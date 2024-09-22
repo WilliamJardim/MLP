@@ -16,5 +16,5 @@ This project was inspired by several publicly available resources, including con
 
 Some general strategies for feedforward and backpropagation were inspired by concepts described by Jason Brownlee, but the code and structure are entirely original and tailored for JavaScript.
 
-# References
+# Credits and References
  - Jason Brownlee, How to Code a Neural Network with Backpropagation In Python (from scratch), Machine Learning Mastery, Available from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/, accessed April 15th, 2024.
