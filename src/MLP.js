@@ -37,7 +37,7 @@ net.activations.relu.derivative = function(functionOutput){
 }
 
 /**
-* A utility for update weights
+* A utility for manipulate weights
 * @param {Object} config 
 */
 net.WeightManipulator = function( config ){
@@ -63,10 +63,10 @@ net.WeightManipulator = function( config ){
 }
 
 /**
-* A utility used for accumulate the erros in a hidden layer
+* A utility used for accumulate the LOSSES in a hidden layer
 * This accumulation is made using a sum 
 */
-net.ErrorAccumulator = function(){
+net.LOSS_Accumulator = function(){
     let context = {};
     context._acumulated = 0;
 
@@ -76,9 +76,11 @@ net.ErrorAccumulator = function(){
     * @param {Number} eloh_param  - The parameters what connect the unit
     * @param {Number} LOSS        - The unit LOSS
     */
-    context.accumulate = function( eloh_param=Number(), LOSS=Number() ){
-        let derivative = eloh_param * LOSS;
-        context._acumulated = context._acumulated + derivative;
+    context.accumulate = function( eloh_param=Number(), 
+                                   LOSS=Number() 
+    ){
+        let thisDerivative  = eloh_param * LOSS;
+        context._acumulated = context._acumulated + thisDerivative;
     }
 
     /**
@@ -764,10 +766,10 @@ net.MLP = function( config_dict={} ){
             //The derivative of this output unit U
             let unit_derivative   = outputDifference * outputDerivative;
 
-            //Store the error in the gradients object
+            //Store the gradient in the gradients object
             list_to_store_gradients_of_units[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = unit_derivative;
 
-            //Store the erros with respect of each weight
+            //Store the gradient with respect of each weight
             list_to_store_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = [];
             
             //For each weight
@@ -851,7 +853,7 @@ net.MLP = function( config_dict={} ){
         */
 
         // Do the accumulation of the LOSSES in the next layer
-        let current_unit_accumulator = net.ErrorAccumulator();
+        let current_unit_accumulator = net.LOSS_Accumulator();
 
         /**
         * For each unit in LEXT LAYER 
@@ -888,7 +890,7 @@ net.MLP = function( config_dict={} ){
         let unit_derivative = acumulated * unit_function_object.derivative( current_unit_output_value );
         
         /**
-        * Store the error in gradients object
+        * Store the gradient in gradients object
         */
         map_to_store_gradients_of_units[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ] = unit_derivative;
 
