@@ -1152,7 +1152,7 @@ net.MLP = function( config_dict={} ){
 
             for( let S = 0 ; S < estimatedValues.length ; S++ )
             {
-                cost += ( sample_desired_value[ S ] - estimatedValues[ S ] ) ** 2;
+                cost = cost + ( sample_desired_value[ S ] - estimatedValues[ S ] ) ** 2;
             }
 
         });
