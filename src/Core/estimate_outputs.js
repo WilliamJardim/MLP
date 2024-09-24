@@ -68,7 +68,7 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
         });
         
         /**
-        * If the current layer is NOT the last layer
+        * If the current layer is NOT the final layer
         */
         if( current_layer.notIs('output') ){
 

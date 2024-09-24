@@ -214,8 +214,8 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
         context.getUnits().forEach(function( current_unit ){
 
             let unit_estimated_data  = current_unit.estimateValue( LAYER_INPUTS );
-            let act_potential     = unit_estimated_data.unit_potential;
-            let unit_estimative       = unit_estimated_data.activation_function_result;
+            let act_potential        = unit_estimated_data.unit_potential;
+            let unit_estimative      = unit_estimated_data.activation_function_result;
 
             units_estimatives.push( unit_estimative );
         });
