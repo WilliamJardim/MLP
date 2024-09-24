@@ -9,12 +9,12 @@
 * 
 *
 * @param {Array} sample_inputs  - the sample features
-* @param {Array} desiredOutputs - the DESIRED values of the last layer units
+* @param {Array} desiredValuess - the DESIRED values of the last layer units
 * 
 * @returns {Object} - The mapped gradients of the units of each layer AND The mapped gradients of the each weight of each unit of each layer
 */
 net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [], 
-                                                   desiredOutputs = [] 
+                                                   desiredValuess = [] 
 ){
 
     let context = this; //The model context
@@ -28,12 +28,12 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
         throw Error(`The sample_inputs is empty Array!`);
     }
 
-    if( !(desiredOutputs instanceof Array) ){
-        throw Error(`The desiredOutputs=[${desiredOutputs}] need be a Array instance!`);
+    if( !(desiredValuess instanceof Array) ){
+        throw Error(`The desiredValuess=[${desiredValuess}] need be a Array instance!`);
     }
 
-    if( desiredOutputs.length == 0 ){
-        throw Error(`The desiredOutputs is empty Array!`);
+    if( desiredValuess.length == 0 ){
+        throw Error(`The desiredValuess is empty Array!`);
     }
 
     let number_of_layers         = context.getLayers().length;
@@ -65,8 +65,8 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
     * 
     * And these gradients will be stored in the list_to_store_gradients_of_units and list_to_store_gradients_for_weights
     */
-    context.calculate_derivatives_of_last_layer_units( model_estimated_values, 
-                                                       desiredOutputs, 
+    context.calculate_derivatives_of_final_layer_units( model_estimated_values, 
+                                                       desiredValuess, 
                                                        list_to_store_gradients_of_units, 
                                                        list_to_store_gradients_for_weights );
 
@@ -124,7 +124,7 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
             * 
             *    All units receives the same inputs!. That is, the same inputs of the layer Who owns the unit
             *    Because, each layer have N inputs. And the inputs of EACH UNIT in a layer are the estimated values of the previous layer.
-            *    So, in short, in a given layer of the neural network, all units in that layer will receive exactly the same inputs, THAT IS, THE OUTPUT OF THE PREVIOUS LAYER, WHICH ARE ITS INPUTS   
+            *    So, in short, in a given layer of the neural network, all units in that layer will receive exactly the same inputs, THAT IS, THE ESTIMATED VALUE OF THE PREVIOUS LAYER, WHICH ARE ITS INPUTS   
             *
             *    Except the input layer, because the input layer has no units, It only has inputs(just numbers), and nothing more than that.
             *    Therefore, the input layer has no units, and therefore does not receive input from a previous layer

@@ -98,8 +98,8 @@ net.HiddenLayerDerivator = function(
             /**
             * NOTE: The next_layer_unit_N.weights[ UH ] is the connection weight, whose index is UH(of the external loop in the explanation of the equation above)
             *       Because, for example, if we are calculating the gradient of the first unit in the last hidden layer, 
-            *       These gradient(of the hidden unit) will depedent of the all gradients in the output layer, 
-            *       together with the connection weight, that is, the weight of unit N of the output layer with respect to the hidden unit number UH
+            *       These gradient(of the hidden unit) will depedent of the all gradients in the final layer, 
+            *       together with the connection weight, that is, the weight of unit N of the final layer with respect to the hidden unit number UH
             *
             * Above are the gradient equation for the hidden layer units, that are applied in the line below:
             */

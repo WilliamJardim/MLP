@@ -20,8 +20,8 @@ net.activations.sigmoid = function(x) {
 }
 
 //Just the derivative of sigmoid
-net.activations.sigmoid.derivative = function(functionOutput){
-    return functionOutput * (1.0 - functionOutput);
+net.activations.sigmoid.derivative = function(functionResult){
+    return functionResult * (1.0 - functionResult);
 }
 
 net.activations.relu = function(x) {
@@ -29,6 +29,6 @@ net.activations.relu = function(x) {
 }
 
 //Just the derivative of sigmoid
-net.activations.relu.derivative = function(functionOutput){
-    return functionOutput > 0 ? 1 : 0;
+net.activations.relu.derivative = function(functionResult){
+    return functionResult > 0 ? 1 : 0;
 }

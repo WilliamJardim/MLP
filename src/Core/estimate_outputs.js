@@ -1,5 +1,5 @@
 /**
-* Get the model estimatived outputs for a ONE SAMPLE
+* Get the model estimatived values for a ONE SAMPLE
 * @param {Array} sample_inputs 
 * @returns {Array}
 */
@@ -42,7 +42,7 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
     context.get_first_hidden_layer()
            .setInputs( [... sample_inputs] );
 
-    //The estimated values of OUTPUT LAYER
+    //The estimated values of LAST LAYER
     let final_estimatives         = []; 
 
     /**
@@ -55,20 +55,20 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
                                           layer_index 
     ){
         /**
-        * For each unit in current layer, get the UNIT OUTPUT and store inside the unit
+        * For each unit in current layer, get the UNIT ESTIMATIVE and store inside the unit
         */
         let units_estimatives = current_layer.get_Estimative_of_Units();
 
         /**
-        * Store the outputs
+        * Store the estimated values
         */
         estimatives_of_each_layer[ `layer${ layer_index }` ] = {};
-        units_estimatives.forEach(function( unitOutput, index ){
-            estimatives_of_each_layer[ `layer${ layer_index }` ][ `unit${ index }` ] = unitOutput;
+        units_estimatives.forEach(function( unitEstimatatedValue, index ){
+            estimatives_of_each_layer[ `layer${ layer_index }` ][ `unit${ index }` ] = unitEstimatatedValue;
         });
         
         /**
-        * If the current layer is NOT the output layer
+        * If the current layer is NOT the last layer
         */
         if( current_layer.notIs('output') ){
 
@@ -85,7 +85,7 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
         }
 
         /**
-        * If is the output layer
+        * If is the final layer
         */
         if( current_layer.is('output') )
         {
@@ -95,7 +95,7 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
     });
 
     /**
-    * Return the final estimatives( that is the estimated values of the output layer )
+    * Return the final estimatives( that is the estimated values of the final layer )
     */
     return {
         model_estimated_values : final_estimatives,
@@ -103,7 +103,7 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
         estimatives_of_each_layer   : estimatives_of_each_layer,
 
         /**
-        * Get the estimated outputs
+        * Get the estimated values
         * @returns {Array}
         */
         getEstimatedValues: function(){
@@ -119,7 +119,7 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
         },
 
         /**
-        * Get the output of each layer
+        * Get the estimated values of each layer
         * @returns {Array}
         */
         getEstimativesOfEachLayer: function(){

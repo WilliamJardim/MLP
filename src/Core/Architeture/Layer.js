@@ -204,7 +204,7 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
         let LAYER_INPUTS = context.getInputs();
 
         /**
-        * For each unit in this layer <layer_index>, get the UNIT OUTPUT and store inside the unit
+        * For each unit in this layer <layer_index>, get the UNIT ESTIMATED VALUE and store inside the unit
         */
         let units_estimatives = [];
 

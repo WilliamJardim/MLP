@@ -51,7 +51,7 @@ net.MLP = class{
             throw Error(`context.input_layer is undefined OR is not of type INPUT!. The first layer must be the INPUT LAYER`);
         }
         if( context.last_layer == undefined || context.last_layer['type'] != 'output' ){
-            throw Error(`context.last_layer is undefined OR is not of type OUTPUT!. The last layer must be the OUTPUT LAYER`);
+            throw Error(`context.last_layer is undefined OR is not of type OUTPUT!. The last layer must be the FINAL LAYER`);
         }
         if( context.learning_rate == undefined || context.learning_rate == null ){
             throw Error(`hyperparameters.learning_rate is undefined!`);
@@ -243,8 +243,8 @@ net.MLP = class{
             return context.layers[ layer_index ];
         }
 
-        /* Get the output layer */
-        context.getOutputLayer = function(){
+        /* Get the last layer */
+        context.getFinalLayer = function(){
             return context.layers[ context.layers.length-1 ];
         }
 

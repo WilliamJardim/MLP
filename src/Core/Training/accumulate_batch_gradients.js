@@ -75,9 +75,9 @@ net.MLP.prototype.accumulate_batch_gradients = function( train_samples ){
             throw Error(`The variable sample_desired_value=[${sample_desired_value}] is not a Array!`);
         }
 
-        //If the number of items in the sample_desired_value Array is different from the number of units in the output layer
+        //If the number of items in the sample_desired_value Array is different from the number of units in the final layer
         if( sample_desired_value.length != context.layers[ context.layers.length-1 ].units.length ){
-            throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in output layer)`);
+            throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in final layer)`);
         }
 
         //Do backpropagation and Gradient Descent
