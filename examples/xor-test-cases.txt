@@ -122,3 +122,25 @@ Started with COST 1.205753692475413 and gradually down to 0.5111531150585836
 
 Started with COST 1.0041844979537677 and gradually down to 0.11496196152193104
 
+23-09-2024
+Started with COST 1.475196509211822 and gradually down to 0.016717435748399005
+
+Started with COST 1.1878419711951518 and gradually down to 0.022284086967481305
+
+Started with COST 1.1329092255827358 and gradually down to 0.0789343124177177
+
+Started with COST 1.169163788849089 and gradually down to 0.040035138825836605
+
+Started with COST 1.4149183614345209 and gradually down to 0.03610965305105918
+
+Started with COST 1.507339400742985 and gradually down to 0.5312565466923284
+
+Started with COST 1.1599304505370558 and gradually down to 0.09254099437443168
+
+Started with COST 1.2307085616495672 and gradually down to 0.029739362989890203
+
+Started with COST 1.0568065383702576 and gradually down to 0.009420810231455128
+
+Started with COST 1.210213037577414 and gradually down to 0.43853946031944147
+
+Started with COST 1.2844360211590584 and gradually down to 0.07180663934495114

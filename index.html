@@ -9,8 +9,32 @@
     
 </body>
 
-<script src="src/Dataset.js"></script>
-<script src="src/MLP.js"></script>
-<script src="src/validation-utils.js"></script>
+
+<script src="src/Data/Dataset.js"></script>
+
+<script src="src/Model.js"></script>
+<script src="src/Utils/validation-utils.js"></script>
+<script src="src/Utils/functions.js"></script>
+<script src="src/Core/Architeture/Unit.js"></script>
+<script src="src/Core/Architeture/Layer.js"></script>
+
+<script src="src/Core/estimate_outputs.js"></script>
+<script src="src/Core/Training/Backpropagation/OutputDerivator.js"></script>
+<script src="src/Core/Training/Backpropagation/calculate_derivatives_of_output_units.js"></script>
+<script src="src/Core/Training/Backpropagation/LossAccumulator.js"></script>
+<script src="src/Core/Training/Backpropagation/HiddenDerivator.js"></script>
+<script src="src/Core/Training/Backpropagation/calculate_hidden_unit_derivative.js"></script>
+<script src="src/Core/Training/Backpropagation/backpropate_sample.js"></script>
+
+<script src="src/Core/Training/Optimization/WeightManipulator.js"></script>
+<script src="src/Core/Training/Optimization/optimize_the_parameters.js"></script>
+
+<script src="src/Core/Training/compute_train_cost.js"></script>
+
+<script src="src/Core/Training/fullbatch_train.js"></script>
+<script src="src/Core/Training/minibatch_train.js"></script>
+<script src="src/Core/Training/online_train.js"></script>
+<script src="src/Core/train.js"></script>
+
 <script src="index.js"></script>
 </html>

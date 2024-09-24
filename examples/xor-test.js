@@ -1,4 +1,4 @@
-let model = net.MLP({
+let model = new net.MLP({
     initialization: 'zeros',
     task: 'binary_classification',
     traintype: 'online',
