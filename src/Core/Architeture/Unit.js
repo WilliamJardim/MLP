@@ -127,7 +127,7 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
             parameterIndex++;
         }
         
-        context.bias = masterRandomValue;
+        context.setBias( masterRandomValue );
     }
 
     /**
@@ -147,8 +147,11 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
             summed_value = summed_value + ( sample_inputs[i] * context.getWeight( weight_index ) );
         }
 
-        //Add the bias
-        summed_value = summed_value + context.bias;
+        /**
+        * Add the bias
+        * Relemering that the bias does have a input, then, i put 1, to ilustrate this in code
+        */
+        summed_value = summed_value + (1 * context.bias);
 
         let estimative = net.activations[ context.getFunctionName() ]( summed_value );
 

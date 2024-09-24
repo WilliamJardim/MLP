@@ -66,9 +66,9 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
     * And these gradients will be stored in the list_to_store_gradients_of_units and list_to_store_gradients_for_weights
     */
     context.calculate_derivatives_of_last_layer_units( model_estimated_values, 
-                                                   desiredOutputs, 
-                                                   list_to_store_gradients_of_units, 
-                                                   list_to_store_gradients_for_weights );
+                                                       desiredOutputs, 
+                                                       list_to_store_gradients_of_units, 
+                                                       list_to_store_gradients_for_weights );
 
     /** 
     * Start the backpropagation
@@ -85,8 +85,8 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
     while( currentLayerIndex >= 0 )
     {
         //Current layer data
-        let current_layer          = context.getLayer( currentLayerIndex );
-        let current_layer_inputs   = inputs_of_each_layer[ `layer${ currentLayerIndex }` ];
+        let current_layer              = context.getLayer( currentLayerIndex );
+        let current_layer_inputs       = inputs_of_each_layer[ `layer${ currentLayerIndex }` ];
         let current_layer_estimatives  = estimatives_of_each_layer[ `layer${ currentLayerIndex }` ]
 
         list_to_store_gradients_of_units[ `layer${ currentLayerIndex }` ]     = {};
@@ -114,7 +114,7 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
 
             let hidden_unit_index           = the_unit_index; //I also will call as UH, that is The index of the current unit, like in the equation above;
             let current_unit_weights        = current_hidden_layer_unit.getWeights();
-            let current_unit_estimative         = current_layer_estimatives[ `unit${ the_unit_index }` ];
+            let current_unit_estimative     = current_layer_estimatives[ `unit${ the_unit_index }` ];
             let current_unit_function_name  = current_hidden_layer_unit.getFunctionName();
 
             /**
@@ -144,7 +144,7 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
                     weights_of_current_hidden_unit       = current_unit_weights,
                     current_unit_inputs_values           = current_unit_inputs,
                     current_unit_function_name           = current_unit_function_name,
-                    current_unit_estimative_value            = current_unit_estimative,
+                    current_unit_estimative_value        = current_unit_estimative,
                     next_layer_units_objects             = next_layer_units,
                     next_layer_units_gradients           = next_layer_gradients,
 
