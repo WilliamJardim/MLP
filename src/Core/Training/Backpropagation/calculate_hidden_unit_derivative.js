@@ -6,7 +6,7 @@
 * @param {Number} weights_of_current_hidden_unit     - The weights of the UH unit(that we are calculating the derivative)
 * @param {Array}  current_unit_inputs_values         - The inputs of of the UH unit(that we are calculating the derivative)
 * @param {String} current_unit_function_name         - The function name of the UH unit(that we are calculating the derivative)
-* @param {Number} current_unit_output_value          - The output of the UH unit(that we are calculating the derivative)
+* @param {Number} current_unit_output_value          - The estimated value of the UH unit(that we are calculating the derivative)
 * @param {Array}  next_layer_units_objects           - The units of the next layer
 * @param {Object} next_layer_units_gradients         - The gradients of the all units in the next layer
 *
@@ -29,7 +29,7 @@ net.MLP.prototype.calculate_hidden_unit_derivative = function(index_of_current_h
                                                               map_to_store_gradients_for_weights={}
 ){
     /**
-    * Create a derivator for derivate the output layer 
+    * Create a derivator for derivate the last layer 
     */
     let derivatorInstance = net.HiddenLayerDerivator(index_of_current_hidden_layer, 
                                                      current_hidden_unit_index, 

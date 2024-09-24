@@ -23,7 +23,7 @@ net.MLP.prototype.compute_train_cost = function( train_samples ){
     train_samples.forEach(function( sample_data ){  
 
         let sample_features        = sample_data[0]; //SAMPLE FEATURES
-        let sample_desired_value   = sample_data[1]; //SAMPLE DESIRED OUTPUTS
+        let sample_desired_value   = sample_data[1]; //SAMPLE DESIRED VALUES
         
         let estimatedValues        = context.estimate_outputs(sample_features)
                                             .getEstimatedOutputs();

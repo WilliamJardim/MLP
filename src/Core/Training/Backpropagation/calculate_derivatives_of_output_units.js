@@ -2,7 +2,7 @@
 * Calculate the derivative of each unit in the output layer
 * 
 * @param {Array}  output_estimated_values              - The network estimations(of each unit)
-* @param {Array}  desiredOutputs                       - The desired outputs(for each unit)
+* @param {Array}  desiredOutputs                       - The desired values(for each unit)
 * @param {Object} list_to_store_gradients_of_units     - A object to store the gradients of each unit
 * @param {Object} list_to_store_gradients_for_weights  - A object to store the gradients of each unit with respect to each unit weight
 *
@@ -26,7 +26,7 @@ net.MLP.prototype.calculate_derivatives_of_output_units = function(output_estima
                                                 list_to_store_gradients_for_weights);
 
     /**
-    * Get and return the gradients of the output layer 
+    * Get and return the gradients of the last model layer 
     */
     let outputGradients = derivatorInstance.derivate();
     return outputGradients;

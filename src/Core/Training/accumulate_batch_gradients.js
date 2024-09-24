@@ -64,7 +64,7 @@ net.MLP.prototype.accumulate_batch_gradients = function( train_samples ){
     train_samples.forEach(function( sample_data ){
 
         let sample_features         = sample_data[0]; //SAMPLE FEATURES
-        let sample_desired_value    = sample_data[1]; //SAMPLE DESIRED OUTPUTS
+        let sample_desired_value    = sample_data[1]; //SAMPLE DESIRED VALUES
 
         //Validations before apply the backpropagation
         if( !(sample_features instanceof Array) ){
@@ -120,7 +120,7 @@ net.MLP.prototype.accumulate_batch_gradients = function( train_samples ){
                 * I sum all the gradient of all the weights( of each unit of each layer ), 
                 * in its corresponding position in the hashmap, that is, sample_gradients_for_weights[ layer<LAYER_INDEX> ] [ unit<UNIT_INDEX> ] [ <WEIGHT_INDEX> ] 
                 *
-                * Because this, The format of the output of this sum will be the same format of the "sample_gradients_for_weights" returned by the backpropagate_sample metheod
+                * Because this, The format of the result of this sum will be the same format of the "sample_gradients_for_weights" returned by the backpropagate_sample metheod
                 */
                 for( let c = 0 ; c < number_of_weights ; c++ )
                 {   

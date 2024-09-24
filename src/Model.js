@@ -71,14 +71,14 @@ net.MLP = class{
             case 'regression':
             case 'linear_regression':
                 if( context.last_layer.activation != 'relu' ){
-                    throw Error(`In the linear regression, you cannot use ${context.last_layer.activation} as output activation function!`);
+                    throw Error(`In the linear regression, you cannot use ${context.last_layer.activation} as activation function!`);
                 }
                 break;
 
             case 'classification':
             case 'logistic_regression':
                 if( context.last_layer.activation != 'sigmoid' ){
-                    throw Error(`In the classification, you cannot use ${context.last_layer.activation} as output activation function!`);
+                    throw Error(`In the classification, you cannot use ${context.last_layer.activation} as activation function!`);
                 }
 
                 break;
@@ -86,11 +86,11 @@ net.MLP = class{
             //Only two classes
             case 'binary_classification':
                 if( context.last_layer.activation != 'sigmoid' ){
-                    throw Error(`In the binary classification, you cannot use ${context.last_layer.activation} as output activation function!`);
+                    throw Error(`In the binary classification, you cannot use ${context.last_layer.activation} as activation function!`);
                 }
 
                 if( context.last_layer.units > 1 ){
-                    throw Error(`In the binary classification, the number of outputs must be only 1, but is ${context.last_layer.units}`);
+                    throw Error(`In the binary classification, the number of estimated values must be only 1, but is ${context.last_layer.units}`);
                 }
                 break;
 
@@ -177,7 +177,7 @@ net.MLP = class{
 
             //Validations of layer creation
             if( last_created && current_layer.number_of_inputs != last_created.number_of_units ) {
-                throw Error(`Initialization error: The layer ${i} have ${ current_layer.number_of_inputs } inputs. But, should be ${ last_created.number_of_units } inputs, because the previus layer( the layer ${i-1} ) have ${ last_created.number_of_units } output units.`);
+                throw Error(`Initialization error: The layer ${i} have ${ current_layer.number_of_inputs } inputs. But, should be ${ last_created.number_of_units } inputs, because the previus layer( the layer ${i-1} ) have ${ last_created.number_of_units } units.`);
             }
             last_created = current_layer;
         }

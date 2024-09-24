@@ -193,13 +193,13 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     }
 
     /** 
-    * Get the output of each unit in the current layer 
+    * Get the estimated value of each unit in the current layer 
     */
     context.get_Output_of_Units = function(){
 
         /**
         * Get this layer inputs( that was linked to this object )
-        * Remembering that the inputs of this layer are the outputs of the previous layer
+        * Remembering that the inputs of this layer are the estimated values of the previous layer
         */
         let LAYER_INPUTS = context.getInputs();
 
@@ -209,7 +209,7 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
         let units_outputs = [];
 
         /**
-        * Compute the output of each unit in this layer 
+        * Compute the estimated value of each unit in this layer 
         */
         context.getUnits().forEach(function( current_unit ){
 

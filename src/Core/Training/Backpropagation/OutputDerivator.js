@@ -3,7 +3,7 @@
 * 
 * @param {Object} model_context                        - The model context
 * @param {Array}  output_estimated_values              - The network estimations(of each unit)
-* @param {Array}  desiredOutputs                       - The desired outputs(for each unit)
+* @param {Array}  desiredOutputs                       - The desired values(for each unit)
 * @param {Object} list_to_store_gradients_of_units     - A object to store the gradients of each unit
 * @param {Object} list_to_store_gradients_for_weights  - A object to store the gradients of each unit with respect to each unit weight
 *

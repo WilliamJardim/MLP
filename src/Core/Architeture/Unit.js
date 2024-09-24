@@ -131,7 +131,7 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     }
 
     /**
-    * Get the estimated output for ONE SAMPLE of this UNIT, to get the estimated output
+    * Get the estimated value for ONE SAMPLE of this UNIT
     * @param   {Array}   sample_inputs        - The model inputs
     * @returns {Number}                       - The model estimative
     */
@@ -150,10 +150,10 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
         //Add the bias
         summed_value = summed_value + context.bias;
 
-        let output = net.activations[ context.getFunctionName() ]( summed_value );
+        let estimative = net.activations[ context.getFunctionName() ]( summed_value );
 
         return {
-            activation_function_output: output,
+            activation_function_output: estimative,
             unit_potential: summed_value //The unit activation potential(just the summed value)
         };
     }

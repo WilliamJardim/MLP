@@ -9,7 +9,7 @@
 * 
 *
 * @param {Array} sample_inputs  - the sample features
-* @param {Array} desiredOutputs - the DESIRED outputs of the output units
+* @param {Array} desiredOutputs - the DESIRED values of the last layer units
 * 
 * @returns {Object} - The mapped gradients of the units of each layer AND The mapped gradients of the each weight of each unit of each layer
 */
@@ -38,10 +38,10 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
 
     let number_of_layers         = context.getLayers().length;
 
-    //Estimate the model outputs
+    //Get the model estimated values
     let estimated_data         = context.estimate_outputs( sample_inputs );
 
-    //Extract the data from the model outputs
+    //Extract the data from the model estimated values
     let output_estimated_values  = estimated_data.getEstimatedOutputs();
     let inputs_of_each_layer     = estimated_data.getInputsOfEachLayer();
     let outputs_of_each_layer    = estimated_data.getOutputsOfEachLayer();
@@ -59,9 +59,9 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
     let list_to_store_gradients_for_weights = {};
 
     /**
-    * Calculate the derivative of each output unit
+    * Calculate the derivative of each unit in last layer
     * This process is made by a subtraction of the "unit estimated value" and the "desired value for the unit".
-    * So, Each unit have a "desired value", and each unit produces a "estimative" in the "estimate_outputs" phase, so these informations are used to calculate this derivatives
+    * So, Each unit have a "desired value", and each unit produces a "estimative" in the "estimate_values" phase, so these informations are used to calculate this derivatives
     * 
     * And these gradients will be stored in the list_to_store_gradients_of_units and list_to_store_gradients_for_weights
     */
@@ -123,13 +123,13 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
             * Because, the key point of this is: 
             * 
             *    All units receives the same inputs!. That is, the same inputs of the layer Who owns the unit
-            *    Because, each layer have N inputs. And the inputs of EACH UNIT in a layer are the outputs of the previous layer.
+            *    Because, each layer have N inputs. And the inputs of EACH UNIT in a layer are the estimated values of the previous layer.
             *    So, in short, in a given layer of the neural network, all units in that layer will receive exactly the same inputs, THAT IS, THE OUTPUT OF THE PREVIOUS LAYER, WHICH ARE ITS INPUTS   
             *
             *    Except the input layer, because the input layer has no units, It only has inputs(just numbers), and nothing more than that.
             *    Therefore, the input layer has no units, and therefore does not receive input from a previous layer
             *
-            *    To facilitate and standardize the process, in a generic way for each layer, we can imagine that the outputs of the previous layer are the inputs themselves.               
+            *    To facilitate and standardize the process, in a generic way for each layer, we can imagine that the estimated values of the previous layer are the inputs themselves.               
             */
             let current_unit_inputs       = [... current_layer_inputs.copyWithin()];
 

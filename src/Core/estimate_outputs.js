@@ -24,25 +24,25 @@ net.MLP.prototype.estimate_outputs = function( sample_inputs=[] ){
     context.vinculate('inputs_of_each_layer', inputs_of_each_layer);
 
     /**
-    * Store the ouputs of each unit of each layer 
+    * Store the estimatives of each unit of each layer 
     * And vinculate this object in the MLP(the father of the layers) to easy access and manipulations
     */
     let outputs_of_each_layer  = {};
     context.vinculate('outputs_of_each_layer', outputs_of_each_layer);
 
     /**
-    * The inputs of a layer <layer_index> is always the outputs of previous layer( <layer_index> - 1 )
-    * So, the property LAYER_INPUTS of the first hidden layer is the sample_inputs. And in the "estimate_outputs" phase, each layer(<layer_index>) will have the property LAYER_INPUTS, storing the outputs of the previous layer(<layer_index> - 1) 
+    * The inputs of a layer <layer_index> is always the estimated values of previous layer( <layer_index> - 1 )
+    * So, the property LAYER_INPUTS of the first hidden layer is the sample_inputs. And in the "estimate_values" phase, each layer(<layer_index>) will have the property LAYER_INPUTS, storing the estimated values of the previous layer(<layer_index> - 1) 
     * 
     * So, the inputs of first hidden layer( that is <layer_index>=0 ), will be the sample_inputs
-    * And the inputs of secound hidden layer( that is <layer_index>=1 ), will be the outputs of the first hidden layer( that is <layer_index>=0 )
+    * And the inputs of secound hidden layer( that is <layer_index>=1 ), will be the estimated values of the first hidden layer( that is <layer_index>=0 )
     *
     * Always in this way.
     */
     context.get_first_hidden_layer()
            .setInputs( [... sample_inputs] );
 
-    //The outputs of OUTPUT LAYER
+    //The estimated values of OUTPUT LAYER
     let final_outputs         = []; 
 
     /**
@@ -73,13 +73,13 @@ net.MLP.prototype.estimate_outputs = function( sample_inputs=[] ){
         if( current_layer.notIs('output') ){
 
             /*
-            * The inputs of a layer <layer_index> is always the outputs of previous layer( <layer_index> - 1 ) 
-            * Then the in lines below will Store the outputs of the current layer( <layer_index> ) in the NEXT LAYER( <layer_index> + 1 ) AS UNIT_INPUTS
+            * The inputs of a layer <layer_index> is always the estimated values of previous layer( <layer_index> - 1 ) 
+            * Then the in lines below will Store the estimated values of the current layer( <layer_index> ) in the NEXT LAYER( <layer_index> + 1 ) AS UNIT_INPUTS
             */
             let next_layer = current_layer.getNextLayer();
         
             /**
-            * Set the current layer( <layer_index> ) outputs AS UNIT_INPUTS OF THE NEXT LAYER( <layer_index> + 1 )
+            * Set the current layer( <layer_index> ) estimated values AS UNIT_INPUTS OF THE NEXT LAYER( <layer_index> + 1 )
             */
             next_layer.setInputs( units_outputs );
         }
@@ -95,7 +95,7 @@ net.MLP.prototype.estimate_outputs = function( sample_inputs=[] ){
     });
 
     /**
-    * Return the final outputs( that is the outputs of the output layer )
+    * Return the final estimatives( that is the estimated values of the output layer )
     */
     return {
         output_estimated_values : final_outputs,
