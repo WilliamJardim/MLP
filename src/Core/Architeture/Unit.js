@@ -13,7 +13,7 @@
 */
 
 //A Unit(with just estimateOutput and weight initialization)
-net.Unit = function( unit_config={} ){
+net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     let context = {};
 
     context.objectName            = 'Unit';
@@ -161,6 +161,23 @@ net.Unit = function( unit_config={} ){
 
         return father_layer_inputs[ weight_index ];
     }
+
+    /**
+    * Get the own context
+    * @returns {Object} - the layer it self
+    */
+    context.getSelfContext = function(){
+        return context;
+    }
+
+    /**
+    * Get the own context
+    * @returns {Object} - the layer it self
+    */
+    context.atSelf = context.getSelfContext;
+
+    //Run the callback
+    context.afterCreateCallback.bind(context)( context );
 
     return context;
 }

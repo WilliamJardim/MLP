@@ -140,9 +140,12 @@ net.MLP = class{
 
         let last_created = null;
 
-        //Initialize the network (ignoring the input layer)
+        /* 
+        * Initialize the network (ignoring the first layer that is the input layer)
+        * Because, the layer of index 1 is the first layer, and in the context.layers_structure Array, the index 0 is the input layer
+        * And then, the index 1 is the first hidden layer, and is the reason by starting at index 1 in the "for loop" below:
+        */
         context.layers_locked = false;
-
         for( let i = 1 ; i < context.number_of_layers ; i++ )
         {
             let current_layer = net.Layer( context.layers_structure[i], ( layerItSelf ) => {
@@ -151,15 +154,18 @@ net.MLP = class{
                 const layer_context = layerItSelf.getSelfContext();
 
                 /**
-                * Here I used "i-1" precisely because we are ignoring the input layer, as this for loop starts at layer 1 forward (precisely to ignore the input layer)
+                * Do important vincules 
                 */
                 layer_context.atSelf()
+                             /*Here I used "i-1" precisely because we are ignoring the input layer, as this for loop starts at layer 1 forward (precisely to ignore the input layer)*/
                              .vinculate('_internal_index', i-1);
 
                 layer_context.atSelf()
                              .vinculate('_father',         context);
                 
-                model_context.addLayer( layer_context );
+                /* Add the layer in the model */
+                model_context.atSelf()
+                             .addLayer( layer_context );
 
             });
 

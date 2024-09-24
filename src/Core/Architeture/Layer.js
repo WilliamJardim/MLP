@@ -15,18 +15,58 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     //The units objects that will be created below
     context.units        = [];
 
+    /**
+    * Add a unit to context.units 
+    * 
+    * @param {net.Layer} new_unit_object
+    */
+    context.addUnit = function( new_unit_object ){
+
+        if( typeof new_unit_object == 'object' && 
+            new_unit_object instanceof Object &&
+            new_unit_object.objectName == 'Unit'
+        ){
+            context.units = [...context.units, new_unit_object];
+
+        }else{
+            throw Error('The "new_unit_object" is not a object of type Unit.');
+        }
+
+    }
+
     //Initialize the layer
     for( let i = 0 ; i < context.number_of_units ; i++ )
     {
-       //Add a unit to the list
-       context.units[i] = net.Unit({
+       /* 
+       * Add a unit to the context.units, using a Unit callback
+       */
+       new net.Unit({
            number_of_inputs     : context.number_of_inputs,
            activation_function  : context.activation_function
-       });
 
-       context.units[i].vinculate( '_unitIndex',  i       );
-       context.units[i].vinculate( '_layerRef' ,  context );
-       context.units[i].generate_random_parameters( context.number_of_inputs );
+        }, ( unitItSelf )=>{
+
+                const layer_context = context.getSelfContext();
+                const unit_context  = unitItSelf.getSelfContext();
+
+                /**
+                * Do important vincules 
+                */
+                unit_context.atSelf()
+                            .vinculate( '_unitIndex',  i       );
+
+                unit_context.atSelf()
+                            .vinculate( '_layerRef' ,  context );
+
+                unit_context.atSelf()
+                            .generate_random_parameters( context.number_of_inputs );
+
+                /* Add the unit in the layer */
+                layer_context.atSelf()
+                             .addUnit( unit_context );
+
+        });
+
     }
 
     /**
