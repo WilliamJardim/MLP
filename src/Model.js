@@ -32,6 +32,7 @@ net.MLP = class{
         context.training_type      = config_dict['traintype'];
         context.hyperparameters    = config_dict['hyperparameters'];
         context.learning_rate      = context.hyperparameters['learningRate'];
+        context.vincules           = {};
 
         //Class parameters and model Hyperparameters validations
         if( context.training_type == undefined || context.training_type == null ){
@@ -105,6 +106,14 @@ net.MLP = class{
         context.layers_locked = true;
 
         /**
+        * Get the own context
+        * @returns {Object} - the model it self
+        */
+        context.getSelfContext = function(){
+            return context;
+        }
+
+        /**
         * Add a layer to context.layers 
         * 
         * @param {net.Layer} new_layer_object
@@ -115,7 +124,13 @@ net.MLP = class{
                 new_layer_object instanceof Object &&
                 new_layer_object.objectName == 'Layer'
             ){
-                context.layers = [...context.layers, new_layer_object];
+                if( !context.layers_locked )
+                {
+                    context.layers = [...context.layers, new_layer_object];
+
+                }else{
+                    throw Error('The layers are locked for new additions!');
+                }
 
             }else{
                 throw Error('The "new_layer_object" is not a object of type Layer.');
@@ -130,16 +145,23 @@ net.MLP = class{
 
         for( let i = 1 ; i < context.number_of_layers ; i++ )
         {
-            let current_layer = net.Layer( context.layers_structure[i] );
+            let current_layer = net.Layer( context.layers_structure[i], ( layerItSelf ) => {
 
-            /**
-            * Here I used "i-1" precisely because we are ignoring the input layer, as this for loop starts at layer 1 forward (precisely to ignore the input layer)
-            */
-            current_layer.vinculate('_internal_index', i-1);
-            current_layer.vinculate('_father',         context);
+                const model_context = context.getSelfContext();
+                const layer_context = layerItSelf.getSelfContext();
 
-            context.addLayer( current_layer );
+                /**
+                * Here I used "i-1" precisely because we are ignoring the input layer, as this for loop starts at layer 1 forward (precisely to ignore the input layer)
+                */
+                layer_context.atSelf()
+                             .vinculate('_internal_index', i-1);
 
+                layer_context.atSelf()
+                             .vinculate('_father',         context);
+                
+                model_context.addLayer( layer_context );
+
+            });
 
             //Validations of layer creation
             if( last_created && current_layer.number_of_inputs != last_created.number_of_units ) {
@@ -147,6 +169,9 @@ net.MLP = class{
             }
             last_created = current_layer;
         }
+
+        //Lock the layers
+        context.layers_locked = true;
 
         //Final validations after initialization
         if( context.input_layer.type != 'input' ){
@@ -160,10 +185,14 @@ net.MLP = class{
         /**
         * Vinculate a prop into this model, to make easy to get and manipulate
         * @param {whatVinculateID}
-        * @parma {whatVinculate}
+        * @param {whatVinculate}
+        * 
+        * @returns {Object} - Model it self
         */
         context.vinculate = function(whatVinculateID, whatVinculate){
             context[ whatVinculateID ] = whatVinculate;
+            context.vincules[ whatVinculateID ] = context[ whatVinculateID ];
+            return context;
         }
 
         context.readProp = function( whatReadName ){

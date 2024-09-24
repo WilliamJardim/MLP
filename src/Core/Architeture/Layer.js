@@ -1,5 +1,5 @@
 //A Layer
-net.Layer = function( layer_config={}, extra_data={} ){
+net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     let context = {};
 
     context.objectName            = 'Layer';
@@ -9,6 +9,8 @@ net.Layer = function( layer_config={}, extra_data={} ){
     context.number_of_inputs      = layer_config.inputs;
     context.activation_function   = layer_config.activation;
     context.layer_type            = layer_config.type;
+    context.afterCreateCallback   = afterCreateCallback;
+    context.vincules              = {}; //Store all vincules
 
     //The units objects that will be created below
     context.units        = [];
@@ -29,11 +31,14 @@ net.Layer = function( layer_config={}, extra_data={} ){
 
     /**
     * Vinculate a prop to this layer
-    * @param {String} newAttributeName
-    * @param {any}    valueOfThisAttribute
+    * @param {String}   newAttributeName
+    * @param {any}      valueOfThisAttribute
+    * @returns {Object} - Layer It self
     */
     context.vinculate = function(newAttributeName, valueOfThisAttribute){
         context[ newAttributeName ] = valueOfThisAttribute;
+        context.vincules[ newAttributeName ] = context[ newAttributeName ];
+        return context;
     }
 
     /**
@@ -163,6 +168,23 @@ net.Layer = function( layer_config={}, extra_data={} ){
 
         return units_outputs;
     }
+
+    /**
+    * Get the own context
+    * @returns {Object} - the layer it self
+    */
+    context.getSelfContext = function(){
+        return context;
+    }
+
+    /**
+    * Get the own context
+    * @returns {Object} - the layer it self
+    */
+    context.atSelf = context.getSelfContext;
+
+    //Run the callback
+    context.afterCreateCallback.bind(context)( context );
 
     /**
     * Return the layer ready
