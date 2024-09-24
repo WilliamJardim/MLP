@@ -114,6 +114,12 @@ net.MLP = class{
         }
 
         /**
+        * Get the own context
+        * @returns {Object} - the layer it self
+        */
+        context.atSelf = context.getSelfContext;
+
+        /**
         * Add a layer to context.layers 
         * 
         * @param {net.Layer} new_layer_object

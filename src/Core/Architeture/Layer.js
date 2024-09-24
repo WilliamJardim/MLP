@@ -34,6 +34,20 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
 
     }
 
+    /**
+    * Get the own context
+    * @returns {Object} - the layer it self
+    */
+    context.getSelfContext = function(){
+        return context;
+    }
+
+    /**
+    * Get the own context
+    * @returns {Object} - the layer it self
+    */
+    context.atSelf = context.getSelfContext;
+
     //Initialize the layer
     for( let i = 0 ; i < context.number_of_units ; i++ )
     {
@@ -208,20 +222,6 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
 
         return units_outputs;
     }
-
-    /**
-    * Get the own context
-    * @returns {Object} - the layer it self
-    */
-    context.getSelfContext = function(){
-        return context;
-    }
-
-    /**
-    * Get the own context
-    * @returns {Object} - the layer it self
-    */
-    context.atSelf = context.getSelfContext;
 
     //Run the callback
     context.afterCreateCallback.bind(context)( context );

@@ -147,3 +147,5 @@ Started with COST 1.2844360211590584 and gradually down to 0.07180663934495114
 
 24-09-2024
 Started with COST 1.1844528778035361 and gradually down to 0.035093112456969514
+
+Started with COST 1.3385076939679275 and gradually down to 0.05392353432521241

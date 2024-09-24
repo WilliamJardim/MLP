@@ -23,6 +23,8 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     context.activation_function   = unit_config.activation_function  || 'sigmoid';
     context.weights               = unit_config.weights              || Array(context.number_of_inputs).fill(0);
     context.bias                  = unit_config.bias                 || Number();
+    context.afterCreateCallback   = afterCreateCallback;
+    context.vincules              = {};
 
     /**
     * Get the layer object( That was linked to this unit )
@@ -39,6 +41,7 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     */
     context.vinculate = function(newAttributeName, valueOfThisAttribute){
         context[ newAttributeName ] = valueOfThisAttribute;
+        context.vincules[ newAttributeName ] = context[ newAttributeName ];
     }
 
     /**
@@ -57,6 +60,15 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
             throw Error(`the newWeights is empty Array!`);
         }
         context.weights = newWeights;
+    }
+
+    /**
+    * Set a especific weight
+    * @param {Number} weight_index 
+    * @param {Number} value 
+    */
+    context.setWeightOfIndex = function( weight_index, value ){
+        context.weights[ Number( weight_index ) ] = Number( value );
     }
 
     //Getter for the context.weights
@@ -105,12 +117,17 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     */
     context.generate_random_parameters = function( number_of_inputs=context.number_of_inputs ){
 
-        for( let i = 0 ; i < number_of_inputs ; i++ )
-        {
-            context.weights[i] = Math.random();
-        }
+        let parameterIndex    = 0;
+        let masterRandomValue = Math.random();
 
-        context.bias = Math.random();
+        while( parameterIndex < number_of_inputs )
+        {
+            let currentRandomValue = Math.random();
+            context.setWeightOfIndex( parameterIndex, currentRandomValue );
+            parameterIndex++;
+        }
+        
+        context.bias = masterRandomValue;
     }
 
     /**
