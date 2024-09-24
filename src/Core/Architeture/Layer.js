@@ -1,7 +1,8 @@
 //A Layer
-net.Layer = function( layer_config={} ){
+net.Layer = function( layer_config={}, extra_data={} ){
     let context = {};
 
+    context.objectName            = 'Layer';
     context.layer_config          = layer_config;
     context.number_of_units       = layer_config.units;
     context.number_of_outputs     = context.number_of_units; //the same as context.number_of_units

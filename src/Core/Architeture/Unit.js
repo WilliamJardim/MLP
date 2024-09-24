@@ -16,6 +16,8 @@
 net.Unit = function( unit_config={} ){
     let context = {};
 
+    context.objectName            = 'Unit';
+
     //Parameters
     context.number_of_inputs      = unit_config.number_of_inputs     || Number();
     context.activation_function   = unit_config.activation_function  || 'sigmoid';

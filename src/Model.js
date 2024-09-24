@@ -101,9 +101,33 @@ net.MLP = class{
         //The layers objects that will be created below
         context.layers  = [];
 
+        //If true, not allow modifications in layers
+        context.layers_locked = true;
+
+        /**
+        * Add a layer to context.layers 
+        * 
+        * @param {net.Layer} new_layer_object
+        */
+        context.addLayer = function( new_layer_object ){
+
+            if( typeof new_layer_object == 'object' && 
+                new_layer_object instanceof Object &&
+                new_layer_object.objectName == 'Layer'
+            ){
+                context.layers = [...context.layers, new_layer_object];
+
+            }else{
+                throw Error('The "new_layer_object" is not a object of type Layer.');
+            }
+
+        }
+
         let last_created = null;
 
         //Initialize the network (ignoring the input layer)
+        context.layers_locked = false;
+
         for( let i = 1 ; i < context.number_of_layers ; i++ )
         {
             let current_layer = net.Layer( context.layers_structure[i] );
@@ -112,10 +136,9 @@ net.MLP = class{
             * Here I used "i-1" precisely because we are ignoring the input layer, as this for loop starts at layer 1 forward (precisely to ignore the input layer)
             */
             current_layer.vinculate('_internal_index', i-1);
-
             current_layer.vinculate('_father',         context);
 
-            context.layers.push( current_layer );
+            context.addLayer( current_layer );
 
 
             //Validations of layer creation
