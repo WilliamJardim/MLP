@@ -9,7 +9,7 @@
 * 
 *
 * @param {Array} sample_inputs  - the sample features
-* @param {Array} desiredValuess - the DESIRED values of the last layer units
+* @param {Array} desiredValuess - the DESIRED values of the final layer units
 * 
 * @returns {Object} - The mapped gradients of the units of each layer AND The mapped gradients of the each weight of each unit of each layer
 */
@@ -59,7 +59,7 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
     let list_to_store_gradients_for_weights = {};
 
     /**
-    * Calculate the derivative of each unit in last layer
+    * Calculate the derivative of each unit in final layer
     * This process is made by a subtraction of the "unit estimated value" and the "desired value for the unit".
     * So, Each unit have a "desired value", and each unit produces a "estimative" in the "estimate_values" phase, so these informations are used to calculate this derivatives
     * 
@@ -80,7 +80,7 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
 
     /**
     * While the "while loop" not arrived the first hidden layer
-    * The first hidden layer(that have index 0, will be the last layer that will be computed) 
+    * The first hidden layer(that have index 0, will be the final layer that will be computed) 
     */
     while( currentLayerIndex >= 0 )
     {

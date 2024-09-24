@@ -11,7 +11,7 @@ let model = new net.MLP({
     layers: [
         { type: 'input',  inputs: 2, pre_process : 'nothing' }, //The input Layer
         { type: 'hidden', inputs: 2, units : 3, activation : 'relu' },
-        { type: 'output', inputs: 3, units : 1, activation : 'sigmoid' }
+        { type: 'final',  inputs: 3, units : 1, activation : 'sigmoid' }
     ]
 });
 

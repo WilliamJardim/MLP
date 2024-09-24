@@ -50,8 +50,8 @@ net.MLP = class{
         if( context.input_layer == undefined || context.input_layer['type'] != 'input' ){
             throw Error(`context.input_layer is undefined OR is not of type INPUT!. The first layer must be the INPUT LAYER`);
         }
-        if( context.last_layer == undefined || context.last_layer['type'] != 'output' ){
-            throw Error(`context.last_layer is undefined OR is not of type OUTPUT!. The last layer must be the FINAL LAYER`);
+        if( context.last_layer == undefined || context.last_layer['type'] != 'final' ){
+            throw Error(`context.last_layer is undefined OR is not of type FINAL!. The last layer of the model must be the FINAL LAYER`);
         }
         if( context.learning_rate == undefined || context.learning_rate == null ){
             throw Error(`hyperparameters.learning_rate is undefined!`);
@@ -243,7 +243,7 @@ net.MLP = class{
             return context.layers[ layer_index ];
         }
 
-        /* Get the last layer */
+        /* Get the final layer */
         context.getFinalLayer = function(){
             return context.layers[ context.layers.length-1 ];
         }

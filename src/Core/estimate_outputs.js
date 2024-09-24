@@ -42,7 +42,7 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
     context.get_first_hidden_layer()
            .setInputs( [... sample_inputs] );
 
-    //The estimated values of LAST LAYER
+    //The estimated values of FINAL LAYER
     let final_estimatives         = []; 
 
     /**
@@ -70,7 +70,7 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
         /**
         * If the current layer is NOT the final layer
         */
-        if( current_layer.notIs('output') ){
+        if( current_layer.notIs('final') ){
 
             /*
             * The inputs of a layer <layer_index> is always the estimated values of previous layer( <layer_index> - 1 ) 
@@ -87,7 +87,7 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
         /**
         * If is the final layer
         */
-        if( current_layer.is('output') )
+        if( current_layer.is('final') )
         {
             final_estimatives = units_estimatives;
         }

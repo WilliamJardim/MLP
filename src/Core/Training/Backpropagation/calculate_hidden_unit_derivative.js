@@ -29,7 +29,7 @@ net.MLP.prototype.calculate_hidden_unit_derivative = function(index_of_current_h
                                                               map_to_store_gradients_for_weights={}
 ){
     /**
-    * Create a derivator for derivate the last layer 
+    * Create a derivator for derivate the final layer 
     */
     let derivatorInstance = net.HiddenLayerDerivator(index_of_current_hidden_layer, 
                                                      current_hidden_unit_index, 
