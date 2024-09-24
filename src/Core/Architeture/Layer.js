@@ -5,7 +5,7 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     context.objectName            = 'Layer';
     context.layer_config          = layer_config;
     context.number_of_units       = layer_config.units;
-    context.number_of_outputs     = context.number_of_units; //the same as context.number_of_units
+    context.amount_of_estimatives     = context.number_of_units; //the same as context.number_of_units
     context.number_of_inputs      = layer_config.inputs;
     context.activation_function   = layer_config.activation;
     context.layer_type            = layer_config.type;
@@ -162,7 +162,7 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     }
 
     /**
-    * Set the inputs of this layer, to be used in context.get_Output_of_Units
+    * Set the inputs of this layer, to be used in context.get_Estimative_of_Units
     */
     context.setInputs = function( LAYER_INPUTS=[] ){
         let this_layer_ref        = context,
@@ -186,7 +186,7 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     }
 
     /**
-    * Get the inputs of this layer, to be used in context.get_Output_of_Units
+    * Get the inputs of this layer, to be used in context.get_Estimative_of_Units
     */
     context.getInputs = function(){
         return context['LAYER_INPUTS'];
@@ -195,7 +195,7 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     /** 
     * Get the estimated value of each unit in the current layer 
     */
-    context.get_Output_of_Units = function(){
+    context.get_Estimative_of_Units = function(){
 
         /**
         * Get this layer inputs( that was linked to this object )
@@ -206,21 +206,21 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
         /**
         * For each unit in this layer <layer_index>, get the UNIT OUTPUT and store inside the unit
         */
-        let units_outputs = [];
+        let units_estimatives = [];
 
         /**
         * Compute the estimated value of each unit in this layer 
         */
         context.getUnits().forEach(function( current_unit ){
 
-            let unit_output_data  = current_unit.estimateOutput( LAYER_INPUTS );
-            let act_potential     = unit_output_data.unit_potential;
-            let unit_output       = unit_output_data.activation_function_output;
+            let unit_estimated_data  = current_unit.estimateValue( LAYER_INPUTS );
+            let act_potential     = unit_estimated_data.unit_potential;
+            let unit_estimative       = unit_estimated_data.activation_function_result;
 
-            units_outputs.push( unit_output );
+            units_estimatives.push( unit_estimative );
         });
 
-        return units_outputs;
+        return units_estimatives;
     }
 
     //Run the callback

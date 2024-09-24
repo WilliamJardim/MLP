@@ -2,7 +2,7 @@
 * Calculate the derivative of each unit in the output layer
 * 
 * @param {Object} model_context                        - The model context
-* @param {Array}  output_estimated_values              - The network estimations(of each unit)
+* @param {Array}  model_estimated_values              - The network estimations(of each unit)
 * @param {Array}  desiredOutputs                       - The desired values(for each unit)
 * @param {Object} list_to_store_gradients_of_units     - A object to store the gradients of each unit
 * @param {Object} list_to_store_gradients_for_weights  - A object to store the gradients of each unit with respect to each unit weight
@@ -11,7 +11,7 @@
 * 
 */
 net.OutputDerivator = function( model_context,
-                                output_estimated_values, 
+                                model_estimated_values, 
                                 desiredOutputs, 
                                 //Lists to append the gradients
                                 list_to_store_gradients_of_units, 
@@ -19,7 +19,7 @@ net.OutputDerivator = function( model_context,
 ){
     let context = {};
     context.model_context = model_context;
-    context.output_estimated_values = output_estimated_values;
+    context.model_estimated_values = model_estimated_values;
     context.desiredOutputs = desiredOutputs;
     context.list_to_store_gradients_of_units = list_to_store_gradients_of_units;
     context.list_to_store_gradients_for_weights = list_to_store_gradients_for_weights;
@@ -27,7 +27,7 @@ net.OutputDerivator = function( model_context,
     context.derivate = function(){
 
         let number_of_layers         = context.model_context.getLayers().length;
-        let index_of_output_layer    = number_of_layers-1;
+        let index_of_last_layer    = number_of_layers-1;
 
         //Registry a object for store the gradients of the units of the output layer
         context.list_to_store_gradients_of_units[ `layer${ number_of_layers-1 }` ] = {};
@@ -52,7 +52,7 @@ net.OutputDerivator = function( model_context,
 
             let unitActivationFn     = output_unit.getFunctionName();
 
-            let unitOutput           = context.output_estimated_values[ output_unit_index ];
+            let unitOutput           = context.model_estimated_values[ output_unit_index ];
 
             let desiredOutput        = context.desiredOutputs[ output_unit_index ];
 
@@ -68,17 +68,17 @@ net.OutputDerivator = function( model_context,
             let unit_derivative   = outputDifference * outputDerivative;
 
             //Store the gradient in the gradients object
-            context.list_to_store_gradients_of_units[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = unit_derivative;
+            context.list_to_store_gradients_of_units[ `layer${ index_of_last_layer }` ][ `unit${ output_unit_index }` ] = unit_derivative;
 
             //Store the gradient with respect of each weight
-            context.list_to_store_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ] = [];
+            context.list_to_store_gradients_for_weights[ `layer${ index_of_last_layer }` ][ `unit${ output_unit_index }` ] = [];
 
             //For each weight
             output_unit.getWeights().forEach(function(weight_value, weight_index_c){
 
                 let weight_input_C = output_unit.getInputOfWeight( weight_index_c );  
 
-                context.list_to_store_gradients_for_weights[ `layer${ index_of_output_layer }` ][ `unit${ output_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
+                context.list_to_store_gradients_for_weights[ `layer${ index_of_last_layer }` ][ `unit${ output_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
 
             });
 

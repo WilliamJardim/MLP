@@ -6,7 +6,7 @@
 * @param {Number} weights_of_current_hidden_unit     - The weights of the UH unit(that we are calculating the derivative)
 * @param {Array}  current_unit_inputs_values         - The inputs of of the UH unit(that we are calculating the derivative)
 * @param {String} current_unit_function_name         - The function name of the UH unit(that we are calculating the derivative)
-* @param {Number} current_unit_output_value          - The estimated value of the UH unit(that we are calculating the derivative)
+* @param {Number} current_unit_estimative_value          - The estimated value of the UH unit(that we are calculating the derivative)
 * @param {Array}  next_layer_units_objects           - The units of the next layer
 * @param {Object} next_layer_units_gradients         - The gradients of the all units in the next layer
 *
@@ -21,7 +21,7 @@ net.HiddenLayerDerivator = function(
                                  weights_of_current_hidden_unit=Array(),
                                  current_unit_inputs_values=Array(), 
                                  current_unit_function_name=String(), 
-                                 current_unit_output_value=Number(), 
+                                 current_unit_estimative_value=Number(), 
                                  next_layer_units_objects=Array(), 
                                  next_layer_units_gradients={}, 
 
@@ -35,7 +35,7 @@ net.HiddenLayerDerivator = function(
     context.weights_of_current_hidden_unit = weights_of_current_hidden_unit;
     context.current_unit_inputs_values     = current_unit_inputs_values;
     context.current_unit_function_name     = current_unit_function_name;
-    context.current_unit_output_value      = current_unit_output_value;
+    context.current_unit_estimative_value      = current_unit_estimative_value;
     context.next_layer_units_objects       = next_layer_units_objects;
     context.next_layer_units_gradients     = next_layer_units_gradients;
 
@@ -112,7 +112,7 @@ net.HiddenLayerDerivator = function(
 
         let acumulated      = current_unit_accumulator.getAccumulatedValue();
 
-        let unit_derivative = acumulated * unit_function_object.derivative( current_unit_output_value );
+        let unit_derivative = acumulated * unit_function_object.derivative( current_unit_estimative_value );
 
         /**
         * Store the gradient in gradients object

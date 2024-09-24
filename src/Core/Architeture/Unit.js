@@ -12,7 +12,7 @@
 * For more details, see README.md.
 */
 
-//A Unit(with just estimateOutput and weight initialization)
+//A Unit(with just estimateValue and weight initialization)
 net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     let context = {};
 
@@ -135,7 +135,7 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     * @param   {Array}   sample_inputs        - The model inputs
     * @returns {Number}                       - The model estimative
     */
-    context.estimateOutput = function( sample_inputs )
+    context.estimateValue = function( sample_inputs )
     {
         let number_of_inputs = sample_inputs.length;
 
@@ -153,7 +153,7 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
         let estimative = net.activations[ context.getFunctionName() ]( summed_value );
 
         return {
-            activation_function_output: estimative,
+            activation_function_result: estimative,
             unit_potential: summed_value //The unit activation potential(just the summed value)
         };
     }

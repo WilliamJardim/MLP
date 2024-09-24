@@ -328,7 +328,7 @@ net.MLP = class{
             }
 
             nn_saved_structure['number_of_inputs'] = nn_saved_structure.layers_data.layer0.unit0.weights.length;
-            nn_saved_structure['number_of_outputs'] = Object.keys( nn_saved_structure.layers_data[`layer${number_of_layers-1}`] ).length;
+            nn_saved_structure['amount_of_estimatives'] = Object.keys( nn_saved_structure.layers_data[`layer${number_of_layers-1}`] ).length;
 
             return nn_saved_structure;
         }

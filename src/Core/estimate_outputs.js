@@ -3,7 +3,7 @@
 * @param {Array} sample_inputs 
 * @returns {Array}
 */
-net.MLP.prototype.estimate_outputs = function( sample_inputs=[] ){
+net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
 
     let context = this; //The model context
 
@@ -27,8 +27,8 @@ net.MLP.prototype.estimate_outputs = function( sample_inputs=[] ){
     * Store the estimatives of each unit of each layer 
     * And vinculate this object in the MLP(the father of the layers) to easy access and manipulations
     */
-    let outputs_of_each_layer  = {};
-    context.vinculate('outputs_of_each_layer', outputs_of_each_layer);
+    let estimatives_of_each_layer  = {};
+    context.vinculate('estimatives_of_each_layer', estimatives_of_each_layer);
 
     /**
     * The inputs of a layer <layer_index> is always the estimated values of previous layer( <layer_index> - 1 )
@@ -43,7 +43,7 @@ net.MLP.prototype.estimate_outputs = function( sample_inputs=[] ){
            .setInputs( [... sample_inputs] );
 
     //The estimated values of OUTPUT LAYER
-    let final_outputs         = []; 
+    let final_estimatives         = []; 
 
     /**
     * In this case, the layer 0 is the first hidden layer, because the input layer is ignored in initialization
@@ -57,14 +57,14 @@ net.MLP.prototype.estimate_outputs = function( sample_inputs=[] ){
         /**
         * For each unit in current layer, get the UNIT OUTPUT and store inside the unit
         */
-        let units_outputs = current_layer.get_Output_of_Units();
+        let units_estimatives = current_layer.get_Estimative_of_Units();
 
         /**
         * Store the outputs
         */
-        outputs_of_each_layer[ `layer${ layer_index }` ] = {};
-        units_outputs.forEach(function( unitOutput, index ){
-            outputs_of_each_layer[ `layer${ layer_index }` ][ `unit${ index }` ] = unitOutput;
+        estimatives_of_each_layer[ `layer${ layer_index }` ] = {};
+        units_estimatives.forEach(function( unitOutput, index ){
+            estimatives_of_each_layer[ `layer${ layer_index }` ][ `unit${ index }` ] = unitOutput;
         });
         
         /**
@@ -81,7 +81,7 @@ net.MLP.prototype.estimate_outputs = function( sample_inputs=[] ){
             /**
             * Set the current layer( <layer_index> ) estimated values AS UNIT_INPUTS OF THE NEXT LAYER( <layer_index> + 1 )
             */
-            next_layer.setInputs( units_outputs );
+            next_layer.setInputs( units_estimatives );
         }
 
         /**
@@ -89,7 +89,7 @@ net.MLP.prototype.estimate_outputs = function( sample_inputs=[] ){
         */
         if( current_layer.is('output') )
         {
-            final_outputs = units_outputs;
+            final_estimatives = units_estimatives;
         }
 
     });
@@ -98,16 +98,16 @@ net.MLP.prototype.estimate_outputs = function( sample_inputs=[] ){
     * Return the final estimatives( that is the estimated values of the output layer )
     */
     return {
-        output_estimated_values : final_outputs,
+        model_estimated_values : final_estimatives,
         inputs_of_each_layer    : inputs_of_each_layer,
-        outputs_of_each_layer   : outputs_of_each_layer,
+        estimatives_of_each_layer   : estimatives_of_each_layer,
 
         /**
         * Get the estimated outputs
         * @returns {Array}
         */
-        getEstimatedOutputs: function(){
-            return final_outputs;
+        getEstimatedValues: function(){
+            return final_estimatives;
         },
 
         /**
@@ -122,8 +122,8 @@ net.MLP.prototype.estimate_outputs = function( sample_inputs=[] ){
         * Get the output of each layer
         * @returns {Array}
         */
-        getOutputsOfEachLayer: function(){
-            return outputs_of_each_layer;
+        getEstimativesOfEachLayer: function(){
+            return estimatives_of_each_layer;
         }
     };
 }
