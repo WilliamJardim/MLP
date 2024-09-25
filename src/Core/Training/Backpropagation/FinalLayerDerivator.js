@@ -18,27 +18,20 @@ net.MLP.prototype.FinalLayerDerivator = function( model_estimated_values,
 ){
     let context = this; //The model context
     let model_context = context; //Alias for the model context
-
-    let derivation_context = {}; //The sub private context to be used to store the values that will used in derivation
     
-    //Just copy the parameters do this context(that is the derivation_context of FinalLayerDerivator context) object
-    derivation_context.model_context = model_context;
-    derivation_context.model_estimated_values = model_estimated_values;
-    derivation_context.desiredValuess = desiredValuess;
-    derivation_context.list_to_store_gradients_of_units = list_to_store_gradients_of_units;
-    derivation_context.list_to_store_gradients_for_weights = list_to_store_gradients_for_weights;
+    let derivation_context = {}; //The sub private context to be used to store the values that will used in derivation
 
     /**
     * Declare the derivative function
     */
     derivation_context.do_derivative = function(){
 
-        let number_of_layers       = derivation_context.model_context.getLayers().length;
+        let number_of_layers       = model_context.getLayers().length;
         let index_of_last_layer    = number_of_layers-1;
 
         //Registry a object for store the gradients of the units of the final layer
-        derivation_context.list_to_store_gradients_of_units[ `layer${ number_of_layers-1 }` ] = {};
-        derivation_context.list_to_store_gradients_for_weights[ `layer${ number_of_layers-1 }` ] = {};
+        list_to_store_gradients_of_units[ `layer${ number_of_layers-1 }` ]    = {};
+        list_to_store_gradients_for_weights[ `layer${ number_of_layers-1 }` ] = {};
 
         /**
         * Calculate the LOSS derivative of each final layer unit, using the chain rule of calculus
@@ -60,9 +53,9 @@ net.MLP.prototype.FinalLayerDerivator = function( model_estimated_values,
 
             let unitActivationFn      = final_unit.getFunctionName();
 
-            let unitEstimatedValue    = derivation_context.model_estimated_values[ final_unit_index ];
+            let unitEstimatedValue    = model_estimated_values[ final_unit_index ];
 
-            let desiredValues         = derivation_context.desiredValuess[ final_unit_index ];
+            let desiredValues         = desiredValuess[ final_unit_index ];
 
             let estimationDifference  = unitEstimatedValue - desiredValues;
 
@@ -76,25 +69,25 @@ net.MLP.prototype.FinalLayerDerivator = function( model_estimated_values,
             let unit_derivative   = estimationDifference * estimatedValueDerivative;
 
             //Store the gradient in the gradients object
-            derivation_context.list_to_store_gradients_of_units[ `layer${ index_of_last_layer }` ][ `unit${ final_unit_index }` ] = unit_derivative;
+            list_to_store_gradients_of_units[ `layer${ index_of_last_layer }` ][ `unit${ final_unit_index }` ] = unit_derivative;
 
             //Store the gradient with respect of each weight
-            derivation_context.list_to_store_gradients_for_weights[ `layer${ index_of_last_layer }` ][ `unit${ final_unit_index }` ] = [];
+            list_to_store_gradients_for_weights[ `layer${ index_of_last_layer }` ][ `unit${ final_unit_index }` ] = [];
 
             //For each weight
             final_unit.getWeights().forEach(function(weight_value, weight_index_c){
 
                 let weight_input_C = final_unit.getInputOfWeight( weight_index_c );  
 
-                derivation_context.list_to_store_gradients_for_weights[ `layer${ index_of_last_layer }` ][ `unit${ final_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
+                list_to_store_gradients_for_weights[ `layer${ index_of_last_layer }` ][ `unit${ final_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
 
             });
 
         });
 
         return {
-            calculated_gradients_of_units: {... JSON.parse(JSON.stringify(derivation_context.list_to_store_gradients_of_units)) },
-            calculated_gradients_for_weights: {... JSON.parse(JSON.stringify(derivation_context.list_to_store_gradients_for_weights)) }
+            calculated_gradients_of_units: {... JSON.parse(JSON.stringify(list_to_store_gradients_of_units)) },
+            calculated_gradients_for_weights: {... JSON.parse(JSON.stringify(list_to_store_gradients_for_weights)) }
         };
     }
 
