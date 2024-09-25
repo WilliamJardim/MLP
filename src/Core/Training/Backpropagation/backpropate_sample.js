@@ -1,7 +1,8 @@
 /**
 * Do the backpropagation step for ONE SAMPLE 
-* 
-* This backpropagation implementation was inspired by various publicly available resources, including concepts 
+* This implementation is entirely original, written from scratch in JavaScript.
+*
+* This implementation was inspired by various publicly available resources, including concepts 
 * and explanations from the work of Jason Brownlee on backpropagation.
 * 
 * CREDITS && REFERENCE:
