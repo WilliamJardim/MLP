@@ -36,7 +36,7 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
         throw Error(`The desiredValuess is empty Array!`);
     }
 
-    let number_of_layers         = context.getLayers().length;
+    let number_of_layers       = context.getLayers().length;
 
     //Get the model estimated values
     let estimated_data         = context.estimate_values( sample_inputs );
@@ -64,11 +64,22 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
     * So, Each unit have a "desired value", and each unit produces a "estimative" in the "estimate_values" phase, so these informations are used to calculate this derivatives
     * 
     * And these gradients will be stored in the list_to_store_gradients_of_units and list_to_store_gradients_for_weights
+    *
+    * So to do this, i will use the following below:
     */
-    context.calculate_derivatives_of_final_layer_units( model_estimated_values, 
-                                                       desiredValuess, 
-                                                       list_to_store_gradients_of_units, 
-                                                       list_to_store_gradients_for_weights );
+
+    /**
+    * Create a derivator instance to derivate the final layer 
+    */
+    let finalLayerDerivator = context.FinalLayerDerivator( model_estimated_values, 
+                                                           desiredValuess, 
+                                                           list_to_store_gradients_of_units, 
+                                                           list_to_store_gradients_for_weights );
+    /**
+    * Get and store the gradients of the final layer( that is, the last layer of the model ) 
+    */
+    finalLayerDerivator.atSelf()
+                       .do_derivative();
 
     /** 
     * Start the backpropagation
@@ -137,20 +148,28 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
             * Calculate the derivative of the current unit UH
             * Relembering that, 
             * The derivative of a unit in a hidden layer will always depend of the derivatives of the next layer
+            * So to do this, i will use the following below:
             */ 
-            context.calculate_hidden_unit_derivative( 
-                    index_of_current_hidden_layer        = currentLayerIndex,
-                    current_hidden_unit_index            = hidden_unit_index, 
-                    weights_of_current_hidden_unit       = current_unit_weights,
-                    current_unit_inputs_values           = current_unit_inputs,
-                    current_unit_function_name           = current_unit_function_name,
-                    current_unit_estimative_value        = current_unit_estimative,
-                    next_layer_units_objects             = next_layer_units,
-                    next_layer_units_gradients           = next_layer_gradients,
 
-                    list_to_store_gradients_of_units     = list_to_store_gradients_of_units,
-                    list_to_store_gradients_for_weights  = list_to_store_gradients_for_weights
-            );
+            /**
+            * Create a derivator for derivate the final layer 
+            */
+            let hiddenLayerDerivator = context.HiddenLayerDerivator(currentLayerIndex,
+                                                                    hidden_unit_index, 
+                                                                    current_unit_weights,
+                                                                    current_unit_inputs,
+                                                                    current_unit_function_name,
+                                                                    current_unit_estimative,
+                                                                    next_layer_units,
+                                                                    next_layer_gradients,
+
+                                                                    list_to_store_gradients_of_units,
+                                                                    list_to_store_gradients_for_weights);
+            /**
+            * Get and store the gradients of a hidden layer 
+            */
+            hiddenLayerDerivator.do_derivative();
+            
         });
 
         /**

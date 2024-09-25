@@ -15,7 +15,7 @@
 * 
 * @returns {Number} - the derivative of the unit
 */
-net.HiddenLayerDerivator = function(
+net.MLP.prototype.HiddenLayerDerivator = function(
                                  index_of_current_hidden_layer=Number(), 
                                  current_hidden_unit_index=Number(), 
                                  weights_of_current_hidden_unit=Array(),
@@ -29,20 +29,28 @@ net.HiddenLayerDerivator = function(
                                  map_to_store_gradients_of_units={}, 
                                  map_to_store_gradients_for_weights={}
 ){
-    let context = {};
-    context.index_of_current_hidden_layer  = index_of_current_hidden_layer;
-    context.current_hidden_unit_index      = current_hidden_unit_index;
-    context.weights_of_current_hidden_unit = weights_of_current_hidden_unit;
-    context.current_unit_inputs_values     = current_unit_inputs_values;
-    context.current_unit_function_name     = current_unit_function_name;
-    context.current_unit_estimative_value  = current_unit_estimative_value;
-    context.next_layer_units_objects       = next_layer_units_objects;
-    context.next_layer_units_gradients     = next_layer_units_gradients;
+    let context = this; //The model context
 
-    context.map_to_store_gradients_of_units = map_to_store_gradients_of_units;
-    context.map_to_store_gradients_for_weights = map_to_store_gradients_for_weights;
+    let derivation_context = {}; //The sub private context to be used to store the values that will used in derivation
 
-    context.derivate = function(){
+    //Just copy the parameters do this context(that is the HiddenLayerDerivator context) object
+    derivation_context.index_of_current_hidden_layer  = index_of_current_hidden_layer;
+    derivation_context.current_hidden_unit_index      = current_hidden_unit_index;
+    derivation_context.weights_of_current_hidden_unit = weights_of_current_hidden_unit;
+    derivation_context.current_unit_inputs_values     = current_unit_inputs_values;
+    derivation_context.current_unit_function_name     = current_unit_function_name;
+    derivation_context.current_unit_estimative_value  = current_unit_estimative_value;
+    derivation_context.next_layer_units_objects       = next_layer_units_objects;
+    derivation_context.next_layer_units_gradients     = next_layer_units_gradients;
+
+    //List to store the values
+    derivation_context.map_to_store_gradients_of_units = map_to_store_gradients_of_units;
+    derivation_context.map_to_store_gradients_for_weights = map_to_store_gradients_for_weights;
+
+    /**
+    * Declare the derivative function
+    */
+    derivation_context.do_derivative = function(){
 
         let unit_function_object      = net.activations[ current_unit_function_name ];
 
@@ -117,28 +125,39 @@ net.HiddenLayerDerivator = function(
         /**
         * Store the gradient in gradients object
         */
-        context.map_to_store_gradients_of_units[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ] = unit_derivative;
+        derivation_context.map_to_store_gradients_of_units[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ] = unit_derivative;
 
         /*
         * Aditionally, store the erros TOO with respect of each weight
         */
-        context.map_to_store_gradients_for_weights[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ] = [];
+        derivation_context.map_to_store_gradients_for_weights[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ] = [];
 
-        context.weights_of_current_hidden_unit.forEach(function( weight_value, 
-                                                                 weight_index_c
+        derivation_context.weights_of_current_hidden_unit.forEach(function( weight_value, 
+                                                                            weight_index_c
         ){
 
-            let weight_input_C = context.current_unit_inputs_values[ weight_index_c ]; //CRIAR UM GETTER  
-            context.map_to_store_gradients_for_weights[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
+            let weight_input_C = derivation_context.current_unit_inputs_values[ weight_index_c ]; //CRIAR UM GETTER  
+            derivation_context.map_to_store_gradients_for_weights[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
 
         });
 
         //Return the actual gradients
         return {
-            map_to_store_gradients_of_units     : context.map_to_store_gradients_of_units,
-            map_to_store_gradients_for_weights  : context.map_to_store_gradients_for_weights
+            map_to_store_gradients_of_units     : derivation_context.map_to_store_gradients_of_units,
+            map_to_store_gradients_for_weights  : derivation_context.map_to_store_gradients_for_weights
         }
     }
     
-    return context;
+    /**
+    * The HiddenLayerDerivator it self
+    * @returns {Object}
+    */
+    derivation_context.atSelf = function(){
+        return derivation_context;
+    }
+
+    /**
+    * Returns the derivator object, that will be used in backpropagation 
+    */
+    return derivation_context;
 }
