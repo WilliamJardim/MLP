@@ -54,7 +54,7 @@ net.MLP.prototype.HiddenLayerDerivator = function(
         * 
         *    current_unit<UH>_derivative  = (next_layer_unit<N0>.weight<UH> * derivative_of_next_layer_unit<N0>) + 
         *                                   (next_layer_unit<N1>.weight<UH> * derivative_of_next_layer_unit<N1>) + 
-        *                                   [... etc]
+        *                                   (... etc)
         * 
         *    NOTE: In this example, the next layer have just 2 units(N0 and N1, respectively), 
         *          but There could be as many as there were. By this, i put "[... etc]", to make it clear that there could be more than just 2 units
