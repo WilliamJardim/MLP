@@ -85,7 +85,7 @@ net.MLP.prototype.HiddenLayerDerivator = function(
                                                    unit_index 
         ){
 
-            let connection_weight_with_UH   = unit.getWeight( current_hidden_unit_index );
+            let connection_weight_with_UH   = unit.getWeightOfIndex( current_hidden_unit_index );
 
             let derivative_of_unit          = next_layer_units_gradients[ `unit${ unit_index }` ];
 

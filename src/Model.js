@@ -102,6 +102,28 @@ net.MLP = class{
         //The layers objects that will be created below
         context.layers  = [];
 
+        //Store the weights and bias of each unit of each layer
+        context.model_parameters = {};
+
+        /**
+        * Return a object that allow manipulate the model parameters of any unit of any layer
+        * Used in 'Unit' class
+        * 
+        * @param {Number} ofUnit  - The unit in question
+        * @param {Number} ofLayer - The layer of the unit in question
+        */
+        context.manipulateModelParameter = function({ ofUnit, ofLayer }){
+
+            return new net.ParameterManipulator({
+                model_parameters: context.model_parameters,
+                //Repass the ofUnit and ofLayer parameters
+                ofUnit, 
+                ofLayer
+            });
+            
+        }
+
+
         //If true, not allow modifications in layers
         context.layers_locked = true;
 
@@ -164,11 +186,14 @@ net.MLP = class{
                 */
                 layer_context.atSelf()
                              /*Here I used "i-1" precisely because we are ignoring the input layer, as this for loop starts at layer 1 forward (precisely to ignore the input layer)*/
-                             .vinculate('_internal_index', i-1);
+                             .vinculate('_internal_index',  i-1);
 
                 layer_context.atSelf()
-                             .vinculate('_father',         context);
+                             .vinculate('_father',          context);
                 
+                layer_context.atSelf()
+                             .vinculate('model_parameters', context.model_parameters);
+
                 /* Add the layer in the model */
                 model_context.atSelf()
                              .addLayer( layer_context );
@@ -282,9 +307,9 @@ net.MLP = class{
                 for( let U = 0 ; U < number_of_units ; U++ )
                 {
                     //Imported data
-                    let imported_current_unit = layer_data[`unit${U}`];
-                    let imported_weights      = imported_current_unit.weights;
-                    let imported_bias         = imported_current_unit.bias;
+                    let imported_current_unit = layer_data[ `unit${U}` ];
+                    let imported_weights      = imported_current_unit.getWeights();
+                    let imported_bias         = imported_current_unit.getBias();
         
                     //Model data
                     let model_current_layer = current_layer_data;
@@ -319,8 +344,8 @@ net.MLP = class{
                 for( let U = 0 ; U < number_of_units ; U++ )
                 {
                     let U_data = {
-                        weights: current_layer_data.units[U].weights,
-                        bias: current_layer_data.units[U].bias
+                        weights: current_layer_data.units[U].getWeights(),
+                        bias: current_layer_data.units[U].getBias()
                     }
 
                     nn_saved_structure.layers_data[`layer${L}`][`unit${U}`] = U_data;

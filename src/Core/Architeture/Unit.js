@@ -17,14 +17,22 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     let context = {};
 
     context.objectName            = 'Unit';
+    context.afterCreateCallback   = afterCreateCallback;
+
+    //Parameters that will be received in creation
+    context._layerRef             = unit_config._layerRef;
+    context._unitIndex            = unit_config._unitIndex;
+
+    //External vincules
+    context.model_parameters      = unit_config.model_parameters;
 
     //Parameters
     context.number_of_inputs      = unit_config.number_of_inputs     || Number();
     context.activation_function   = unit_config.activation_function  || 'sigmoid';
-    context.weights               = unit_config.weights              || Array(context.number_of_inputs).fill(0);
-    context.bias                  = unit_config.bias                 || Number();
-    context.afterCreateCallback   = afterCreateCallback;
-    context.vincules              = {};
+    //context.weights               = unit_config.weights              || Array(context.number_of_inputs).fill(0);
+    //context.bias                  = unit_config.bias                 || Number();
+
+    context.vincules              = {}; //All vincules
 
     /**
     * Get the layer object( That was linked to this unit )
@@ -32,6 +40,21 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     */
     context.getLayerOfThisUnit = function(){
         return context._layerRef; 
+    }
+
+    /**
+    * Get the MLP model
+    */
+    context.getModel = function(){
+        return context.getLayerOfThisUnit().getFather();
+    }
+
+    /**
+    * Get the index of this unit in the owner-layer
+    * @returns {Number} 
+    */
+    context.getThisUnitIndex = function(){
+        return context._unitIndex;
     }
 
     /**
@@ -58,8 +81,18 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
         }
         if( newWeights.length == 0 ){
             throw Error(`the newWeights is empty Array!`);
-        }
-        context.weights = newWeights;
+        }  
+
+        let index_of_layer     = context.getLayerOfThisUnit().getLayerIndex();
+                                        
+        let index_of_this_unit = context.getThisUnitIndex();     
+
+        context.getModel()
+               .manipulateModelParameter({
+                    ofLayer  : index_of_layer,
+                    ofUnit   : index_of_this_unit
+                })
+                .setWeightsArray( newWeights );
     }
 
     /**
@@ -68,48 +101,140 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     * @param {Number} value 
     */
     context.setWeightOfIndex = function( weight_index, value ){
-        context.weights[ Number( weight_index ) ] = Number( value );
+
+        let index_of_layer     = context.getLayerOfThisUnit().getLayerIndex();
+                                        
+        let index_of_this_unit = context.getThisUnitIndex();     
+
+        context.getModel()
+               .manipulateModelParameter({
+                    ofLayer  : index_of_layer,
+                    ofUnit   : index_of_this_unit
+                })
+                .setWeightOfIndex( weight_index, Number(value) );
+
     }
 
     //Getter for the context.weights
     context.getWeights = function(){
-        return context.weights;
+        
+        let index_of_layer     = context.getLayerOfThisUnit().getLayerIndex();
+        let index_of_this_unit = context.getThisUnitIndex();     
+
+        return context.getModel()
+                      .manipulateModelParameter({
+                          ofLayer  : index_of_layer,
+                          ofUnit   : index_of_this_unit
+                       })
+                       .getWeights();
+    }
+
+    context.getBias = function(){
+
+        let index_of_layer     = context.getLayerOfThisUnit().getLayerIndex();
+        let index_of_this_unit = context.getThisUnitIndex();     
+
+        let manipulator = context.getModel()
+                                 .manipulateModelParameter({
+                                        ofLayer  : index_of_layer,
+                                        ofUnit   : index_of_this_unit
+                                  });
+        
+        return manipulator.getBias();
+
     }
 
     //Add a value to a especific weight
     context.addWeight = function( weight_index, number ){
-        context.weights[ weight_index ] = context.weights[ weight_index ] + number;
+
+        let index_of_layer     = context.getLayerOfThisUnit().getLayerIndex();
+        let index_of_this_unit = context.getThisUnitIndex();     
+
+        let manipulator = context.getModel()
+                                 .manipulateModelParameter({
+                                        ofLayer  : index_of_layer,
+                                        ofUnit   : index_of_this_unit
+                                  });
+        
+        manipulator.setWeightOfIndex( weight_index, manipulator.getWeightOfIndex( weight_index ) + number );
+
     }
 
     //Subtract a value to a especific weight
     context.subtractWeight = function( weight_index, number ){
-        context.weights[ weight_index ] = context.weights[ weight_index ] - number;
+        
+        let index_of_layer     = context.getLayerOfThisUnit().getLayerIndex();
+        let index_of_this_unit = context.getThisUnitIndex();     
+
+        let manipulator = context.getModel()
+                                 .manipulateModelParameter({
+                                        ofLayer  : index_of_layer,
+                                        ofUnit   : index_of_this_unit
+                                  });
+        
+        manipulator.setWeightOfIndex( weight_index , manipulator.getWeightOfIndex( weight_index ) - number );
+
     }
 
     //Get a WeightManipulator for a especific weight
     context.selectWeight = function( weight_index ){
+
         return net.WeightManipulator({
             context: context,
             index: weight_index
         });
+
     }
 
     //Setter for bias
     context.setBias = function( newBias=Number() ){
+
         if( typeof newBias != 'number' ){
             throw Error(`the newBias=${newBias} is not a Number instance!`);
         }
-        context.bias = newBias;
+
+        let index_of_layer     = context.getLayerOfThisUnit().getLayerIndex();
+        let index_of_this_unit = context.getThisUnitIndex();     
+
+        context.getModel()
+               .manipulateModelParameter({
+                    ofLayer  : index_of_layer,
+                    ofUnit   : index_of_this_unit
+                })
+                .setBias( Number(newBias) );
+
     }
 
     //Add a value for the bias
     context.addBias = function( number ){
-        context.bias = context.bias + number;
+
+        let index_of_layer     = context.getLayerOfThisUnit().getLayerIndex();
+        let index_of_this_unit = context.getThisUnitIndex();     
+
+        let manipulator = context.getModel()
+                                 .manipulateModelParameter({
+                                        ofLayer  : index_of_layer,
+                                        ofUnit   : index_of_this_unit
+                                  });
+        
+        manipulator.setBias( manipulator.getBias() + number );
+        
     }
 
     //Subtract a value for the bias
     context.subtractBias = function( number ){
-        context.bias = context.bias - number;
+
+        let index_of_layer     = context.getLayerOfThisUnit().getLayerIndex();
+        let index_of_this_unit = context.getThisUnitIndex();     
+
+        let manipulator = context.getModel()
+                                 .manipulateModelParameter({
+                                        ofLayer  : index_of_layer,
+                                        ofUnit   : index_of_this_unit
+                                  });
+        
+        manipulator.setBias( manipulator.getBias() - number );
+
     }
 
     /**
@@ -119,46 +244,18 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
 
         let parameterIndex    = 0;
         let masterRandomValue = Math.random();
+        let totP = 0;
 
         while( parameterIndex < number_of_inputs )
         {
             let currentRandomValue = Math.random();
+            
             context.setWeightOfIndex( parameterIndex, currentRandomValue );
             parameterIndex++;
+            totP++;
         }
         
         context.setBias( masterRandomValue );
-    }
-
-    /**
-    * Get the estimated value for ONE SAMPLE of this UNIT
-    * @param   {Array}   sample_inputs        - The model inputs
-    * @returns {Number}                       - The model estimative
-    */
-    context.estimateValue = function( sample_inputs )
-    {
-        let number_of_inputs = sample_inputs.length;
-
-        let summed_value = 0;
-
-        for( let i = 0 ; i < number_of_inputs ; i++ ) 
-        {
-            let weight_index = i;
-            summed_value = summed_value + ( sample_inputs[i] * context.getWeight( weight_index ) );
-        }
-
-        /**
-        * Add the bias
-        * Relemering that the bias does have a input, then, i put 1, to ilustrate this in code
-        */
-        summed_value = summed_value + (1 * context.bias);
-
-        let estimative = net.activations[ context.getFunctionName() ]( summed_value );
-
-        return {
-            activation_function_result: estimative,
-            unit_potential: summed_value //The unit activation potential(just the summed value)
-        };
     }
 
     /**
@@ -166,8 +263,19 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     * @param {Number} weight_index
     * @returns {Number}
     */
-    context.getWeight = function( weight_index ){
-        return context.weights[ weight_index ]
+    context.getWeightOfIndex = function( weight_index ){
+
+        let index_of_layer     = context.getLayerOfThisUnit().getLayerIndex();
+        let index_of_this_unit = context.getThisUnitIndex();     
+
+        let manipulator = context.getModel()
+                                 .manipulateModelParameter({
+                                        ofLayer  : index_of_layer,
+                                        ofUnit   : index_of_this_unit
+                                  });
+
+        return manipulator.getWeightOfIndex( weight_index );
+        
     }
 
     /**
@@ -180,6 +288,43 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
             father_layer_inputs   = father_layer.getInputs();     //The inputs of the layer(that is, the layer to which THIS UNIT belongs)
 
         return father_layer_inputs[ weight_index ];
+    }
+
+    /**
+    * Get the estimated value for ONE SAMPLE of this UNIT
+    * @param   {Array}   sample_inputs        - The model inputs
+    * @returns {Number}                       - The model estimative
+    */
+    context.estimateValue = function( sample_inputs )
+    {
+        let number_of_inputs = sample_inputs.length;
+        let summed_value = 0;
+        let i = 0;
+
+        /**
+        * Combine the inputs with their weights 
+        */
+        while( i < number_of_inputs  ) 
+        {
+            let weight_index = i;
+            summed_value = summed_value + ( sample_inputs[i] * context.getWeightOfIndex( weight_index ) );
+
+            //Next iteration
+            i++;
+        }
+
+        /**
+        * Add the bias
+        * Relemering that the bias does have a input, then, i put 1, to ilustrate this in code
+        */
+        summed_value = summed_value + ( 1 * context.getBias() );
+
+        let estimative = net.activations[ context.getFunctionName() ]( summed_value );
+
+        return {
+            activation_function_result: estimative,
+            unit_potential: summed_value //The unit activation potential(just the summed value)
+        };
     }
 
     /**

@@ -10,10 +10,28 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     context.activation_function   = layer_config.activation;
     context.layer_type            = layer_config.type;
     context.afterCreateCallback   = afterCreateCallback;
-    context.vincules              = {}; //Store all vincules
 
+    //External vincules
+    context.model_parameters      = layer_config.model_parameters;
+
+    context.vincules              = {}; //Store all vincules
+    
     //The units objects that will be created below
     context.units        = [];
+
+    /**
+    * Get the layer father(the model)
+    */
+    context.getFather = function(){
+        return context._father;
+    }
+
+    /**
+    * Get the index of this layer 
+    */
+    context.getLayerIndex = function(){
+        return context._internal_index;
+    }
 
     /**
     * Add a unit to context.units 
@@ -48,41 +66,6 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     */
     context.atSelf = context.getSelfContext;
 
-    //Initialize the layer
-    for( let i = 0 ; i < context.number_of_units ; i++ )
-    {
-       /* 
-       * Add a unit to the context.units, using a Unit callback
-       */
-       new net.Unit({
-           number_of_inputs     : context.number_of_inputs,
-           activation_function  : context.activation_function
-
-        }, ( unitItSelf )=>{
-
-                const layer_context = context.getSelfContext();
-                const unit_context  = unitItSelf.getSelfContext();
-
-                /**
-                * Do important vincules 
-                */
-                unit_context.atSelf()
-                            .vinculate( '_unitIndex',  i       );
-
-                unit_context.atSelf()
-                            .vinculate( '_layerRef' ,  context );
-
-                unit_context.atSelf()
-                            .generate_random_parameters( context.number_of_inputs );
-
-                /* Add the unit in the layer */
-                layer_context.atSelf()
-                             .addUnit( unit_context );
-
-        });
-
-    }
-
     /**
     * Vinculate a prop to this layer
     * @param {String}   newAttributeName
@@ -100,13 +83,6 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     */
     context.getIndex = function(){
         return context['_internal_index'];
-    }
-
-    /**
-    * Get the layer father(the model)
-    */
-    context.getFather = function(){
-        return context._father;
     }
 
     /**
@@ -225,6 +201,51 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
 
     //Run the callback
     context.afterCreateCallback.bind(context)( context );
+
+    //Initialize the layer
+    let i = 0;
+    while( i < context.number_of_units )
+    {
+        /**
+        * Add a unit to the context.units, using a Unit callback
+        */
+        new net.Unit({
+           number_of_inputs     : context.number_of_inputs,
+           activation_function  : context.activation_function
+
+        }, ( unitItSelf )=>{
+
+                const layer_context = context.getSelfContext();
+                const unit_context  = unitItSelf.getSelfContext();
+
+                /**
+                * Do important vincules 
+                */
+                unit_context.atSelf()
+                            .vinculate( '_unitIndex',      i);
+
+                unit_context.atSelf()
+                            .vinculate( '_layerRef' ,      context );
+
+                unit_context.atSelf()
+                            .vinculate('model_parameters', context.model_parameters);
+
+                /**
+                * Generate parameters for this unit
+                */
+                unit_context.atSelf()
+                            .generate_random_parameters( context.number_of_inputs );
+
+                /* Add the unit in the layer */
+                layer_context.atSelf()
+                             .addUnit( unit_context );
+
+        });
+
+        //Create next unit in next iteration
+        i++;
+
+    }
 
     /**
     * Return the layer ready
