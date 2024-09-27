@@ -155,17 +155,21 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
             /**
             * Create a derivator for derivate the final layer 
             */
-            let hiddenLayerDerivator = context.HiddenLayerDerivator(currentLayerIndex,
+            let hiddenLayerDerivator = context.HiddenLayerDerivator(
+                                                                    //Current layer and unit data
+                                                                    currentLayerIndex,
                                                                     hidden_unit_index, 
                                                                     current_unit_weights,
                                                                     current_unit_inputs,
                                                                     current_unit_function_name,
                                                                     current_unit_estimative,
                                                                     
+                                                                    //Next layer data
                                                                     next_layer_index,
                                                                     number_of_next_layer_units,
                                                                     next_layer_gradients,
 
+                                                                    //Gradients storage
                                                                     list_to_store_gradients_of_units,
                                                                     list_to_store_gradients_for_weights);
             /**
