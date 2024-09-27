@@ -109,7 +109,7 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
         */
         let next_layer_index               = currentLayerIndex + 1;
         let next_layer                     = context.getLayer( next_layer_index );
-        let next_layer_units               = next_layer.getUnits();
+        let number_of_next_layer_units     = next_layer.getUnits().length;
 
         /**
         * Get the gradients(of the units) of the next layer
@@ -161,7 +161,9 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
                                                                     current_unit_inputs,
                                                                     current_unit_function_name,
                                                                     current_unit_estimative,
-                                                                    next_layer_units,
+                                                                    
+                                                                    next_layer_index,
+                                                                    number_of_next_layer_units,
                                                                     next_layer_gradients,
 
                                                                     list_to_store_gradients_of_units,

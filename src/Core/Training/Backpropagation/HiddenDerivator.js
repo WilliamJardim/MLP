@@ -7,7 +7,9 @@
 * @param {Array}  current_unit_inputs_values         - The inputs of of the UH unit(that we are calculating the derivative)
 * @param {String} current_unit_function_name         - The function name of the UH unit(that we are calculating the derivative)
 * @param {Number} current_unit_estimative_value      - The estimated value of the UH unit(that we are calculating the derivative)
-* @param {Array}  next_layer_units_objects           - The units of the next layer
+*
+* @param {Number} next_layer_index                   - The index of the next layer( That is, the layer in front of the current hidden layer )
+* @param {Number} number_of_next_layer_units         - The total number of the units of the next layer
 * @param {Object} next_layer_units_gradients         - The gradients of the all units in the next layer
 *
 * @param {Object} map_to_store_gradients_of_units    - The list to store the calculated gradients of the UH unit(that we are calculating the derivative)
@@ -22,7 +24,9 @@ net.MLP.prototype.HiddenLayerDerivator = function(
                                  current_unit_inputs_values=Array(), 
                                  current_unit_function_name=String(), 
                                  current_unit_estimative_value=Number(), 
-                                 next_layer_units_objects=Array(), 
+                                 
+                                 next_layer_index=Number(),
+                                 number_of_next_layer_units=Number(),
                                  next_layer_units_gradients={}, 
 
                                  //List to store the values
@@ -81,13 +85,18 @@ net.MLP.prototype.HiddenLayerDerivator = function(
         *    Here "unit" is the current unit in the next layer(that is, current of the forEach loop)
         *   "unit_index" is the number of the current unit in the next layer
         */
-        next_layer_units_objects.forEach(function( unit, 
-                                                   unit_index 
-        ){
+        let next_layer_unit_index = 0;
+        while( next_layer_unit_index < number_of_next_layer_units ){
 
-            let connection_weight_with_UH   = unit.getWeightOfIndex( current_hidden_unit_index );
+            let current_next_unit_index     = next_layer_unit_index;
 
-            let derivative_of_unit          = next_layer_units_gradients[ `unit${ unit_index }` ];
+            let connection_weight_with_UH   = context.manipulateModelParameter({ 
+                                                        ofUnit  : current_next_unit_index,  
+                                                        ofLayer : next_layer_index 
+                                                     })
+                                                     .getWeightOfIndex( current_hidden_unit_index );
+
+            let derivative_of_unit          = next_layer_units_gradients[ `unit${ next_layer_unit_index }` ];
 
             /**
             * NOTE: The next_layer_unit_N.weights[ UH ] is the connection weight, whose index is UH(of the external loop in the explanation of the equation above)
@@ -102,7 +111,10 @@ net.MLP.prototype.HiddenLayerDerivator = function(
                 eloh_param  = connection_weight_with_UH,
                 LOSS        = derivative_of_unit 
             );
-        });
+
+            //Next unit in the next layer
+            next_layer_unit_index++;
+        };
 
         let acumulated      = current_unit_accumulator.getAccumulatedValue();
 
