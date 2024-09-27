@@ -82,23 +82,20 @@ net.MLP.prototype.HiddenLayerDerivator = function(
         * For each unit in LEXT LAYER 
         * We are working in the context of the next layer:
         * 
-        *    Here "unit" is the current unit in the next layer(that is, current of the forEach loop)
-        *   "unit_index" is the number of the current unit in the next layer
+        *   "next_layer_unit_index" is the number of the current unit in the next layer
         */
         let next_layer_unit_index = 0;
         while( next_layer_unit_index < number_of_next_layer_units ){
 
             let current_next_unit_index     = next_layer_unit_index;
 
-            let connection_weight_with_UH   = context.manipulateModelParameter({ 
-                                                        ofUnit  : current_next_unit_index,  
-                                                        ofLayer : next_layer_index 
-                                                     })
-                                                     .getWeightOfIndex( current_hidden_unit_index );
+            let connection_weight_with_UH   = context.getWeightOf({ theWeight: current_hidden_unit_index, 
+                                                                    ofUnit: current_next_unit_index, 
+                                                                    ofLayer: next_layer_index });
 
             let derivative_of_unit          = next_layer_units_gradients[ `unit${ next_layer_unit_index }` ];
 
-            /**
+            /*
             * NOTE: The next_layer_unit_N.weights[ UH ] is the connection weight, whose index is UH(of the external loop in the explanation of the equation above)
             *       Because, for example, if we are calculating the gradient of the first unit in the last hidden layer, 
             *       These gradient(of the hidden unit) will depedent of the all gradients in the final layer, 
