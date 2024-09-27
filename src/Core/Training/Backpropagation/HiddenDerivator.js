@@ -64,7 +64,7 @@ net.MLP.prototype.HiddenLayerDerivator = function(
         * 
         * >>> EXPLANATION:
         * 
-        *   Where the UH is the index of the hidden unit in the current hidden layer. And the N is the index of the next layer unit.
+        *   Where the UH is the index of the hidden unit(which we are calculating the derivative) in the current hidden layer. And the Ns( N0, N1, etc... ) are the indexes of the next layer units.
         *   Relemering that the in the example above, we have just 2 units in the next layer, so the have only the N0(unit one) and N1(unit two).
         * 
         *   The weight<UH> is the connection weight of weights array in the next_layer_unit<N> object.
