@@ -60,6 +60,8 @@ net.MLP.prototype.HiddenLayerDerivator = function(
         *          but There could be as many as there were. By this, i put "[... etc]", to make it clear that there could be more than just 2 units
         * 
         *    NOTE: "current_unit" is a hidden unit!
+        *          So the "current_unit<UH>" is the hidden unit of index <UH> in current hidden layer.
+        *          Then, the "current_unit<UH>_derivative" is the derivative of the LOSS with respect to the unit "current_unit<UH>".
         * 
         * 
         * >>> EXPLANATION:
