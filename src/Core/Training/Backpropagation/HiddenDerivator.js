@@ -12,7 +12,8 @@
 * @param {Number} number_of_next_layer_units         - The total number of the units of the next layer
 * @param {Object} next_layer_units_gradients         - The gradients of the all units in the next layer
 *
-* @param {Object} map_to_store_gradients - The list to store the calculated gradients with respect each weight and bias of the UH unit(that we are calculating the derivative)
+* @param {Object} map_to_store_gradients_of_units    - The list to store the calculated gradients of the UH unit(that we are calculating the derivative)
+* @param {Object} map_to_store_gradients_for_weights - The list to store the calculated gradients with respect each weight of the UH unit(that we are calculating the derivative)
 * 
 * @returns {Number} - the derivative of the unit
 */
@@ -29,7 +30,8 @@ net.MLP.prototype.HiddenLayerDerivator = function(
                                  next_layer_units_gradients={}, 
 
                                  //List to store the values
-                                 map_to_store_gradients={}
+                                 map_to_store_gradients_of_units={}, 
+                                 map_to_store_gradients_for_weights={}
 ){
     let context = this; //The model context
 
@@ -93,19 +95,7 @@ net.MLP.prototype.HiddenLayerDerivator = function(
                                                                     ofUnit: current_next_unit_index, 
                                                                     ofLayer: next_layer_index });
 
-            /**
-            * Here I am using "getDerivativeOfBias" to obtaining the derivative of the bias because the derivative of the bias has no entry, 
-            * (Why are we obtaining the derivative with respect to the "this hidden unit estimative function", and not with respect to the parameters on which "this hidden unit estimative function" depends.)
-            * And what we want is precisely the derivative with respect to the result of the this hidden unit estimation function.  
-            * 
-            * In other words, here we are obtaining the derivative of the "neural network's estimation function result" with respect to the result of the "current unit function result"
-            *
-            * To facilitate understanding, you can think that the derivative of the "neural network's estimation function" with respect to the bias of a unit in a hidden layer IS THE SAME THING as the master derivative of that unit, so to speak.
-            *
-            * So every time you see me referring to "the derivative with respect to the bias of the Unit", you already know that this is the derivative of the "neural network estimative" with respect to the "unit estimative" of the layer.
-            */
-            let derivative_of_unit = next_layer_units_gradients.getGradientOfAUnit( next_layer_unit_index )
-                                                               .getMasterDerivativeOfTheUnit();
+            let derivative_of_unit          = next_layer_units_gradients[ `unit${ next_layer_unit_index }` ];
 
             /*
             * NOTE: By using the function: "context.getWeightOf({ theWeight: current_hidden_unit_index, 
@@ -129,24 +119,34 @@ net.MLP.prototype.HiddenLayerDerivator = function(
             next_layer_unit_index++;
         };
 
-        let acumulated     = current_unit_accumulator.getAccumulatedValue();
+        let acumulated      = current_unit_accumulator.getAccumulatedValue();
 
-        let derivative     = unit_function_object.derivative( current_unit_estimative_value ) * acumulated;
+        let unit_derivative = unit_function_object.derivative( current_unit_estimative_value ) * acumulated;
 
         /**
-        * Compute and store the gradients of this unit
+        * Store the gradient in gradients object
         */
-        map_to_store_gradients.storeGradientOf({
-            //Unit data
-            derivative,
-            ofUnit  : current_hidden_unit_index, 
+        map_to_store_gradients_of_units[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ] = unit_derivative;
 
-            //Layer data
-            ofLayer : index_of_current_hidden_layer
+        /*
+        * Aditionally, store the erros TOO with respect of each weight
+        */
+        map_to_store_gradients_for_weights[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ] = [];
+
+        weights_of_current_hidden_unit.forEach(function( weight_value, 
+                                                         weight_index_c
+        ){
+
+            let weight_input_C = current_unit_inputs_values[ weight_index_c ]; //CRIAR UM GETTER  
+            map_to_store_gradients_for_weights[ `layer${ index_of_current_hidden_layer }` ][ `unit${ current_hidden_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
+
         });
 
         //Return the actual gradients
-        return map_to_store_gradients;
+        return {
+            map_to_store_gradients_of_units     : map_to_store_gradients_of_units,
+            map_to_store_gradients_for_weights  : map_to_store_gradients_for_weights
+        }
     }
     
     /**

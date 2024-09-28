@@ -48,15 +48,16 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
     let estimatives_of_each_layer  = estimated_data.getEstimativesOfEachLayer();
 
     /**
-    * List store the gradients for the all layers(of each weight and bias of each unit)
-    * Format { <layer_number>: [ <unit_number>: { <weight>: [] ...} ] ...}
+    * List store the gradients of each unit of the all layers
+    * Format { layer_number: gradients_object ...}
     */
-    let list_to_store_gradients = new modelContext.GradientStorage({ modelRef: modelContext });
+    let list_to_store_gradients_of_units = {};
 
     /**
-    * Create a slot to the final layer in the GradientStorage 
+    * List store the gradients for the all layers(of each weight of each unit)
+    * Format { layer_number: [ unit: { weight: [] ...} ] ...}
     */
-    list_to_store_gradients.registryLayer( modelContext.final_layer_index );
+    let list_to_store_gradients_for_weights = {};
 
     /**
     * Calculate the derivative of each unit in final layer
@@ -73,9 +74,8 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
     */
     let finalLayerDerivator = modelContext.FinalLayerDerivator( model_estimated_values, 
                                                                 desiredValuess, 
-
-                                                                //Gradients storage
-                                                                list_to_store_gradients);
+                                                                list_to_store_gradients_of_units, 
+                                                                list_to_store_gradients_for_weights );
     /**
     * Get and store the gradients of the final layer( that is, the last layer of the model ) 
     */
@@ -101,10 +101,8 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
         let current_layer_inputs       = inputs_of_each_layer[ `layer${ currentLayerIndex }` ];
         let current_layer_estimatives  = estimatives_of_each_layer[ `layer${ currentLayerIndex }` ]
 
-        /**
-        * Create a slot to the current hidden layer in the GradientStorage 
-        */
-        list_to_store_gradients.registryLayer( currentLayerIndex );
+        list_to_store_gradients_of_units[ `layer${ currentLayerIndex }` ]     = {};
+        list_to_store_gradients_for_weights[ `layer${ currentLayerIndex }` ]  = {};
 
         /**
         * Next layer data:
@@ -117,7 +115,7 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
         * Get the gradients(of the units) of the next layer
         * These gradients will be used in lines below:
         */
-        let next_layer_gradients           = list_to_store_gradients.retriveGradientsOfLayer( next_layer_index );
+        let next_layer_gradients           = list_to_store_gradients_of_units[ `layer${ next_layer_index }` ];
 
         /**
         * For each unit in CURRENT HIDDEN LAYER
@@ -177,7 +175,8 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
                                                                     next_layer_gradients,
 
                                                                     //Gradients storage
-                                                                    list_to_store_gradients);
+                                                                    list_to_store_gradients_of_units,
+                                                                    list_to_store_gradients_for_weights);
             /**
             * Get and store the gradients of a hidden layer 
             */
@@ -194,5 +193,8 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
     /**
     * Return the calculated gradients for the sample
     */
-    return list_to_store_gradients;
+    return {
+        gradients_of_units          : list_to_store_gradients_of_units,
+        gradients_for_each_weights  : list_to_store_gradients_for_weights
+    };
 }
