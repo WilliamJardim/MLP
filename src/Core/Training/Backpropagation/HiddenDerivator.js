@@ -105,7 +105,7 @@ net.MLP.prototype.HiddenLayerDerivator = function(
             * So every time you see me referring to "the derivative with respect to the bias of the Unit", you already know that this is the derivative of the "neural network estimative" with respect to the "unit estimative" of the layer.
             */
             let derivative_of_unit = next_layer_units_gradients.getGradientOfAUnit( next_layer_unit_index )
-                                                               .getDerivativeOfBias();
+                                                               .getMasterDerivativeOfTheUnit();
 
             /*
             * NOTE: By using the function: "context.getWeightOf({ theWeight: current_hidden_unit_index, 
