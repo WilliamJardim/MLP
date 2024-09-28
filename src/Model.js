@@ -26,6 +26,7 @@ net.MLP = class{
         context.layers_structure   = config_dict['layers'] || [];
         context.number_of_layers   = context.layers_structure.length;
         context.input_layer        = context.layers_structure[0]; //Get the input layer
+        context.final_layer_index  = context.number_of_layers-1-1; //Ignoring the input layer 
         context.last_layer         = context.layers_structure[context.number_of_layers-1];
 
         context.task               = config_dict['task'];

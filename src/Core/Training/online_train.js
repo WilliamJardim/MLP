@@ -41,15 +41,12 @@ net.MLP.prototype.online_train = function( train_samples,
             }
 
             //Do backpropagation and Gradient Descent
-            let calculated_gradients_data         = context.backpropagate_sample(sample_features, sample_desired_value);
-
-            let gradients_for_weights  = calculated_gradients_data['gradients_for_each_weights'];
-            let gradients_for_bias     = calculated_gradients_data['gradients_of_units'];
+            let gradients_for_parameters = context.backpropagate_sample(sample_features, sample_desired_value);
 
             /**
             * Applies the Gradient Descent algorithm to update the parameters
             */
-            context.optimize_the_parameters( gradients_for_weights, gradients_for_bias );
+            context.optimize_the_parameters( gradients_for_parameters );
 
         });
 

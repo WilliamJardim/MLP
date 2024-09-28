@@ -4,17 +4,16 @@
 * @param {Object} model_context                        - The model context
 * @param {Array}  model_estimated_values               - The network estimations(of each unit)
 * @param {Array}  desiredValuess                       - The desired values(for each unit)
-* @param {Object} list_to_store_gradients_of_units     - A object to store the gradients of each unit
-* @param {Object} list_to_store_gradients_for_weights  - A object to store the gradients of each unit with respect to each unit weight
+* @param {Object} map_to_store_gradients               - A object to store the gradients of each unit with respect to each unit weight
 *
 * @returns {Object} - The calculated gradients of the final layer
 * 
 */
 net.MLP.prototype.FinalLayerDerivator = function( model_estimated_values, 
                                                   desiredValuess, 
+
                                                   //Lists to append the gradients
-                                                  list_to_store_gradients_of_units, 
-                                                  list_to_store_gradients_for_weights
+                                                  map_to_store_gradients
 ){
     let context = this; //The model context
     let model_context = context; //Alias for the model context
@@ -30,8 +29,8 @@ net.MLP.prototype.FinalLayerDerivator = function( model_estimated_values,
         let index_of_last_layer    = number_of_layers-1;
 
         //Registry a object for store the gradients of the units of the final layer
-        list_to_store_gradients_of_units[ `layer${ number_of_layers-1 }` ]    = {};
-        list_to_store_gradients_for_weights[ `layer${ number_of_layers-1 }` ] = {};
+        //list_to_store_gradients_of_units[ `layer${ number_of_layers-1 }` ]    = {};
+        //list_to_store_gradients_for_weights[ `layer${ number_of_layers-1 }` ] = {};
 
         /**
         * Calculate the LOSS derivative of each final layer unit, using the chain rule of calculus
@@ -52,11 +51,8 @@ net.MLP.prototype.FinalLayerDerivator = function( model_estimated_values,
         ){
 
             let unitActivationFn      = final_unit.getFunctionName();
-
             let unitEstimatedValue    = model_estimated_values[ final_unit_index ];
-
             let desiredValues         = desiredValuess[ final_unit_index ];
-
             let estimationDifference  = unitEstimatedValue - desiredValues;
 
             //The activation function of this U final unit
@@ -66,29 +62,23 @@ net.MLP.prototype.FinalLayerDerivator = function( model_estimated_values,
             let estimatedValueDerivative  = unit_function_object.derivative( unitEstimatedValue );
 
             //The derivative of this final unit U
-            let unit_derivative   = estimationDifference * estimatedValueDerivative;
+            let derivative   = estimationDifference * estimatedValueDerivative;
 
-            //Store the gradient in the gradients object
-            list_to_store_gradients_of_units[ `layer${ index_of_last_layer }` ][ `unit${ final_unit_index }` ] = unit_derivative;
+            /**
+            * Compute and store the gradients of this unit
+            */
+            map_to_store_gradients.storeGradientOf({
+                                    //Unit data
+                                    derivative,
+                                    ofUnit  : final_unit_index, 
 
-            //Store the gradient with respect of each weight
-            list_to_store_gradients_for_weights[ `layer${ index_of_last_layer }` ][ `unit${ final_unit_index }` ] = [];
-
-            //For each weight
-            final_unit.getWeights().forEach(function(weight_value, weight_index_c){
-
-                let weight_input_C = final_unit.getInputOfWeight( weight_index_c );  
-
-                list_to_store_gradients_for_weights[ `layer${ index_of_last_layer }` ][ `unit${ final_unit_index }` ][ weight_index_c ] = unit_derivative * weight_input_C;
-
-            });
+                                    //Layer data
+                                    ofLayer : index_of_last_layer
+                                });
 
         });
 
-        return {
-            calculated_gradients_of_units: {... JSON.parse(JSON.stringify(list_to_store_gradients_of_units)) },
-            calculated_gradients_for_weights: {... JSON.parse(JSON.stringify(list_to_store_gradients_for_weights)) }
-        };
+        return map_to_store_gradients;
     }
 
     /**
