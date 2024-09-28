@@ -297,20 +297,34 @@ net.Unit = function( unit_config={}, afterCreateCallback=()=>{}  ){
     */
     context.estimateValue = function( sample_inputs )
     {
+        let layerContext      = context.getLayerOfThisUnit(); //The layer that owns this unit
+        let modelContext      = context.getModel();           //The MLP Model ref
+        let thisUnitContext   = context;                      //This unit context
+
         let number_of_inputs = sample_inputs.length;
         let summed_value = 0;
-        let i = 0;
+
+        let number_of_weight = 0; //By default, starts in the first weight(that is the weight of the first input)
 
         /**
         * Combine the inputs with their weights 
         */
-        while( i < number_of_inputs  ) 
+        while( number_of_weight < number_of_inputs ) 
         {
-            let weight_index = i;
-            summed_value = summed_value + ( sample_inputs[i] * context.getWeightOfIndex( weight_index ) );
+            const weight_index = number_of_weight; //The index of the weight
+
+            const thisMultiplication = ( 
+                                        sample_inputs[weight_index] * modelContext.getWeightOf({ 
+                                                                           theWeight : weight_index,
+                                                                           ofLayer   : layerContext.getLayerIndex(),
+                                                                           ofUnit    : thisUnitContext.getThisUnitIndex()
+                                                                      }) 
+                                       );
+
+            summed_value = summed_value + thisMultiplication;
 
             //Next iteration
-            i++;
+            number_of_weight++;
         }
 
         /**

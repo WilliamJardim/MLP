@@ -138,6 +138,21 @@ net.MLP = class{
                    .getWeightOfIndex( theWeight );
         }
 
+        /**
+        * Get all the weights of a unit of a layer 
+        * @param {Number} ofUnit    - The index of the unit
+        * @param {Number} ofLayer   - The index of the layer 
+        */
+        context.getWeightsOf = function( { ofUnit, ofLayer } ){
+
+            return context.manipulateModelParameter({ 
+                        ofUnit  : ofUnit,  
+                        ofLayer : ofLayer 
+                   })
+                   .getWeights();
+
+        }
+
 
         //If true, not allow modifications in layers
         context.layers_locked = true;
