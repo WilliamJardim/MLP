@@ -26,3 +26,6 @@ let dataset = net.data.Dataset([
 
 //Training the model
 let results = model.train(dataset, 256);
+
+console.log('Initial LOSS', results.initial_loss);
+console.log('Final LOSS', results.final_loss);

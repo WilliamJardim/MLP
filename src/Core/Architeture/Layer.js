@@ -5,7 +5,7 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     context.objectName            = 'Layer';
     context.layer_config          = layer_config;
     context.number_of_units       = layer_config.units;
-    context.amount_of_estimatives     = context.number_of_units; //the same as context.number_of_units
+    context.amount_of_estimatives = context.number_of_units; //the same as context.number_of_units
     context.number_of_inputs      = layer_config.inputs;
     context.activation_function   = layer_config.activation;
     context.layer_type            = layer_config.type;
@@ -89,11 +89,18 @@ net.Layer = function( layer_config={}, afterCreateCallback=()=>{} ){
     * Return the next layer( That is, it returns the layer that comes after the current layer )
     * @returns {net.Layer}
     */
-    context.getNextLayer = function(){
+    context.getNextLayer = function( callback_in_layer=null ){
         let next_layer_index = context.getIndex() + 1;
 
-        return context.getFather()
-                      .getLayer( next_layer_index ) || null;
+        let layer_it_context = context.getFather()
+                                      .getLayer( next_layer_index ) || null;
+
+        if( callback_in_layer )
+        {
+            callback_in_layer.bind(layer_it_context)( layer_it_context, next_layer_index );
+        }
+        
+        return layer_it_context;
     }
 
     /**

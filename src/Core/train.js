@@ -85,6 +85,7 @@ net.MLP.prototype.train = function( train_samples,
         last_total_loss: training_result.last_total_loss,
         loss_history: training_result.loss_history,
         initial_loss: training_result.loss_history[0],
+        after_first_epoch_loss: training_result.loss_history[1],
         final_loss: training_result.loss_history[training_result.loss_history.length-1],
     };
 

@@ -94,8 +94,11 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
 
     });
 
+    //TODO STORE THE ACTIVATIONS LAYER BY LAYER
+
     /**
     * Return the final estimatives( that is the estimated values of the final layer )
+    * 
     */
     return {
         model_estimated_values : final_estimatives,

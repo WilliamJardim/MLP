@@ -83,8 +83,8 @@ net.MLP.prototype.accumulate_batch_gradients = function( train_samples ){
         //Do backpropagation and Gradient Descent
         let sample_gradients_data = context.backpropagate_sample(sample_features, sample_desired_value);
     
-        let sample_gradients_for_weights = sample_gradients_data['gradients_for_each_weights'];
-        let sample_gradients_for_bias    = sample_gradients_data['gradients_of_units'];
+        let sample_gradients_for_weights = sample_gradients_data['gradients_of_each_unit_weights_per_layer'];
+        let sample_gradients_for_bias    = sample_gradients_data['gradients_of_each_unit_bias_per_layer'];
 
         //Accumulate the gradients
         let layersIds = Object.keys(sample_gradients_for_weights);

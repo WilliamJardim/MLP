@@ -17,9 +17,6 @@
 net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [], 
                                                    desiredValuess = [] 
 ){
-
-    let modelContext = this; //The model context
-
     //Validations
     if( !(sample_inputs instanceof Array) ){
         throw Error(`The sample_inputs=[${sample_inputs}] need be a Array instance!`);
@@ -37,50 +34,62 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
         throw Error(`The desiredValuess is empty Array!`);
     }
 
-    let number_of_layers       = modelContext.getLayers().length;
-
-    //Get the model estimated values
-    let estimated_data         = modelContext.estimate_values( sample_inputs );
-
-    //Extract the data from the model estimated values
-    let model_estimated_values     = estimated_data.getEstimatedValues();
-    let inputs_of_each_layer       = estimated_data.getInputsOfEachLayer();
-    let estimatives_of_each_layer  = estimated_data.getEstimativesOfEachLayer();
+    let modelContext                 = this; //The model context
+    let number_of_final_layer_units  = modelContext.last_layer.units;
+    let final_layer_index            = modelContext.last_layer_index - 1;
+    let model_estimatives_data       = modelContext.estimate_values( sample_inputs ); 
+    let model_estimatives            = model_estimatives_data.getEstimatedValues();        //Get propagation values
+    let estimatives_of_each_layer    = model_estimatives_data.getEstimativesOfEachLayer(); //Get the estimative-values of each unit of each layer
+    let inputs_of_each_layer         = model_estimatives_data.getInputsOfEachLayer();
 
     /**
-    * List store the gradients of each unit of the all layers
-    * Format { layer_number: gradients_object ...}
+    * Store the gradients of the weights and bias, each unit of each layer 
+    * 
+    * "gradients_per_layer" structure: 
+    * layer
+    *    --> unit == GradientVector
+    * 
+    * That is, the "gradients_per_layer" contains "layers" as keys, and the "layers" contains "units" as keys, and the "units" is GradientVector instances
     */
-    let list_to_store_gradients_of_units = {};
-
-    /**
-    * List store the gradients for the all layers(of each weight of each unit)
-    * Format { layer_number: [ unit: { weight: [] ...} ] ...}
-    */
-    let list_to_store_gradients_for_weights = {};
+    let gradients_per_layer = {};
 
     /**
     * Calculate the derivative of each unit in final layer
     * This process is made by a subtraction of the "unit estimated value" and the "desired value for the unit".
     * So, Each unit have a "desired value", and each unit produces a "estimative" in the "estimate_values" phase, so these informations are used to calculate this derivatives
     * 
-    * And these gradients will be stored in the list_to_store_gradients_of_units and list_to_store_gradients_for_weights
+    * And these gradients will be stored in the "gradients_per_layer"
     *
     * So to do this, i will use the following below:
     */
+    gradients_per_layer[ `layer${ final_layer_index }` ] = {};
 
-    /**
-    * Create a derivator instance to derivate the final layer 
-    */
-    let finalLayerDerivator = modelContext.FinalLayerDerivator( model_estimated_values, 
-                                                                desiredValuess, 
-                                                                list_to_store_gradients_of_units, 
-                                                                list_to_store_gradients_for_weights );
-    /**
-    * Get and store the gradients of the final layer( that is, the last layer of the model ) 
-    */
-    finalLayerDerivator.atSelf()
-                       .do_derivative();
+    for( let unit_number = 0 ; unit_number < number_of_final_layer_units ; unit_number++  )
+    {
+        let unit_obj           = modelContext.getLayer(final_layer_index)
+                                             .getUnit( unit_number );
+
+        let unit_inputs        = inputs_of_each_layer[ `layer${ final_layer_index }` ];
+
+        let unit_function      = net.activations[ unit_obj.activation_function ];
+        let estimative         = model_estimatives[ unit_number ];
+        let desired_value      = desiredValuess[ unit_number ];
+        
+        let loss_wrt_unit_estimation = ( estimative - desired_value ) * unit_function.derivative( estimative );
+
+        /**
+        * Compute the partial derivatives of each weight parameter( that is the gradient vector ), and store as GradientVector instance
+        */
+        gradients_per_layer[ `layer${ final_layer_index }` ][ `unit${ unit_number }` ] = net.GradientVector({
+
+                                                                    //Repass the LOSS WRT OF THE UNIT ESTIMATION FUNCTION
+                                                                    loss_wrt_unit_estimation, 
+
+                                                                    //Get the inputs of the weights of the current unit
+                                                                    unit_inputs
+
+                                                                  });
+    }
 
     /** 
     * Start the backpropagation
@@ -88,54 +97,62 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
     * 
     * When we reach the FIRST HIDDEN LAYER, when had calculate the gradients of all units in the FIRST HIDDEN LAYER, the backpropagation finally ends.
     */
-    let currentLayerIndex = number_of_layers-1-1;
+
+    let number_of_layers = modelContext.number_of_layers - 1 - 1 - 1; //Ignore the input layer and ignore the final layer
 
     /**
     * While the "while loop" not arrived the first hidden layer
     * The first hidden layer(that have index 0, will be the final layer that will be computed) 
     */
-    while( currentLayerIndex >= 0 )
+    let current_hidden_layer = number_of_layers;
+    while( current_hidden_layer >= 0 )
     {
-        //Current layer data
-        let current_layer              = modelContext.getLayer( currentLayerIndex );
-        let current_layer_inputs       = inputs_of_each_layer[ `layer${ currentLayerIndex }` ];
-        let current_layer_estimatives  = estimatives_of_each_layer[ `layer${ currentLayerIndex }` ]
+        gradients_per_layer[ `layer${ current_hidden_layer }` ] = {};
 
-        list_to_store_gradients_of_units[ `layer${ currentLayerIndex }` ]     = {};
-        list_to_store_gradients_for_weights[ `layer${ currentLayerIndex }` ]  = {};
+        /*
+        * THE FORMULA USED IS FOLLOWING:
+        *
+        * The gradients for the units in ANY hidden layer is:
+        * Below are a simple example suposing that in the next layer we have 2 units:
+        * 
+        * >>> EQUATION WITH A EXAMPLE OF USE:
+        * 
+        *    current_unit<UH>_derivative  = ( derivative_of_next_layer_unit<N0> * weight<UH>_of_unit<N0> ) + 
+        *                                   ( derivative_of_next_layer_unit<N1> * weight<UH>_of_unit<N1> ) + 
+        *                                   ( ... etc )
+        * 
+        *    NOTE: In this example, the next layer have just 2 units(N0 and N1, respectively), 
+        *          but There could be as many as there were. By this, i put "[... etc]", to make it clear that there could be more than just 2 units
+        * 
+        *    NOTE: "current_unit" is a hidden unit!
+        *          So the "current_unit<UH>" is the hidden unit of index <UH> in current hidden layer.
+        *          Then, the "current_unit<UH>_derivative" is the derivative of the LOSS with respect to the unit "current_unit<UH>".
+        * 
+        * 
+        * >>> EXPLANATION:
+        * 
+        *   Where the UH is the index of the hidden unit(which we are calculating the derivative) in the current hidden layer. And the Ns( N0, N1, etc... ) are the indexes of the next layer units.
+        *   Relemering that the in the example above, we have just 2 units in the next layer, so the have only the N0(unit one) and N1(unit two).
+        * 
+        *   The weight<UH> is the weight that make a eloh( unites the two parts, that is, which connects the estimative-value of unit H with the input of unit U), of weights array in the next_layer_unit<N> object.
+        * 
+        * 
+        * This is the equation that are used for apply the backpropagation. This equation is used in this loop.
+        * So the code bellow apply this:
+        * 
+        */
 
         /**
-        * Next layer data:
+        * For each hidden unit in the current hidden layer
+        * (The logic for any hidden layer unit will always be the same, for any unit of any hidden layer)
         */
-        let next_layer_index               = currentLayerIndex + 1;
-        let next_layer                     = modelContext.getLayer( next_layer_index );
-        let number_of_next_layer_units     = next_layer.getUnits().length;
-
-        /**
-        * Get the gradients(of the units) of the next layer
-        * These gradients will be used in lines below:
-        */
-        let next_layer_gradients           = list_to_store_gradients_of_units[ `layer${ next_layer_index }` ];
-
-        /**
-        * For each unit in CURRENT HIDDEN LAYER
-        */
-        current_layer.getUnits().forEach(function( current_hidden_layer_unit, 
-                                                   the_unit_index
-        ){
-
-            let hidden_unit_index           = the_unit_index; //I also will call as UH, that is The index of the current unit, like in the equation above;
-
-            let current_unit_weights        = modelContext.getWeightsOf({ 
-                                                ofUnit  : the_unit_index, 
-                                                ofLayer : current_layer.getLayerIndex()
-                                            });
-
-            let current_unit_estimative     = current_layer_estimatives[ `unit${ the_unit_index }` ];
-            let current_unit_function_name  = current_hidden_layer_unit.getFunctionName();
+        for( let hidden_unit_number = 0 ; hidden_unit_number < modelContext.getLayer(current_hidden_layer).getUnits().length ; hidden_unit_number++  )
+        {
+            let hidden_unit_obj           = modelContext.getLayer( current_hidden_layer )
+                                                        .getUnit( hidden_unit_number );
 
             /**
-            * I make a copy of the "current_layer_inputs" variable to make a safe and independent copy of the same layer inputs for all units,
+            * I make a copy of the "inputs_of_each_layer[ `layer${ current_hidden_layer }` ]" variable to make a safe and independent copy of the same layer inputs for all units,
             * 
             * Because, the key point of this is: 
             * 
@@ -148,53 +165,106 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
             *
             *    To facilitate and standardize the process, in a generic way for each layer, we can imagine that the estimated values of the previous layer are the inputs themselves.               
             */
-            let current_unit_inputs       = [... current_layer_inputs.copyWithin()];
+            let unit_inputs               = inputs_of_each_layer[ `layer${ current_hidden_layer }` ].copyWithin();
+
+            let hidden_unit_function      = net.activations[ hidden_unit_obj.activation_function ];
+            let hidden_unit_estimative    = estimatives_of_each_layer[ `layer${ current_hidden_layer }` ][ `unit${ hidden_unit_number }` ];
+
+            let loss_wrt_unit_estimation = 0;
 
             /**
-            * Calculate the derivative of the current unit UH
-            * Relembering that, 
-            * The derivative of a unit in a hidden layer will always depend of the derivatives of the next layer
-            * So to do this, i will use the following below:
-            */ 
-
-            /**
-            * Create a derivator for derivate the final layer 
+            * GET THE NEXT LAYER:
             */
-            let hiddenLayerDerivator = modelContext.HiddenLayerDerivator(
-                                                                    //Current layer and unit data
-                                                                    currentLayerIndex,
-                                                                    hidden_unit_index, 
-                                                                    current_unit_weights,
-                                                                    current_unit_inputs,
-                                                                    current_unit_function_name,
-                                                                    current_unit_estimative,
-                                                                    
-                                                                    //Next layer data
-                                                                    next_layer_index,
-                                                                    number_of_next_layer_units,
-                                                                    next_layer_gradients,
+            modelContext.getLayer( current_hidden_layer )
+                        .getNextLayer( ( next_layer_context, next_layer_index ) => {
+                             
+                             /**
+                             * For each unit in LEXT LAYER 
+                             * We are working in the context of the next layer:
+                             * 
+                             *   "layer_index" is the number of the current unit in the next layer
+                             */
+                             ( next_layer_context )
+                             .getUnits().forEach( ( unit_obj, unit_index ) => {
+                                    const layer_index      = next_layer_index;
+                                    const layer_gradients  = gradients_per_layer[ `layer${ layer_index }` ];
+                                    const unit_derivative  = layer_gradients[ `unit${ unit_index }` ].get_wrt_unit_estimation();
 
-                                                                    //Gradients storage
-                                                                    list_to_store_gradients_of_units,
-                                                                    list_to_store_gradients_for_weights);
-            /**
-            * Get and store the gradients of a hidden layer 
-            */
-            hiddenLayerDerivator.do_derivative();
-            
-        });
+                                    /**
+                                    * NOTE: By using the function: "modelContext.getWeightOf({
+                                    *                                    theWeight : hidden_unit_number,
+                                    *                                    ofUnit    : unit_index,
+                                    *                                    ofLayer   : unit_obj.getLayerOfThisUnit().getIndex() //Get the layer of the next unit
+                                    *                                });", below, in line 196
+                                    *
+                                    *   The "context.getWeightOf" returns the parameter of the "current unit in the next layer, A.K.A called N in the formula above" 
+                                    *   that make the eloh with the "current unit in the current hidden layer, AKA UH unit in the formula above", Whose index is UH(of the external loop in the explanation of the equation above)
+                                    *
+                                    *   Because, for example, if we are calculating the gradient of the first unit in the last hidden layer, 
+                                    *   These gradient(of the hidden unit of the last hidden layer) will depedent of the all gradients in the final layer, 
+                                    *   together with the eloh parameter, that is, the weight of unit N of the final layer with respect to the hidden unit number UH
+                                    *
+                                    * Above are the gradient equation for the hidden layer units, that are applied in the line below:
+                                    */
+                                    const eloh_parameter   = modelContext.getWeightOf({
+                                                                theWeight : hidden_unit_number,
+                                                                ofUnit    : unit_index,
+                                                                ofLayer   : unit_obj.getLayerOfThisUnit().getIndex() //Get the layer of the next unit
+                                                             });
 
-        /**
-        * Goto previous layer
-        */
-        currentLayerIndex--;
+                                    loss_wrt_unit_estimation += ( unit_derivative * 
+                                                                  eloh_parameter * 
+                                                                  hidden_unit_function.derivative( hidden_unit_estimative ) );
+
+                                    //Alert if something is wrong
+                                    if( isNaN(unit_derivative) || isNaN(unit_derivative) ){ debugger; }
+
+                                    
+                             });
+
+                        });
+                        
+            //Compute the partial derivatives of each weight parameter( that is the gradient vector ), and store as GradientVector instance
+            gradients_per_layer[ `layer${ current_hidden_layer }` ][ `unit${hidden_unit_number}` ] = net.GradientVector({
+
+                                                                        //Repass the LOSS WRT OF THE UNIT ESTIMATION FUNCTION
+                                                                        loss_wrt_unit_estimation,
+
+                                                                        //Get the inputs of the weights of the current unit
+                                                                        unit_inputs
+                                                                    });
+        }
+
+        /** Previous layer **/
+        current_hidden_layer--;
+
     }
 
     /**
-    * Return the calculated gradients for the sample
+    * Split the gradients in two distinct objects 
+    */
+    let gradients_of_each_unit_bias_per_layer = {};
+    let gradients_of_each_unit_weights_per_layer = {};
+    
+    let layersKeys = Object.keys( gradients_per_layer );
+    layersKeys.forEach((layerId)=>{
+        let unitsKeys = Object.keys( gradients_per_layer[layerId] );
+        gradients_of_each_unit_bias_per_layer[ layerId ] = {};
+        gradients_of_each_unit_weights_per_layer[ layerId ] = {};
+
+        unitsKeys.forEach((unitId)=>{
+            gradients_of_each_unit_bias_per_layer[ layerId ][ unitId ]  = gradients_per_layer[layerId][unitId].loss_wrt_unit_estimation;
+            gradients_of_each_unit_weights_per_layer[ layerId ][ unitId ] = gradients_per_layer[layerId][unitId].loss_wrt_unit_weights;
+        });
+    });
+
+    /**
+    * Return the gradients
     */
     return {
-        gradients_of_units          : list_to_store_gradients_of_units,
-        gradients_for_each_weights  : list_to_store_gradients_for_weights
+        gradients_per_layer,
+        gradients_of_each_unit_weights_per_layer,
+        gradients_of_each_unit_bias_per_layer
     };
+    
 }

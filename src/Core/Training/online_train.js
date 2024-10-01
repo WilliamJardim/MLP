@@ -43,8 +43,8 @@ net.MLP.prototype.online_train = function( train_samples,
             //Do backpropagation and Gradient Descent
             let calculated_gradients_data         = context.backpropagate_sample(sample_features, sample_desired_value);
 
-            let gradients_for_weights  = calculated_gradients_data['gradients_for_each_weights'];
-            let gradients_for_bias     = calculated_gradients_data['gradients_of_units'];
+            let gradients_for_weights  = calculated_gradients_data['gradients_of_each_unit_weights_per_layer'];
+            let gradients_for_bias     = calculated_gradients_data['gradients_of_each_unit_bias_per_layer'];
 
             /**
             * Applies the Gradient Descent algorithm to update the parameters
