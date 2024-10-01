@@ -72,11 +72,11 @@ net.MLP.prototype.calculate_gradients_of_a_hidden_layer = function({ modelContex
                     .getNextLayer( ( next_layer_context, next_layer_index ) => {
                             
                             /**
-                         * For each unit in LEXT LAYER 
-                         * We are working in the context of the next layer:
-                         * 
-                         *   "layer_index" is the number of the current unit in the next layer
-                         */
+                            * For each unit in LEXT LAYER 
+                            * We are working in the context of the next layer:
+                            * 
+                            *   "layer_index" is the number of the current unit in the next layer
+                            */
                             ( next_layer_context )
                             .getUnits().forEach( ( unit_obj, unit_index ) => {
                                 const layer_index      = next_layer_index;
@@ -88,7 +88,7 @@ net.MLP.prototype.calculate_gradients_of_a_hidden_layer = function({ modelContex
                                 *                                    theWeight : hidden_unit_number,
                                 *                                    ofUnit    : unit_index,
                                 *                                    ofLayer   : unit_obj.getLayerOfThisUnit().getIndex() //Get the layer of the next unit
-                                *                                });", below, in line 196
+                                *                                });", below, in line 102
                                 *
                                 *   The "context.getWeightOf" returns the parameter of the "current unit in the next layer, A.K.A called N in the formula above" 
                                 *   that make the eloh with the "current unit in the current hidden layer, AKA UH unit in the formula above", Whose index is UH(of the external loop in the explanation of the equation above)
