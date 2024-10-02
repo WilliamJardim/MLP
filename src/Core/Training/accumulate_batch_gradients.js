@@ -80,60 +80,75 @@ net.MLP.prototype.accumulate_batch_gradients = function( train_samples ){
             throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in final layer)`);
         }
 
-        //Do backpropagation and Gradient Descent
-        let sample_gradients_data = context.backpropagate_sample(sample_features, sample_desired_value);
-    
-        let sample_gradients_for_weights = sample_gradients_data['gradients_of_each_unit_weights_per_layer'];
-        let sample_gradients_for_bias    = sample_gradients_data['gradients_of_each_unit_bias_per_layer'];
+        //Do backpropagation and retrive the gradients
+        let sample_gradients_data = context.backpropagate_sample({
+            sample_inputs  : sample_features, 
+            desiredValuess : sample_desired_value,
 
-        //Accumulate the gradients
-        let layersIds = Object.keys(sample_gradients_for_weights);
+            /**
+            * Callback called after the "backpropagate_sample" execution
+            * Use this callback to accumulate the gradients
+            * 
+            * Is full sequential and sync metheod, is not assync.
+            */
+            afterThis({ modelContext,
+                        gradients_per_layer,
+                        gradients_of_each_unit_weights_per_layer,
+                        gradients_of_each_unit_bias_per_layer
+            }){
+                let sample_gradients_for_weights = gradients_of_each_unit_weights_per_layer;
+                let sample_gradients_for_bias    = gradients_of_each_unit_bias_per_layer;
 
-        layersIds.forEach(function(layerId){
-            let layerData  = sample_gradients_for_weights[ layerId ];
-            let unitsId    = Object.keys(layerData);
+                //Accumulate the gradients
+                let layersIds = Object.keys(sample_gradients_for_weights);
 
-            //If not existis the layer in summed_gradients_for_weights, create with empty object
-            if( summed_gradients_for_weights[ layerId ] == undefined ){
-                summed_gradients_for_weights[ layerId ] = {};
+                layersIds.forEach(function(layerId){
+                    let layerData  = sample_gradients_for_weights[ layerId ];
+                    let unitsId    = Object.keys(layerData);
+
+                    //If not existis the layer in summed_gradients_for_weights, create with empty object
+                    if( summed_gradients_for_weights[ layerId ] == undefined ){
+                        summed_gradients_for_weights[ layerId ] = {};
+                    }
+
+                    if( summed_gradients_for_bias[ layerId ] == undefined ){
+                        summed_gradients_for_bias[ layerId ] = {};
+                    }
+
+                    unitsId.forEach(function(unitId){
+                        let number_of_weights = sample_gradients_for_weights[ layerId ][ unitId ].length;
+
+                        //If not exists the unit in summed_gradients_for_weights, create with zeros
+                        if( summed_gradients_for_weights[ layerId ][ unitId ] == undefined ){
+                            summed_gradients_for_weights[ layerId ][ unitId ] = Array(number_of_weights).fill(0);
+                        }
+
+                        //If not exists the unit in summed_gradients_for_bias, create with zero
+                        if( summed_gradients_for_bias[ layerId ][ unitId ] == undefined ){
+                            summed_gradients_for_bias[ layerId ][ unitId ] = 0;
+                        }
+
+                        /**
+                        * I do the accumulation in the following way: 
+                        * I sum all the gradient of all the weights( of each unit of each layer ), 
+                        * in its corresponding position in the hashmap, that is, sample_gradients_for_weights[ layer<LAYER_INDEX> ] [ unit<UNIT_INDEX> ] [ <WEIGHT_INDEX> ] 
+                        *
+                        * Because this, The format of the result of this sum will be the same format of the "sample_gradients_for_weights" returned by the backpropagate_sample metheod
+                        */
+                        for( let c = 0 ; c < number_of_weights ; c++ )
+                        {   
+                            let weight_index = c;
+                            let gradient_of_weight = sample_gradients_for_weights[ layerId ][ unitId ][ weight_index ];
+                            summed_gradients_for_weights[ layerId ][ unitId ][ weight_index ] = summed_gradients_for_weights[ layerId ][ unitId ][ weight_index ] + gradient_of_weight;
+                        }
+
+                        //Sum gradient for acculate the bias(that no have inputs)
+                        let gradient_of_bias = sample_gradients_for_bias[ layerId ][ unitId ];
+                        summed_gradients_for_bias[ layerId ][ unitId ] = summed_gradients_for_bias[ layerId ][ unitId ] + gradient_of_bias;
+
+                    });
+                });
             }
-
-            if( summed_gradients_for_bias[ layerId ] == undefined ){
-                summed_gradients_for_bias[ layerId ] = {};
-            }
-
-            unitsId.forEach(function(unitId){
-                let number_of_weights = sample_gradients_for_weights[ layerId ][ unitId ].length;
-
-                //If not exists the unit in summed_gradients_for_weights, create with zeros
-                if( summed_gradients_for_weights[ layerId ][ unitId ] == undefined ){
-                    summed_gradients_for_weights[ layerId ][ unitId ] = Array(number_of_weights).fill(0);
-                }
-
-                //If not exists the unit in summed_gradients_for_bias, create with zero
-                if( summed_gradients_for_bias[ layerId ][ unitId ] == undefined ){
-                    summed_gradients_for_bias[ layerId ][ unitId ] = 0;
-                }
-
-                /**
-                * I do the accumulation in the following way: 
-                * I sum all the gradient of all the weights( of each unit of each layer ), 
-                * in its corresponding position in the hashmap, that is, sample_gradients_for_weights[ layer<LAYER_INDEX> ] [ unit<UNIT_INDEX> ] [ <WEIGHT_INDEX> ] 
-                *
-                * Because this, The format of the result of this sum will be the same format of the "sample_gradients_for_weights" returned by the backpropagate_sample metheod
-                */
-                for( let c = 0 ; c < number_of_weights ; c++ )
-                {   
-                    let weight_index = c;
-                    let gradient_of_weight = sample_gradients_for_weights[ layerId ][ unitId ][ weight_index ];
-                    summed_gradients_for_weights[ layerId ][ unitId ][ weight_index ] = summed_gradients_for_weights[ layerId ][ unitId ][ weight_index ] + gradient_of_weight;
-                }
-
-                //Sum gradient for acculate the bias(that no have inputs)
-                let gradient_of_bias = sample_gradients_for_bias[ layerId ][ unitId ];
-                summed_gradients_for_bias[ layerId ][ unitId ] = summed_gradients_for_bias[ layerId ][ unitId ] + gradient_of_bias;
-
-            });
         });
 
     });

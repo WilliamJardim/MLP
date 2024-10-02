@@ -14,9 +14,12 @@
 * 
 * @returns {Object} - The mapped gradients of the units of each layer AND The mapped gradients of the each weight of each unit of each layer
 */
-net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [], 
-                                                   desiredValuess = [] 
-){
+net.MLP.prototype.backpropagate_sample = function({
+                                                    sample_inputs  = [], 
+                                                    desiredValuess = [],
+                                                    beforeThis = ()=>{},
+                                                    afterThis=()=>{}
+}){
     //Validations
     if( !(sample_inputs instanceof Array) ){
         throw Error(`The sample_inputs=[${sample_inputs}] need be a Array instance!`);
@@ -50,6 +53,17 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
     * That is, the "gradients_per_layer" contains "layers" as keys, and the "layers" contains "units" as keys, and the "units" is GradientVector instances
     */
     let gradients_per_layer = {};
+
+    if( beforeThis )
+    {
+        beforeThis.bind(modelContext)({
+            modelContext,
+            model_estimatives_data,
+            model_estimatives,
+            estimatives_of_each_layer,
+            inputs_of_each_layer
+        });
+    }
 
     /** 
     * Calculate the gradients of the final layer, and store in the "gradients_per_layer"
@@ -109,6 +123,20 @@ net.MLP.prototype.backpropagate_sample = function( sample_inputs  = [],
             gradients_of_each_unit_weights_per_layer[ layerId ][ unitId ] = gradients_per_layer[layerId][unitId].loss_wrt_unit_weights;
         });
     });
+
+    if( afterThis )
+    {
+        afterThis.bind(modelContext)({
+            modelContext,
+            gradients_per_layer,
+            gradients_of_each_unit_weights_per_layer,
+            gradients_of_each_unit_bias_per_layer,
+            model_estimatives_data,
+            model_estimatives,
+            estimatives_of_each_layer,
+            inputs_of_each_layer
+        });
+    }
 
     /**
     * Return the gradients

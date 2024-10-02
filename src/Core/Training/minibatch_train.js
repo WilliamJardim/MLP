@@ -36,8 +36,11 @@ net.MLP.prototype.minibatch_train = function( train_samples,
 
     });
 
+    //Add the remain
+    sub_divisions.push( current_set );
+
     //While the current epoch number is less the number_of_epochs
-    while( currentEpoch < number_of_epochs )
+    while( currentEpoch <= number_of_epochs )
     {
         let total_loss = 0;
 
@@ -48,7 +51,7 @@ net.MLP.prototype.minibatch_train = function( train_samples,
             * Accumulate the gradients of each weight of each unit of each layer
             * Then, update the weights and bias in the final of the batch 
             */
-            context.train_fullbatch( actual_train_set );
+            context.fullbatch_train( actual_train_set, 1 );
 
         });
 
@@ -57,7 +60,7 @@ net.MLP.prototype.minibatch_train = function( train_samples,
         last_total_loss = total_loss;
         loss_history.push(total_loss);
 
-        if( String( Number(currentEpoch / 100) ).indexOf('.') != -1 ){
+        if( String( Number(currentEpoch / 1) ).indexOf('.') != -1 ){
             console.log(`LOSS: ${last_total_loss}, epoch ${currentEpoch}`)
         }
 
