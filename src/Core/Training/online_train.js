@@ -9,7 +9,7 @@
 net.MLP.prototype.online_train = function( train_samples, 
                                            number_of_epochs
 ){
-    let context = this; //The model context
+    let modelContext = this; //The model context
 
     let currentEpoch    = 0;
     let last_total_loss = 0;
@@ -36,12 +36,12 @@ net.MLP.prototype.online_train = function( train_samples,
             }
 
             //If the number of items in the sample_desired_value Array is different from the number of units in the final layer
-            if( sample_desired_value.length != context.layers[ context.layers.length-1 ].units.length ){
-                throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in final layer)`);
+            if( sample_desired_value.length != modelContext.layers[ modelContext.layers.length-1 ].units.length ){
+                throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${modelContext.layers[ modelContext.layers.length-1 ].units.length}(the number of units in final layer)`);
             }
 
             //Do backpropagation and Gradient Descent
-            let calculated_gradients_data = context.backpropagate_sample({
+            let calculated_gradients_data = modelContext.backpropagate_sample({
                 sample_inputs  : sample_features, 
                 desiredValuess : sample_desired_value, 
 
@@ -66,13 +66,13 @@ net.MLP.prototype.online_train = function( train_samples,
                     /**
                     * Applies the Gradient Descent algorithm to update the parameters
                     */
-                    context.optimize_the_parameters( gradients_for_weights, gradients_for_bias );
+                    modelContext.optimize_the_parameters( gradients_for_weights, gradients_for_bias );
                 }
             });
 
         });
 
-        total_loss += context.compute_train_cost( train_samples );
+        total_loss += modelContext.compute_train_cost( train_samples );
 
         last_total_loss = total_loss;
         loss_history.push(total_loss);

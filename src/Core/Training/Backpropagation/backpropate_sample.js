@@ -52,7 +52,7 @@ net.MLP.prototype.backpropagate_sample = function({
     * 
     * That is, the "gradients_per_layer" contains "layers" as keys, and the "layers" contains "units" as keys, and the "units" is GradientVector instances
     */
-    let gradients_per_layer = {};
+    let gradients_per_layer = modelContext.readProp('gradients_per_layer');
 
     if( beforeThis )
     {

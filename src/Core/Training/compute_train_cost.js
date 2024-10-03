@@ -6,7 +6,7 @@
 */
 net.MLP.prototype.compute_train_cost = function( train_samples ){
 
-    let context = this; //The model context
+    let modelContext = this; //The model context
 
     //Validations
     //If is a array or a instance of net.data.Dataset, is acceptable and compative type
@@ -25,8 +25,8 @@ net.MLP.prototype.compute_train_cost = function( train_samples ){
         let sample_features        = sample_data[0]; //SAMPLE FEATURES
         let sample_desired_value   = sample_data[1]; //SAMPLE DESIRED VALUES
         
-        let estimatedValues        = context.estimate_values(sample_features)
-                                            .getEstimatedValues();
+        let estimatedValues        = modelContext.estimate_values(sample_features)
+                                                 .getEstimatedValues();
 
         for( let S = 0 ; S < estimatedValues.length ; S++ )
         {

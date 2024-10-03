@@ -8,10 +8,10 @@
 net.MLP.prototype.optimize_the_parameters = function( the_gradients_for_weights={}, 
                                                       the_gradients_for_bias={} 
 ){
-    let context = this; //The model context
+    let modelContext = this; //The model context
 
     //For each layer
-    context.getLayers().forEach(function( current_layer, 
+    modelContext.getLayers().forEach(function( current_layer, 
                                           layer_index                                       
     ){
 
@@ -29,14 +29,14 @@ net.MLP.prototype.optimize_the_parameters = function( the_gradients_for_weights=
 
                 //Select this weight <weight_index> and update then
                 current_unit.selectWeight( weight_index )
-                            .subtract( context.learning_rate * calculated_gradients_values_for_weight );
+                            .subtract( modelContext.learning_rate * calculated_gradients_values_for_weight );
 
             });
 
             let calculated_gradients_values_for_bias = the_gradients_for_bias[`layer${ layer_index }`][ `unit${ unit_index }` ];
 
             //Update bias
-            current_unit.subtractBias( context.learning_rate * calculated_gradients_values_for_bias );
+            current_unit.subtractBias( modelContext.learning_rate * calculated_gradients_values_for_bias );
 
         });
 

@@ -7,7 +7,7 @@
 net.MLP.prototype.train = function( train_samples, 
                                     number_of_epochs 
 ){
-    let context = this; //The model context
+    let modelContext = this; //The model context
 
     //Validations
     //If is a array or a instance of net.data.Dataset, is acceptable and compative type
@@ -36,7 +36,7 @@ net.MLP.prototype.train = function( train_samples,
     }
 
     //Task validation
-    if( context.task == 'classification' || context.task == 'logistic_regression' || context.task == 'binary_classification'){
+    if( modelContext.task == 'classification' || modelContext.task == 'logistic_regression' || modelContext.task == 'binary_classification'){
 
         //Check if some disired value of the samples ARE NOT BINARY
         let someDesiredValueIsNotBinary = [... train_samples.copyWithin()].some( 
@@ -47,7 +47,7 @@ net.MLP.prototype.train = function( train_samples,
         })
 
         if( someDesiredValueIsNotBinary == true ){
-            throw Error(`dataset problem!. Some desired values are not binar!. But, In task of ${context.task}, Should be only 0 and 1, or boolean`);
+            throw Error(`dataset problem!. Some desired values are not binar!. But, In task of ${modelContext.task}, Should be only 0 and 1, or boolean`);
         }
 
     }
@@ -57,31 +57,31 @@ net.MLP.prototype.train = function( train_samples,
     validations.throwErrorIfSomeSampleHaveObjectsArraysInsteadValues( secure_copy_of_samples_for_validations );
     validations.throwErrorIfSomeSampleAreStringsOrCharacters( secure_copy_of_samples_for_validations );
     validations.throwErrorIfSomeSampleAreIncorrectArrayLength( secure_copy_of_samples_for_validations );
-    validations.throwErrorIfSomeSampleAreDiffentLengthOfInputsThatTheInputLayer( context.input_layer.inputs , secure_copy_of_samples_for_validations );
+    validations.throwErrorIfSomeSampleAreDiffentLengthOfInputsThatTheInputLayer( modelContext.input_layer.inputs , secure_copy_of_samples_for_validations );
 
     //Start train
     let training_result = {};
 
-    switch( context.getTrainingType() ){
+    switch( modelContext.getTrainingType() ){
         case 'online':
-            training_result = context.online_train(train_samples, number_of_epochs);
+            training_result = modelContext.online_train(train_samples, number_of_epochs);
             break;
 
         case 'batch':
         case 'fullbatch':
-            training_result = context.fullbatch_train(train_samples, number_of_epochs);
+            training_result = modelContext.fullbatch_train(train_samples, number_of_epochs);
             break;
 
         case 'minibatch':
-            training_result = context.minibatch_train(train_samples, number_of_epochs);
+            training_result = modelContext.minibatch_train(train_samples, number_of_epochs);
             break;
 
         default:
-            throw Error(`Invalid training type ${ context.getTrainingType() }!`);
+            throw Error(`Invalid training type ${ modelContext.getTrainingType() }!`);
     }
 
     return {
-        model: context,
+        model: modelContext,
         last_total_loss: training_result.last_total_loss,
         loss_history: training_result.loss_history,
         initial_loss: training_result.loss_history[0],

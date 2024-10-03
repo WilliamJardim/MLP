@@ -5,7 +5,7 @@
 * @param {Array} train_samples - The training samples
 */
 net.MLP.prototype.accumulate_batch_gradients = function( train_samples ){
-    let context = this; //The model context
+    let modelContext = this; //The model context
     
     let number_of_samples = train_samples.length;
 
@@ -76,12 +76,12 @@ net.MLP.prototype.accumulate_batch_gradients = function( train_samples ){
         }
 
         //If the number of items in the sample_desired_value Array is different from the number of units in the final layer
-        if( sample_desired_value.length != context.layers[ context.layers.length-1 ].units.length ){
-            throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${context.layers[ context.layers.length-1 ].units.length}(the number of units in final layer)`);
+        if( sample_desired_value.length != modelContext.layers[ modelContext.layers.length-1 ].units.length ){
+            throw Error(`The sample_desired_value=[${sample_desired_value}] has ${sample_desired_value.length} elements, But must be ${modelContext.layers[ modelContext.layers.length-1 ].units.length}(the number of units in final layer)`);
         }
 
         //Do backpropagation and retrive the gradients
-        let sample_gradients_data = context.backpropagate_sample({
+        let sample_gradients_data = modelContext.backpropagate_sample({
             sample_inputs  : sample_features, 
             desiredValuess : sample_desired_value,
 
@@ -254,5 +254,5 @@ net.MLP.prototype.accumulate_batch_gradients = function( train_samples ){
     /**
     * Applies the Gradient Descent algorithm to update the parameters
     */
-    context.optimize_the_parameters( mean_gradients_for_weights, mean_gradients_for_bias );
+    modelContext.optimize_the_parameters( mean_gradients_for_weights, mean_gradients_for_bias );
 }

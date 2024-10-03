@@ -107,6 +107,17 @@ net.MLP = class{
         context.model_parameters = {};
 
         /**
+        * Store the gradients of the weights and bias, each unit of each layer 
+        * 
+        * "gradients_per_layer" structure: 
+        * layer
+        *    --> unit == GradientVector
+        * 
+        * That is, the "gradients_per_layer" contains "layers" as keys, and the "layers" contains "units" as keys, and the "units" is GradientVector instances
+        */
+        context.gradients_per_layer = net.GradientStorage();
+
+        /**
         * Return a object that allow manipulate the model parameters of any unit of any layer
         * Used in 'Unit' class
         * 

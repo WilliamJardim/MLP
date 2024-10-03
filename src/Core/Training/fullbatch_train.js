@@ -9,7 +9,7 @@
 net.MLP.prototype.fullbatch_train = function( train_samples, 
                                               number_of_epochs 
 ){
-    let context = this; //The model context
+    let modelContext = this; //The model Context
     
     let currentEpoch_fullback = 0;
     let last_total_loss_fullbatch = 0;
@@ -21,9 +21,9 @@ net.MLP.prototype.fullbatch_train = function( train_samples,
         let total_loss_fullbatch = 0;
 
         //Accumulate the batch and update the parameters
-        context.accumulate_batch_gradients( train_samples );
+        modelContext.accumulate_batch_gradients( train_samples );
         
-        total_loss_fullbatch += context.compute_train_cost( train_samples );
+        total_loss_fullbatch += modelContext.compute_train_cost( train_samples );
 
         last_total_loss_fullbatch = total_loss_fullbatch;
         loss_history_fullbatch.push(total_loss_fullbatch);

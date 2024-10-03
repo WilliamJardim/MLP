@@ -5,7 +5,7 @@
 */
 net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
 
-    let context = this; //The model context
+    let modelContext = this; //The model context
 
     //Validations
     if( !(sample_inputs instanceof Array) ){
@@ -21,14 +21,14 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
     * And vinculate this object in the MLP(the father of the layers) to easy access and manipulations
     */
     let inputs_of_each_layer   = {};
-    context.vinculate('inputs_of_each_layer', inputs_of_each_layer);
+    modelContext.vinculate('inputs_of_each_layer', inputs_of_each_layer);
 
     /**
     * Store the estimatives of each unit of each layer 
     * And vinculate this object in the MLP(the father of the layers) to easy access and manipulations
     */
     let estimatives_of_each_layer  = {};
-    context.vinculate('estimatives_of_each_layer', estimatives_of_each_layer);
+    modelContext.vinculate('estimatives_of_each_layer', estimatives_of_each_layer);
 
     /**
     * The inputs of a layer <layer_index> is always the estimated values of previous layer( <layer_index> - 1 )
@@ -39,8 +39,8 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
     *
     * Always in this way.
     */
-    context.get_first_hidden_layer()
-           .setInputs( [... sample_inputs] );
+    modelContext.get_first_hidden_layer()
+                .setInputs( [... sample_inputs] );
 
     //The estimated values of FINAL LAYER
     let final_estimatives         = []; 
@@ -51,8 +51,8 @@ net.MLP.prototype.estimate_values = function( sample_inputs=[] ){
     * So
     * For each layer:
     */
-    context.getLayers().forEach(function( current_layer, 
-                                          layer_index 
+    modelContext.getLayers().forEach(function( current_layer, 
+                                               layer_index 
     ){
         /**
         * For each unit in current layer, get the UNIT ESTIMATIVE and store inside the unit
