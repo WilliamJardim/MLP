@@ -62,7 +62,7 @@ net.MLP.prototype.online_train = function( train_samples,
                 }){
                     let gradients_for_weights  = gradients_of_each_unit_weights_per_layer;
                     let gradients_for_bias     = gradients_of_each_unit_bias_per_layer;
-    
+
                     /**
                     * Applies the Gradient Descent algorithm to update the parameters
                     */

@@ -54,6 +54,11 @@ net.MLP.prototype.backpropagate_sample = function({
     */
     let gradients_per_layer = modelContext.readProp('gradients_per_layer');
 
+    /** 
+    * Clean all, the clear old gradients  
+    */
+    gradients_per_layer.eraseAll();
+
     if( beforeThis )
     {
         beforeThis.bind(modelContext)({
@@ -112,9 +117,10 @@ net.MLP.prototype.backpropagate_sample = function({
     let gradients_of_each_unit_bias_per_layer = {};
     let gradients_of_each_unit_weights_per_layer = {};
     
-    let layersKeys = Object.keys( gradients_per_layer );
+    let layersKeys = Object.keys( gradients_per_layer.table );
     layersKeys.forEach((layerId)=>{
-        let unitsKeys = Object.keys( gradients_per_layer[layerId] );
+        
+        let unitsKeys = Object.keys( gradients_per_layer[layerId].table );
         gradients_of_each_unit_bias_per_layer[ layerId ] = {};
         gradients_of_each_unit_weights_per_layer[ layerId ] = {};
 

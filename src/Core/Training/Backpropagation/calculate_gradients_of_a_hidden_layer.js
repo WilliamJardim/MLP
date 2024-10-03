@@ -1,6 +1,6 @@
 net.MLP.prototype.calculate_gradients_of_a_hidden_layer = function({ modelContext, inputs_of_each_layer, estimatives_of_each_layer, current_hidden_layer, gradients_per_layer })
 {
-    gradients_per_layer[ `layer${ current_hidden_layer }` ] = {};
+    gradients_per_layer.registryLayer( current_hidden_layer );
 
     /*
     * THE FORMULA USED IS FOLLOWING:
@@ -80,8 +80,11 @@ net.MLP.prototype.calculate_gradients_of_a_hidden_layer = function({ modelContex
                             ( next_layer_context )
                             .getUnits().forEach( ( unit_obj, unit_index ) => {
                                 const layer_index      = next_layer_index;
-                                const layer_gradients  = gradients_per_layer[ `layer${ layer_index }` ];
-                                const unit_derivative  = layer_gradients[ `unit${ unit_index }` ].get_wrt_unit_estimation();
+
+                                const layer_gradients  = gradients_per_layer.getLayer( layer_index );
+
+                                const unit_derivative  = layer_gradients.ofUnit( unit_index )
+                                                                        .get_wrt_unit_estimation();
 
                                 /**
                                 * NOTE: By using the function: "modelContext.getWeightOf({
@@ -120,14 +123,19 @@ net.MLP.prototype.calculate_gradients_of_a_hidden_layer = function({ modelContex
         /**
         * Compute the partial derivatives of each weight parameter( that is the gradient vector ), and store as GradientVector instance
         */
-        gradients_per_layer[ `layer${ current_hidden_layer }` ][ `unit${hidden_unit_number}` ] = net.GradientVector({
+        gradients_per_layer.setGradientWrtOf({
+            ofUnit       : hidden_unit_number,
+            ofLayer      : current_hidden_layer,
 
-                                                                    //Repass the LOSS WRT OF THE UNIT ESTIMATION FUNCTION
-                                                                    loss_wrt_unit_estimation,
+            setGradient  : new net.GradientVector({
+                //Repass the LOSS WRT OF THE UNIT ESTIMATION FUNCTION
+                loss_wrt_unit_estimation,
 
-                                                                    //Get the inputs of the weights of the current unit
-                                                                    unit_inputs
-                                                                });
+                //Get the inputs of the weights of the current unit
+                unit_inputs
+            })
+        });
+
     }
 
     /**

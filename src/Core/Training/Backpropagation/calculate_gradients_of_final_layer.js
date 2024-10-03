@@ -11,7 +11,7 @@ net.MLP.prototype.calculate_gradients_of_final_layer = function( { modelContext,
     */
     let final_layer_index            = modelContext.last_layer_index - 1;
 
-    gradients_per_layer[ `layer${ final_layer_index }` ] = {};
+    gradients_per_layer.registryLayer( final_layer_index );
 
     let number_of_final_layer_units  = modelContext.last_layer.units;
     
@@ -32,15 +32,18 @@ net.MLP.prototype.calculate_gradients_of_final_layer = function( { modelContext,
         /**
         * Compute the partial derivatives of each weight parameter( that is the gradient vector ), and store as GradientVector instance
         */
-        gradients_per_layer[ `layer${ final_layer_index }` ][ `unit${ unit_number }` ] = net.GradientVector({
+        gradients_per_layer.setGradientWrtOf({
+            ofUnit       : unit_number,
+            ofLayer      : final_layer_index,
 
-                                                                            //Repass the LOSS WRT OF THE UNIT ESTIMATION FUNCTION
-                                                                            loss_wrt_unit_estimation, 
+            setGradient  : new net.GradientVector({
+                //Repass the LOSS WRT OF THE UNIT ESTIMATION FUNCTION
+                loss_wrt_unit_estimation,
 
-                                                                            //Get the inputs of the weights of the current unit
-                                                                            unit_inputs
-
-                                                                     });
+                //Get the inputs of the weights of the current unit
+                unit_inputs
+            })
+        });
                                 
         /** DO THE SAMES FOR THE NEXT UNIT IN THE CURRENT HIDDEN LAYER  */
         unit_number++;

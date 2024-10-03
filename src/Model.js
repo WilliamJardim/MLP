@@ -115,7 +115,7 @@ net.MLP = class{
         * 
         * That is, the "gradients_per_layer" contains "layers" as keys, and the "layers" contains "units" as keys, and the "units" is GradientVector instances
         */
-        context.gradients_per_layer = net.GradientStorage();
+        context.gradients_per_layer = net.GradientStorage.GradientStorage();
 
         /**
         * Return a object that allow manipulate the model parameters of any unit of any layer
